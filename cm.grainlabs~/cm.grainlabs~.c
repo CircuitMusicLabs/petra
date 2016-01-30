@@ -30,7 +30,7 @@
 #include "cmstereo.h" // for cm_pan
 #include "cmutil.h" // for cm_random
 #include <stdlib.h> // for arc4random_uniform
-#define MAX_GRAINLENGTH 300 // max grain length in ms
+#define MAX_GRAINLENGTH 500 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MAX_PITCH 10 // max pitch
 #define MAX_GAIN 2.0
