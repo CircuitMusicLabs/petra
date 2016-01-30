@@ -281,7 +281,7 @@ void *cmgrainwindow_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
-	// ALLOCATE MEMORY FOR THE WINDOW ARRAY
+	// ALLOCATE MEMORY FOR THE WINDOW ARRAY; this is new
 	x->window = (double *)sysmem_newptrclear((x->window_length) * sizeof(double *));
 	if (x->window == NULL) {
 		object_error((t_object *)x, "out of memory");
