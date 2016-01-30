@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="cm.grainlabs~" module="msp" category="MSP Sampling">
+	<digest>
+		Polyphonic granular synthesizer by Circuit Music Labs
+	</digest>
+	<description>
+		<o>cm.grainlabs~</o> is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and a window buffer for windowing the individual grains.
+	</description>
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">
+			Circuit Music Labs
+		</metadata>
+		<metadata name="tag">
+			Max
+		</metadata>
+		<metadata name="tag">
+			MSP Sampling
+		</metadata>
+		<metadata name="reference">
+			TEXT_HERE
+		</metadata>
+		<metadata name="license">
+			TEXT_HERE
+		</metadata>
+	</metadatalist>
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="INLET_TYPE">
+			<digest>
+				trigger inlet
+			</digest>
+			<description>
+				Signal inlet used for triggering new grains
+			</description>
+		</inlet>
+		<inlet id="1" type="INLET_TYPE">
+			<digest>
+				min start position
+			</digest>
+			<description>
+				Minimum start position value in ms
+			</description>
+		</inlet>
+		<inlet id="2" type="INLET_TYPE">
+			<digest>
+				max start position
+			</digest>
+			<description>
+				Maximum start position value in ms
+			</description>
+		</inlet>
+		<inlet id="3" type="INLET_TYPE">
+			<digest>
+				min grain length
+			</digest>
+			<description>
+				Minimum grain length in ms
+			</description>
+		</inlet>
+		<inlet id="4" type="INLET_TYPE">
+			<digest>
+				max grain length
+			</digest>
+			<description>
+				Maximum grain length in ms
+			</description>
+		</inlet>
+		<inlet id="5" type="INLET_TYPE">
+			<digest>
+				min pitch
+			</digest>
+			<description>
+				Minimum pitch value
+			</description>
+		</inlet>
+		<inlet id="6" type="INLET_TYPE">
+			<digest>
+				max pitch
+			</digest>
+			<description>
+				Maximum pitch value
+			</description>
+		</inlet>
+		<inlet id="7" type="INLET_TYPE">
+			<digest>
+				min pan
+			</digest>
+			<description>
+				Minimum pan value
+			</description>
+		</inlet>
+		<inlet id="8" type="INLET_TYPE">
+			<digest>
+				max pan
+			</digest>
+			<description>
+				Maximum pan value
+			</description>
+		</inlet>
+		<inlet id="9" type="INLET_TYPE">
+			<digest>
+				min gain
+			</digest>
+			<description>
+				Minimum gain value
+			</description>
+		</inlet>
+		<inlet id="10" type="INLET_TYPE">
+			<digest>
+				max gain
+			</digest>
+			<description>
+				Maximum gain value
+			</description>
+		</inlet>
+	</inletlist>
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="OUTLET_TYPE">
+			<digest>
+				Signal output left
+			</digest>
+			<description>
+			</description>
+		</outlet>
+		<outlet id="1" type="OUTLET_TYPE">
+			<digest>
+				Signal output right
+			</digest>
+			<description>
+			</description>
+		</outlet>
+		<outlet id="2" type="OUTLET_TYPE">
+			<digest>
+				Number of currently playing grains
+			</digest>
+			<description>
+			</description>
+		</outlet>
+	</outletlist>
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="sample" optional="0" type="symbol">
+			<digest>
+				Sample buffer reference
+			</digest>
+			<description>
+				Name of the buffer used for playback.
+			</description>
+		</objarg>
+		<objarg name="window" optional="0" type="symbol">
+			<digest>
+				Window buffer reference
+			</digest>
+			<description>
+				Name of the buffer used for the grain window.
+			</description>
+		</objarg>
+		<objarg name="limit" optional="0" type="int">
+			<digest>
+				Max grains
+			</digest>
+			<description>
+				Maximum number of simultaneously playing grains.
+			</description>
+		</objarg>
+	</objarglist>
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="limit">
+			<arglist />
+			<digest>
+				Sets the maximum grains value
+			</digest>
+			<description>
+				Specifies the maximum number of simultaneously playing grains (max value 128).
+			</description>
+		</method>
+		<method name="set">
+			<arglist>
+				<arg name="sample buffer" optional="0" type="symbol" />
+				<arg name="window buffer" optional="0" type="symbol" />
+			</arglist>
+			<digest>
+				Sets the buffer references
+			</digest>
+			<description>
+				Specifies the sample and window buffer references.
+			</description>
+		</method>
+	</methodlist>
+	<!--ATTRIBUTES-->
+	<attributelist>
+		<attribute name="stereo" get="0" set="1" type="int" size="1">
+			<digest>
+				Multi-channel playback on/off
+			</digest>
+			<description>
+				Activates and deactivates stereo playback of multi-channel files loaded into the sample buffer.
+			</description>
+		</attribute>
+		<attribute name="w_interp" get="0" set="1" type="int" size="1">
+			<digest>
+				Window interpolation on/off
+			</digest>
+			<description>
+				Activates and deactivates window sample interpolation.
+			</description>
+		</attribute>
+		<attribute name="s_interp" get="0" set="1" type="int" size="1">
+			<digest>
+				Sample interpolation on/off
+			</digest>
+			<description>
+				Activates and deactivates buffer sample interpolation.
+			</description>
+		</attribute>
+		<attribute name="zero" get="0" set="1" type="int" size="1">
+			<digest>
+				Zero crossing trigger mode on/off
+			</digest>
+			<description>
+				Activates and deactivates zero crossing trigger mode.
+			</description>
+		</attribute>
+	</attributelist>
+	<misc name="Output">
+		<entry name="signal outlet 1">
+			<description>
+				Signal outlet for left channel.
+			</description>
+		</entry>
+		<entry name="signal outlet 2">
+			<description>
+				Signal outlet for right channel.
+			</description>
+		</entry>
+		<entry name="int">
+			<description>
+				Number of currently playing grains.
+			</description>
+		</entry>
+	</misc>
+</c74object>

@@ -1,0 +1,42 @@
+{
+	"author" : "Circuit Music Labs",
+	"authors" : [  ],
+	"categories" : [  ],
+	"description" : "Granular Synthesis External",
+	"displayname" : "",
+	"extends" : "",
+	"extensible" : 0,
+	"homepatcher" : "cm.grainlabs~.maxhelp",
+	"max_version_max" : "none",
+	"max_version_min" : "6.1",
+	"name" : "cm.grainlabs~",
+	"os" : 	{
+		"macintosh" : 		{
+			"platform" : [ "x64" ],
+			"min_version" : "10.9.x"
+		}
+,
+		"windows" : 		{
+			"platform" : [ "x64" ],
+			"min_version" : "7"
+		}
+
+	}
+,
+	"readme" : "",
+	"tags" : [ "granular", "audio", "externals" ],
+	"version" : "0.0.2",
+	"versions" : null,
+	"website" : "https://cmlabs.wordpress.com",
+	"filelist" : 	{
+		"patchers" : [ "cm.grainlabs~.maxhelp" ],
+		"help" : [ "cm.grainlabs~.maxhelp" ],
+		"media" : [ "" ],
+		"misc" : [ "" ],
+		"code" : [ "" ],
+		"extras" : [ "" ]
+	}
+,
+	"c74install" : 1,
+	"installdate" : 3535803330
+}
