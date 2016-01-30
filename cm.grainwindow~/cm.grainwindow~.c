@@ -48,7 +48,7 @@ typedef struct _cmgrainwindow {
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
 	
-	t_symbol *window_type; // window typedef
+	int window_type; // window typedef
 	int window_length; // window length
 	short w_writeflag; // checkflag to see if window array is currently re-witten
 	
@@ -118,7 +118,7 @@ t_max_err cmgrainwindow_winterp_set(t_cmgrainwindow *x, t_object *attr, long arg
 t_max_err cmgrainwindow_sinterp_set(t_cmgrainwindow *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgrainwindow_zero_set(t_cmgrainwindow *x, t_object *attr, long argc, t_atom *argv);
 
-void cmgrainwindow_windowwrite(t_cmgrainwindow *x, t_symbol *s, int length);
+void cmgrainwindow_windowwrite(t_cmgrainwindow *x, int *s, int length);
 
 
 /************************************************************************************************************************/
@@ -187,12 +187,12 @@ void *cmgrainwindow_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 	
 	x->buffer_name = atom_getsymarg(0, argc, argv); // get user supplied argument for sample buffer
-	x->window_type = atom_getsymarg(1, argc, argv); // get user supplied argument for window type
-	x->window_length = atom_getsymarg(2, argc, argv); // get user supplied argument for window length
+	x->window_type = atom_getintarg(1, argc, argv); // get user supplied argument for window type
+	x->window_length = atom_getintarg(2, argc, argv); // get user supplied argument for window length
 	x->grains_limit = atom_getintarg(3, argc, argv); // get user supplied argument for maximum grains
 	
 	// CHECK IF WINDOW TYPE ARGUMENT IS VALID
-	if (x->window_type != gensym("hann") || x->window_type != gensym("rect")) {
+	if (x->window_type < 0 || x->window_type > 1) {
 		object_error((t_object *)x, "invalid window type");
 		return NULL;
 	}
@@ -847,11 +847,11 @@ void cmgrainwindow_w_type(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) 
 	if (ac == 1) {
 		if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
 			// CHECK IF WINDOW TYPE ARGUMENT IS VALID
-			if (atom_getsym(av) != gensym("hann") || atom_getsym(av) != gensym("rect")) {
+			if (atom_getlong(av) < 0 || atom_getlong(av) > 1) {
 				object_error((t_object *)x, "invalid window type");
 			}
 			else {
-				x->window_type = atom_getsym(av); // write window type into object structure
+				x->window_type = atom_getlong(av); // write window type into object structure
 				cmgrainwindow_windowwrite(x, x->window_type, x->window_length); // write window into window array
 			}
 		}
@@ -952,12 +952,12 @@ t_max_err cmgrainwindow_zero_set(t_cmgrainwindow *x, t_object *attr, long ac, t_
 /************************************************************************************************************************/
 /* THE WINDOW_WRITE FUNCTION                                                                                            */
 /************************************************************************************************************************/
-void cmgrainwindow_windowwrite(t_cmgrainwindow *x, t_symbol *type, int length) {
+void cmgrainwindow_windowwrite(t_cmgrainwindow *x, int *type, int length) {
 	x->w_writeflag = 1;
-	if (type == gensym("hann")) {
+	if (*type == 0) {
 		cm_hann(x->window, length);
 	}
-	else if (type == gensym("rect")) {
+	else if (*type == 1) {
 		cm_rectangular(x->window, length);
 	}
 	x->w_writeflag = 0;
