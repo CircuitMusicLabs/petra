@@ -12,8 +12,6 @@
 		394300AE1C5D143D007E6747 /* cmstereo.h in Headers */ = {isa = PBXBuildFile; fileRef = 394300A81C5D143D007E6747 /* cmstereo.h */; settings = {ASSET_TAGS = (); }; };
 		394300AF1C5D143D007E6747 /* cmutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 394300A91C5D143D007E6747 /* cmutil.c */; settings = {ASSET_TAGS = (); }; };
 		394300B01C5D143D007E6747 /* cmutil.h in Headers */ = {isa = PBXBuildFile; fileRef = 394300AA1C5D143D007E6747 /* cmutil.h */; settings = {ASSET_TAGS = (); }; };
-		394300B11C5D143D007E6747 /* cmwindows.c in Sources */ = {isa = PBXBuildFile; fileRef = 394300AB1C5D143D007E6747 /* cmwindows.c */; settings = {ASSET_TAGS = (); }; };
-		394300B21C5D143D007E6747 /* cmwindows.h in Headers */ = {isa = PBXBuildFile; fileRef = 394300AC1C5D143D007E6747 /* cmwindows.h */; settings = {ASSET_TAGS = (); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,8 +22,6 @@
 		394300A81C5D143D007E6747 /* cmstereo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmstereo.h; sourceTree = "<group>"; };
 		394300A91C5D143D007E6747 /* cmutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmutil.c; sourceTree = "<group>"; };
 		394300AA1C5D143D007E6747 /* cmutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmutil.h; sourceTree = "<group>"; };
-		394300AB1C5D143D007E6747 /* cmwindows.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmwindows.c; sourceTree = "<group>"; };
-		394300AC1C5D143D007E6747 /* cmwindows.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmwindows.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,10 +41,8 @@
 				22CF119A0EE9A8250054F513 /* cm.grainlabs~.c */,
 				394300A71C5D143D007E6747 /* cmstereo.c */,
 				394300A91C5D143D007E6747 /* cmutil.c */,
-				394300AB1C5D143D007E6747 /* cmwindows.c */,
 				394300A81C5D143D007E6747 /* cmstereo.h */,
 				394300AA1C5D143D007E6747 /* cmutil.h */,
-				394300AC1C5D143D007E6747 /* cmwindows.h */,
 				22CF10220EE984600054F513 /* maxmspsdk.xcconfig */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
 			);
@@ -72,7 +66,6 @@
 			files = (
 				394300B01C5D143D007E6747 /* cmutil.h in Headers */,
 				394300AE1C5D143D007E6747 /* cmstereo.h in Headers */,
-				394300B21C5D143D007E6747 /* cmwindows.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -153,7 +146,6 @@
 				22CF119B0EE9A8250054F513 /* cm.grainlabs~.c in Sources */,
 				394300AD1C5D143D007E6747 /* cmstereo.c in Sources */,
 				394300AF1C5D143D007E6747 /* cmutil.c in Sources */,
-				394300B11C5D143D007E6747 /* cmwindows.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
