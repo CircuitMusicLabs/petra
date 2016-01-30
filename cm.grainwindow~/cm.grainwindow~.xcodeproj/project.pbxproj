@@ -19,7 +19,7 @@
 /* Begin PBXFileReference section */
 		22CF10220EE984600054F513 /* maxmspsdk.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = maxmspsdk.xcconfig; path = ../../maxmspsdk.xcconfig; sourceTree = SOURCE_ROOT; };
 		22CF119A0EE9A8250054F513 /* cm.grainwindow~.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "cm.grainwindow~.c"; sourceTree = "<group>"; };
-		2FBBEAE508F335360078DB84 /* cm.grainbuffer~.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "cm.grainbuffer~.mxo"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2FBBEAE508F335360078DB84 /* cm.grainwindow~.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "cm.grainwindow~.mxo"; sourceTree = BUILT_PRODUCTS_DIR; };
 		394300A71C5D143D007E6747 /* cmstereo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmstereo.c; sourceTree = "<group>"; };
 		394300A81C5D143D007E6747 /* cmstereo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmstereo.h; sourceTree = "<group>"; };
 		394300A91C5D143D007E6747 /* cmutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmutil.c; sourceTree = "<group>"; };
@@ -58,7 +58,7 @@
 		19C28FB4FE9D528D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2FBBEAE508F335360078DB84 /* cm.grainbuffer~.mxo */,
+				2FBBEAE508F335360078DB84 /* cm.grainwindow~.mxo */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,7 +95,7 @@
 			);
 			name = "max-external";
 			productName = iterator;
-			productReference = 2FBBEAE508F335360078DB84 /* cm.grainbuffer~.mxo */;
+			productReference = 2FBBEAE508F335360078DB84 /* cm.grainwindow~.mxo */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -106,7 +106,7 @@
 			attributes = {
 				LastUpgradeCheck = 0700;
 			};
-			buildConfigurationList = 2FBBEACF08F335010078DB84 /* Build configuration list for PBXProject "cm.grainbuffer~" */;
+			buildConfigurationList = 2FBBEACF08F335010078DB84 /* Build configuration list for PBXProject "cm.grainwindow~" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
@@ -181,7 +181,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				PRODUCT_NAME = "cm.grainbuffer~";
+				PRODUCT_NAME = "cm.grainwindow~";
 			};
 			name = Development;
 		};
@@ -191,14 +191,14 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
-				PRODUCT_NAME = "cm.grainbuffer~";
+				PRODUCT_NAME = "cm.grainwindow~";
 			};
 			name = Deployment;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2FBBEACF08F335010078DB84 /* Build configuration list for PBXProject "cm.grainbuffer~" */ = {
+		2FBBEACF08F335010078DB84 /* Build configuration list for PBXProject "cm.grainwindow~" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2FBBEAD008F335010078DB84 /* Development */,
