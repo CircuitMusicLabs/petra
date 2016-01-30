@@ -1,5 +1,5 @@
 /*
- cm.grainlabs~ - a granular synthesis external audio object for Max/MSP.
+ cm.grainbuffer~ - a granular synthesis external audio object for Max/MSP.
  Copyright (C) 2014  Matthias Müller - Circuit Music Labs
  
  This program is free software: you can redistribute it and/or modify
@@ -41,7 +41,7 @@
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
-typedef struct _cmgrainlabs {
+typedef struct _cmgrainbuffer {
 	t_pxobject obj;
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
@@ -78,33 +78,33 @@ typedef struct _cmgrainlabs {
 	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
-} t_cmgrainlabs;
+} t_cmgrainbuffer;
 
 
 /************************************************************************************************************************/
 /* STATIC DECLARATIONS                                                                                                  */
 /************************************************************************************************************************/
-static t_class *cmgrainlabs_class; // class pointer
+static t_class *cmgrainbuffer_class; // class pointer
 static t_symbol *ps_buffer_modified, *ps_stereo;
 
 
 /************************************************************************************************************************/
 /* FUNCTION PROTOTYPES                                                                                                  */
 /************************************************************************************************************************/
-void *cmgrainlabs_new(t_symbol *s, long argc, t_atom *argv);
-void cmgrainlabs_dsp64(t_cmgrainlabs *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
-void cmgrainlabs_perform64(t_cmgrainlabs *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
-void cmgrainlabs_assist(t_cmgrainlabs *x, void *b, long msg, long arg, char *dst);
-void cmgrainlabs_free(t_cmgrainlabs *x);
-void cmgrainlabs_float(t_cmgrainlabs *x, double f);
-void cmgrainlabs_dblclick(t_cmgrainlabs *x);
-t_max_err cmgrainlabs_notify(t_cmgrainlabs *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
-void cmgrainlabs_set(t_cmgrainlabs *x, t_symbol *s, long ac, t_atom *av);
-void cmgrainlabs_limit(t_cmgrainlabs *x, t_symbol *s, long ac, t_atom *av);
-t_max_err cmgrainlabs_stereo_set(t_cmgrainlabs *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgrainlabs_winterp_set(t_cmgrainlabs *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgrainlabs_sinterp_set(t_cmgrainlabs *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgrainlabs_zero_set(t_cmgrainlabs *x, t_object *attr, long argc, t_atom *argv);
+void *cmgrainbuffer_new(t_symbol *s, long argc, t_atom *argv);
+void cmgrainbuffer_dsp64(t_cmgrainbuffer *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
+void cmgrainbuffer_perform64(t_cmgrainbuffer *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
+void cmgrainbuffer_assist(t_cmgrainbuffer *x, void *b, long msg, long arg, char *dst);
+void cmgrainbuffer_free(t_cmgrainbuffer *x);
+void cmgrainbuffer_float(t_cmgrainbuffer *x, double f);
+void cmgrainbuffer_dblclick(t_cmgrainbuffer *x);
+t_max_err cmgrainbuffer_notify(t_cmgrainbuffer *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+void cmgrainbuffer_set(t_cmgrainbuffer *x, t_symbol *s, long ac, t_atom *av);
+void cmgrainbuffer_limit(t_cmgrainbuffer *x, t_symbol *s, long ac, t_atom *av);
+t_max_err cmgrainbuffer_stereo_set(t_cmgrainbuffer *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgrainbuffer_winterp_set(t_cmgrainbuffer *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgrainbuffer_sinterp_set(t_cmgrainbuffer *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgrainbuffer_zero_set(t_cmgrainbuffer *x, t_object *attr, long argc, t_atom *argv);
 
 
 /************************************************************************************************************************/
@@ -112,46 +112,46 @@ t_max_err cmgrainlabs_zero_set(t_cmgrainlabs *x, t_object *attr, long argc, t_at
 /************************************************************************************************************************/
 int C74_EXPORT main(void) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
-	cmgrainlabs_class = class_new("cm.grainlabs~", (method)cmgrainlabs_new, (method)cmgrainlabs_free, sizeof(t_cmgrainlabs), 0, A_GIMME, 0);
+	cmgrainbuffer_class = class_new("cm.grainbuffer~", (method)cmgrainbuffer_new, (method)cmgrainbuffer_free, sizeof(t_cmgrainbuffer), 0, A_GIMME, 0);
 	
-	class_addmethod(cmgrainlabs_class, (method)cmgrainlabs_dsp64, 		"dsp64", 	A_CANT, 0);  // Bind the 64 bit dsp method
-	class_addmethod(cmgrainlabs_class, (method)cmgrainlabs_assist, 		"assist", 	A_CANT, 0); // Bind the assist message
-	class_addmethod(cmgrainlabs_class, (method)cmgrainlabs_float, 		"float", 	A_FLOAT, 0); // Bind the float message (allowing float input)
-	class_addmethod(cmgrainlabs_class, (method)cmgrainlabs_dblclick, 	"dblclick",	A_CANT, 0); // Bind the double click message
-	class_addmethod(cmgrainlabs_class, (method)cmgrainlabs_notify, 		"notify", 	A_CANT, 0); // Bind the notify message
-	class_addmethod(cmgrainlabs_class, (method)cmgrainlabs_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmgrainlabs_class, (method)cmgrainlabs_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmgrainbuffer_class, (method)cmgrainbuffer_dsp64, 		"dsp64", 	A_CANT, 0);  // Bind the 64 bit dsp method
+	class_addmethod(cmgrainbuffer_class, (method)cmgrainbuffer_assist, 		"assist", 	A_CANT, 0); // Bind the assist message
+	class_addmethod(cmgrainbuffer_class, (method)cmgrainbuffer_float, 		"float", 	A_FLOAT, 0); // Bind the float message (allowing float input)
+	class_addmethod(cmgrainbuffer_class, (method)cmgrainbuffer_dblclick, 	"dblclick",	A_CANT, 0); // Bind the double click message
+	class_addmethod(cmgrainbuffer_class, (method)cmgrainbuffer_notify, 		"notify", 	A_CANT, 0); // Bind the notify message
+	class_addmethod(cmgrainbuffer_class, (method)cmgrainbuffer_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
+	class_addmethod(cmgrainbuffer_class, (method)cmgrainbuffer_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
 	
-	CLASS_ATTR_ATOM_LONG(cmgrainlabs_class, "stereo", 0, t_cmgrainlabs, attr_stereo);
-	CLASS_ATTR_ACCESSORS(cmgrainlabs_class, "stereo", (method)NULL, (method)cmgrainlabs_stereo_set);
-	CLASS_ATTR_BASIC(cmgrainlabs_class, "stereo", 0);
-	CLASS_ATTR_SAVE(cmgrainlabs_class, "stereo", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgrainlabs_class, "stereo", 0, "onoff", "Multichannel playback");
+	CLASS_ATTR_ATOM_LONG(cmgrainbuffer_class, "stereo", 0, t_cmgrainbuffer, attr_stereo);
+	CLASS_ATTR_ACCESSORS(cmgrainbuffer_class, "stereo", (method)NULL, (method)cmgrainbuffer_stereo_set);
+	CLASS_ATTR_BASIC(cmgrainbuffer_class, "stereo", 0);
+	CLASS_ATTR_SAVE(cmgrainbuffer_class, "stereo", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgrainbuffer_class, "stereo", 0, "onoff", "Multichannel playback");
 	
-	CLASS_ATTR_ATOM_LONG(cmgrainlabs_class, "w_interp", 0, t_cmgrainlabs, attr_winterp);
-	CLASS_ATTR_ACCESSORS(cmgrainlabs_class, "w_interp", (method)NULL, (method)cmgrainlabs_winterp_set);
-	CLASS_ATTR_BASIC(cmgrainlabs_class, "w_interp", 0);
-	CLASS_ATTR_SAVE(cmgrainlabs_class, "w_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgrainlabs_class, "w_interp", 0, "onoff", "Window interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmgrainbuffer_class, "w_interp", 0, t_cmgrainbuffer, attr_winterp);
+	CLASS_ATTR_ACCESSORS(cmgrainbuffer_class, "w_interp", (method)NULL, (method)cmgrainbuffer_winterp_set);
+	CLASS_ATTR_BASIC(cmgrainbuffer_class, "w_interp", 0);
+	CLASS_ATTR_SAVE(cmgrainbuffer_class, "w_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgrainbuffer_class, "w_interp", 0, "onoff", "Window interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmgrainlabs_class, "s_interp", 0, t_cmgrainlabs, attr_sinterp);
-	CLASS_ATTR_ACCESSORS(cmgrainlabs_class, "s_interp", (method)NULL, (method)cmgrainlabs_sinterp_set);
-	CLASS_ATTR_BASIC(cmgrainlabs_class, "s_interp", 0);
-	CLASS_ATTR_SAVE(cmgrainlabs_class, "s_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgrainlabs_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmgrainbuffer_class, "s_interp", 0, t_cmgrainbuffer, attr_sinterp);
+	CLASS_ATTR_ACCESSORS(cmgrainbuffer_class, "s_interp", (method)NULL, (method)cmgrainbuffer_sinterp_set);
+	CLASS_ATTR_BASIC(cmgrainbuffer_class, "s_interp", 0);
+	CLASS_ATTR_SAVE(cmgrainbuffer_class, "s_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgrainbuffer_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmgrainlabs_class, "zero", 0, t_cmgrainlabs, attr_zero);
-	CLASS_ATTR_ACCESSORS(cmgrainlabs_class, "zero", (method)NULL, (method)cmgrainlabs_zero_set);
-	CLASS_ATTR_BASIC(cmgrainlabs_class, "zero", 0);
-	CLASS_ATTR_SAVE(cmgrainlabs_class, "zero", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgrainlabs_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
+	CLASS_ATTR_ATOM_LONG(cmgrainbuffer_class, "zero", 0, t_cmgrainbuffer, attr_zero);
+	CLASS_ATTR_ACCESSORS(cmgrainbuffer_class, "zero", (method)NULL, (method)cmgrainbuffer_zero_set);
+	CLASS_ATTR_BASIC(cmgrainbuffer_class, "zero", 0);
+	CLASS_ATTR_SAVE(cmgrainbuffer_class, "zero", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgrainbuffer_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
-	CLASS_ATTR_ORDER(cmgrainlabs_class, "stereo", 0, "1");
-	CLASS_ATTR_ORDER(cmgrainlabs_class, "w_interp", 0, "2");
-	CLASS_ATTR_ORDER(cmgrainlabs_class, "s_interp", 0, "3");
+	CLASS_ATTR_ORDER(cmgrainbuffer_class, "stereo", 0, "1");
+	CLASS_ATTR_ORDER(cmgrainbuffer_class, "w_interp", 0, "2");
+	CLASS_ATTR_ORDER(cmgrainbuffer_class, "s_interp", 0, "3");
 	
-	class_dspinit(cmgrainlabs_class); // Add standard Max/MSP methods to your class
-	class_register(CLASS_BOX, cmgrainlabs_class); // Register the class with Max
+	class_dspinit(cmgrainbuffer_class); // Add standard Max/MSP methods to your class
+	class_register(CLASS_BOX, cmgrainbuffer_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
 	return 0;
@@ -161,8 +161,8 @@ int C74_EXPORT main(void) {
 /************************************************************************************************************************/
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
-void *cmgrainlabs_new(t_symbol *s, long argc, t_atom *argv) {
-	t_cmgrainlabs *x = (t_cmgrainlabs *)object_alloc(cmgrainlabs_class); // create the object and allocate required memory
+void *cmgrainbuffer_new(t_symbol *s, long argc, t_atom *argv) {
+	t_cmgrainbuffer *x = (t_cmgrainbuffer *)object_alloc(cmgrainbuffer_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 11); // create 11 inlets
 	
 	if (argc < ARGUMENTS) {
@@ -282,7 +282,7 @@ void *cmgrainlabs_new(t_symbol *s, long argc, t_atom *argv) {
 /************************************************************************************************************************/
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmgrainlabs_dsp64(t_cmgrainlabs *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
+void cmgrainbuffer_dsp64(t_cmgrainbuffer *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
 	x->connect_status[0] = count[1]; // 2nd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[1] = count[2]; // 3rd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[2] = count[3]; // 4th inlet: write connection flag into object structure (1 if signal connected)
@@ -299,15 +299,15 @@ void cmgrainlabs_dsp64(t_cmgrainlabs *x, t_object *dsp64, short *count, double s
 	}
 	
 	// CALL THE PERFORM ROUTINE
-	//object_method(dsp64, gensym("dsp_add64"), x, cmgrainlabs_perform64, 0, NULL);
-	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgrainlabs_perform64, 0, NULL);
+	//object_method(dsp64, gensym("dsp_add64"), x, cmgrainbuffer_perform64, 0, NULL);
+	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgrainbuffer_perform64, 0, NULL);
 }
 
 
 /************************************************************************************************************************/
 /* THE 64 BIT PERFORM ROUTINE                                                                                           */
 /************************************************************************************************************************/
-void cmgrainlabs_perform64(t_cmgrainlabs *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
+void cmgrainbuffer_perform64(t_cmgrainbuffer *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
 	long i, limit; // for loop counterS
@@ -589,7 +589,7 @@ zero:
 /************************************************************************************************************************/
 /* ASSIST METHOD FOR INLET AND OUTLET ANNOTATION                                                                        */
 /************************************************************************************************************************/
-void cmgrainlabs_assist(t_cmgrainlabs *x, void *b, long msg, long arg, char *dst) {
+void cmgrainbuffer_assist(t_cmgrainbuffer *x, void *b, long msg, long arg, char *dst) {
 	if (msg == ASSIST_INLET) {
 		switch (arg) {
 			case 0:
@@ -646,7 +646,7 @@ void cmgrainlabs_assist(t_cmgrainlabs *x, void *b, long msg, long arg, char *dst
 /************************************************************************************************************************/
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
-void cmgrainlabs_free(t_cmgrainlabs *x) {
+void cmgrainbuffer_free(t_cmgrainbuffer *x) {
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
 	object_free(x->buffer); // free the buffer reference
 	object_free(x->w_buffer); // free the window buffer reference
@@ -664,7 +664,7 @@ void cmgrainlabs_free(t_cmgrainlabs *x) {
 /************************************************************************************************************************/
 /* FLOAT METHOD FOR FLOAT INLET SUPPORT                                                                                 */
 /************************************************************************************************************************/
-void cmgrainlabs_float(t_cmgrainlabs *x, double f) {
+void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 	double dump;
 	int inlet = ((t_pxobject*)x)->z_in; // get info as to which inlet was addressed (stored in the z_in component of the object structure
 	switch (inlet) {
@@ -767,7 +767,7 @@ void cmgrainlabs_float(t_cmgrainlabs *x, double f) {
 /************************************************************************************************************************/
 /* DOUBLE CLICK METHOD FOR VIEWING BUFFER CONTENT                                                                       */
 /************************************************************************************************************************/
-void cmgrainlabs_dblclick(t_cmgrainlabs *x) {
+void cmgrainbuffer_dblclick(t_cmgrainbuffer *x) {
 	buffer_view(buffer_ref_getobject(x->buffer));
 	buffer_view(buffer_ref_getobject(x->w_buffer));
 }
@@ -776,7 +776,7 @@ void cmgrainlabs_dblclick(t_cmgrainlabs *x) {
 /************************************************************************************************************************/
 /* NOTIFY METHOD FOR THE BUFFER REFERENCES                                                                              */
 /************************************************************************************************************************/
-t_max_err cmgrainlabs_notify(t_cmgrainlabs *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
+t_max_err cmgrainbuffer_notify(t_cmgrainbuffer *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	t_symbol *buffer_name = (t_symbol *)object_method((t_object *)sender, gensym("getname"));
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = 1;
@@ -796,7 +796,7 @@ t_max_err cmgrainlabs_notify(t_cmgrainlabs *x, t_symbol *s, t_symbol *msg, void 
 /************************************************************************************************************************/
 /* THE BUFFER SET METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmgrainlabs_set(t_cmgrainlabs *x, t_symbol *s, long ac, t_atom *av) {
+void cmgrainbuffer_set(t_cmgrainbuffer *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 2) {
 		x->buffer_modified = 1;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
@@ -819,7 +819,7 @@ void cmgrainlabs_set(t_cmgrainlabs *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE GRAINS LIMIT METHOD                                                                                              */
 /************************************************************************************************************************/
-void cmgrainlabs_limit(t_cmgrainlabs *x, t_symbol *s, long ac, t_atom *av) {
+void cmgrainbuffer_limit(t_cmgrainbuffer *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
 	if (arg < 1 || arg > MAXGRAINS) {
@@ -836,7 +836,7 @@ void cmgrainlabs_limit(t_cmgrainlabs *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE STEREO ATTRIBUTE SET METHOD                                                                                      */
 /************************************************************************************************************************/
-t_max_err cmgrainlabs_stereo_set(t_cmgrainlabs *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgrainbuffer_stereo_set(t_cmgrainbuffer *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_stereo = atom_getlong(av)? 1 : 0;
 	}
@@ -847,7 +847,7 @@ t_max_err cmgrainlabs_stereo_set(t_cmgrainlabs *x, t_object *attr, long ac, t_at
 /************************************************************************************************************************/
 /* THE WINDOW INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmgrainlabs_winterp_set(t_cmgrainlabs *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgrainbuffer_winterp_set(t_cmgrainbuffer *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_winterp = atom_getlong(av)? 1 : 0;
 	}
@@ -858,7 +858,7 @@ t_max_err cmgrainlabs_winterp_set(t_cmgrainlabs *x, t_object *attr, long ac, t_a
 /************************************************************************************************************************/
 /* THE SAMPLE INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmgrainlabs_sinterp_set(t_cmgrainlabs *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgrainbuffer_sinterp_set(t_cmgrainbuffer *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_sinterp = atom_getlong(av)? 1 : 0;
 	}
@@ -869,7 +869,7 @@ t_max_err cmgrainlabs_sinterp_set(t_cmgrainlabs *x, t_object *attr, long ac, t_a
 /************************************************************************************************************************/
 /* THE ZERO CROSSING ATTRIBUTE SET METHOD                                                                               */
 /************************************************************************************************************************/
-t_max_err cmgrainlabs_zero_set(t_cmgrainlabs *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgrainbuffer_zero_set(t_cmgrainbuffer *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_zero = atom_getlong(av)? 1 : 0;
 	}
