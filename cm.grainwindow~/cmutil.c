@@ -31,8 +31,17 @@ double cm_random(double *min, double *max) {
 }
 
 
-// LINEAR INTERPOLATION FUNCTION
+// LINEAR INTERPOLATION FUNCTION FOR BUFFER (passing float pointer)
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
+	
+	long index = (long)distance; // get truncated index
+	distance -= (long)distance; // calculate fraction value for interpolation
+	
+	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+}
+
+// LINEAR INTERPOLATION FUNCTION FOR WINDOW (passing douple pointer)
+double cm_lininterpwin(double distance, double *buffer, t_atom_long b_channelcount, short channel) {
 	
 	long index = (long)distance; // get truncated index
 	distance -= (long)distance; // calculate fraction value for interpolation

@@ -48,8 +48,8 @@ typedef struct _cmgrainwindow {
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
 	
-	int window_type; // window typedef
-	int window_length; // window length
+	long window_type; // window typedef
+	long window_length; // window length
 	short w_writeflag; // checkflag to see if window array is currently re-witten
 	
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
@@ -118,7 +118,7 @@ t_max_err cmgrainwindow_winterp_set(t_cmgrainwindow *x, t_object *attr, long arg
 t_max_err cmgrainwindow_sinterp_set(t_cmgrainwindow *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgrainwindow_zero_set(t_cmgrainwindow *x, t_object *attr, long argc, t_atom *argv);
 
-void cmgrainwindow_windowwrite(t_cmgrainwindow *x, int *s, int length);
+void cmgrainwindow_windowwrite(t_cmgrainwindow *x);
 
 
 /************************************************************************************************************************/
@@ -135,8 +135,8 @@ int C74_EXPORT main(void) {
 	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
 	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_set, 		"set", 			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_limit, 		"w_type", 		A_GIMME, 0); // Bind the window type message
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_limit, 		"w_length", 	A_GIMME, 0); // Bind the window length message
+	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_w_type, 		"w_type", 		A_GIMME, 0); // Bind the window type message
+	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_w_length, 	"w_length", 	A_GIMME, 0); // Bind the window length message
 	
 	CLASS_ATTR_ATOM_LONG(cmgrainwindow_class, "stereo", 0, t_cmgrainwindow, attr_stereo);
 	CLASS_ATTR_ACCESSORS(cmgrainwindow_class, "stereo", (method)NULL, (method)cmgrainwindow_stereo_set);
@@ -311,8 +311,10 @@ void *cmgrainwindow_new(t_symbol *s, long argc, t_atom *argv) {
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
 	
+	
 	// WRITE WINDOW INTO WINDOW ARRAY
-	cmgrainwindow_windowwrite(x, x->window_type, x->window_length);
+	cmgrainwindow_windowwrite(x);
+	
 	
 	return x;
 }
@@ -372,7 +374,7 @@ void cmgrainwindow_perform64(t_cmgrainwindow *x, t_object *dsp64, double **ins, 
 	long b_framecount; // number of frames in the sample buffer
 	t_atom_long b_channelcount; // number of channels in the sample buffer
 	
-	float *w_sample = (float *)x->window;
+	//float *w_sample = (float *)x->window;
 	
 	
 	// BUFFER CHECKS
@@ -550,11 +552,11 @@ void cmgrainwindow_perform64(t_cmgrainwindow *x, t_object *dsp64, double **ins, 
 					// GET WINDOW SAMPLE FROM WINDOW BUFFER
 					if (x->attr_winterp) {
 						distance = ((double)x->grainpos[i] / (double)x->t_length[i]) * (double)x->window_length;
-						w_read = cm_lininterp(distance, w_sample, 1, 0);
+						w_read = cm_lininterpwin(distance, x->window, 1, 0);
 					}
 					else {
 						index = (long)(((double)x->grainpos[i] / (double)x->t_length[i]) * (double)x->window_length);
-						w_read = w_sample[index];
+						w_read = x->window[index];
 					}
 					// GET GRAIN SAMPLE FROM SAMPLE BUFFER
 					distance = x->start[i] + (((double)x->grainpos[i]++ / (double)x->t_length[i]) * (double)x->gr_length[i]);
@@ -844,15 +846,16 @@ void cmgrainwindow_set(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) {
 /* THE WINDOW TYPE SET METHOD                                                                                           */
 /************************************************************************************************************************/
 void cmgrainwindow_w_type(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) {
-	if (ac == 1) {
+	long arg = atom_getlong(av);
+	if (ac && av) {
 		if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
 			// CHECK IF WINDOW TYPE ARGUMENT IS VALID
-			if (atom_getlong(av) < 0 || atom_getlong(av) > 1) {
+			if (arg < 0 || arg > 1) {
 				object_error((t_object *)x, "invalid window type");
 			}
 			else {
-				x->window_type = atom_getlong(av); // write window type into object structure
-				cmgrainwindow_windowwrite(x, x->window_type, x->window_length); // write window into window array
+				x->window_type = arg; // write window type into object structure
+				cmgrainwindow_windowwrite(x); // write window into window array
 			}
 		}
 	}
@@ -867,8 +870,8 @@ void cmgrainwindow_w_type(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) 
 /* THE WINDOW LENGTH SET METHOD                                                                                         */
 /************************************************************************************************************************/
 void cmgrainwindow_w_length(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) {
-	int arg = atom_getlong(av);
-	if (ac == 1) {
+	long arg = atom_getlong(av);
+	if (ac && av) {
 		// CHECK IF WINDOW LENGTH ARGUMENT IS VALID
 		if (arg < MIN_WINDOWLENGTH) {
 			object_error((t_object *)x, "window length must be greater than %d", MIN_WINDOWLENGTH);
@@ -878,7 +881,7 @@ void cmgrainwindow_w_length(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av
 			x->w_writeflag = 1;
 			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double *)); // resize and clear window array
 			x->w_writeflag = 0;
-			cmgrainwindow_windowwrite(x, x->window_type, x->window_length); // write window into window array
+			cmgrainwindow_windowwrite(x); // write window into window array
 		}
 	}
 	else {
@@ -952,19 +955,24 @@ t_max_err cmgrainwindow_zero_set(t_cmgrainwindow *x, t_object *attr, long ac, t_
 /************************************************************************************************************************/
 /* THE WINDOW_WRITE FUNCTION                                                                                            */
 /************************************************************************************************************************/
-void cmgrainwindow_windowwrite(t_cmgrainwindow *x, int *type, int length) {
+void cmgrainwindow_windowwrite(t_cmgrainwindow *x) {
+	long length = x->window_length;
 	x->w_writeflag = 1;
-	if (*type == 0) {
-		cm_hann(x->window, length);
-	}
-	else if (*type == 1) {
-		cm_rectangular(x->window, length);
+	switch (x->window_type) {
+		case 0:
+			object_post((t_object*)x, "hann - %d", length);
+			cm_hann(x->window, &length);
+			break;
+		case 1:
+			object_post((t_object*)x, "rectangular - %d", length);
+			cm_rectangular(x->window, &length);
+			break;
+		default:
+			cm_hann(x->window, &length);
 	}
 	x->w_writeflag = 0;
 	return;
 }
-
-
 
 
 

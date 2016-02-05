@@ -27,7 +27,11 @@
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 
-// LINEAR INTERPOLATION FUNCTION
-double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
+// LINEAR INTERPOLATION FUNCTION FOR BUFFER
+double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel);
+
+
+// LINEAR INTERPOLATION FUNCTION FOR WINDOW
+double cm_lininterpwin(double distance, double *buffer, t_atom_long b_channelcount, short channel);
 
 #endif

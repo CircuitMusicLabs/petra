@@ -25,20 +25,19 @@
 #include "cmwindows.h"
 
 
-
 // HANN WINDOW
-void cm_hann(double *window, int *w_size) {
+void cm_hann(double *window, long *length) {
 	int i;
-	for (i = 0; i < *w_size; i++) {
-		window[i] = 0.5 * (1 - cos((2 * M_PI * i) / (*w_size - 1)));
+	for (i = 0; i < *length; i++) {
+		window[i] = 0.5 * (1.0 - cos((2.0 * M_PI * (double)i) / (*length - 1)));
 	}
 	return;
 }
 
 // RECTANGULAR WINDOW
-void cm_rectangular(double *window, int *w_size) {
+void cm_rectangular(double *window, long *length) {
 	int i;
-	for (i = 0; i < *w_size; i++) {
+	for (i = 0; i < *length; i++) {
 		window[i] = 1;
 	}
 	return;
