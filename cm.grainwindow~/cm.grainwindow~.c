@@ -38,7 +38,7 @@
 #define ARGUMENTS 4 // constant number of arguments required for the external
 #define MAXGRAINS 128 // maximum number of simultaneously playing grains
 #define MIN_WINDOWLENGTH 16 // min window length in samples
-
+#define MAX_WININDEX 2
 
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
@@ -192,7 +192,7 @@ void *cmgrainwindow_new(t_symbol *s, long argc, t_atom *argv) {
 	x->grains_limit = atom_getintarg(3, argc, argv); // get user supplied argument for maximum grains
 	
 	// CHECK IF WINDOW TYPE ARGUMENT IS VALID
-	if (x->window_type < 0 || x->window_type > 1) {
+	if (x->window_type < 0 || x->window_type > MAX_WININDEX) {
 		object_error((t_object *)x, "invalid window type");
 		return NULL;
 	}
@@ -850,7 +850,7 @@ void cmgrainwindow_w_type(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) 
 	if (ac && av) {
 		if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
 			// CHECK IF WINDOW TYPE ARGUMENT IS VALID
-			if (arg < 0 || arg > 1) {
+			if (arg < 0 || arg > MAX_WININDEX) {
 				object_error((t_object *)x, "invalid window type");
 			}
 			else {
@@ -956,16 +956,24 @@ t_max_err cmgrainwindow_zero_set(t_cmgrainwindow *x, t_object *attr, long ac, t_
 /* THE WINDOW_WRITE FUNCTION                                                                                            */
 /************************************************************************************************************************/
 void cmgrainwindow_windowwrite(t_cmgrainwindow *x) {
+//	int i;
 	long length = x->window_length;
 	x->w_writeflag = 1;
 	switch (x->window_type) {
 		case 0:
 			object_post((t_object*)x, "hann - %d", length);
 			cm_hann(x->window, &length);
+//			for (i = 0; i < length; i++) {
+//				object_post((t_object*)x, "%d : %f", i, x->window[i]);
+//			}
 			break;
 		case 1:
 			object_post((t_object*)x, "rectangular - %d", length);
 			cm_rectangular(x->window, &length);
+			break;
+		case 2:
+			object_post((t_object*)x, "bartlett - %d", length);
+			cm_bartlett(x->window, &length);
 			break;
 		default:
 			cm_hann(x->window, &length);

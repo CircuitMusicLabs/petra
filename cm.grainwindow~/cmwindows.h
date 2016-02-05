@@ -3,5 +3,6 @@
 
 void cm_hann(double *window, long *length);
 void cm_rectangular(double *window, long *length);
+void cm_bartlett(double *window, long *length);
 
 #endif

@@ -42,3 +42,16 @@ void cm_rectangular(double *window, long *length) {
 	}
 	return;
 }
+
+void cm_bartlett(double *window, long *length) {
+	int i;
+	for (i = 0; i < *length; i++) {
+		if (i < (*length - 1) / 2) {
+			window[i] = (2 * (double)i) / (double)(*length - 1);
+		}
+		else {
+			window[i] = 2 - ((2 * (double)i) / (double)(*length - 1));
+		}
+	}
+	return;
+}
