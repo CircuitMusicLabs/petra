@@ -518,7 +518,7 @@ void cmgrainwindow_perform64(t_cmgrainwindow *x, t_object *dsp64, double **ins, 
 				x->gr_length[slot] = b_framecount;
 			}
 			/************************************************************************************************************************/
-			// CHECK IF START POSITION IS LEGAL ACCORDING TO GRAINzLENGTH (SAMPLES) AND BUFFER SIZE
+			// CHECK IF START POSITION IS LEGAL ACCORDING TO GRAINLENGTH (SAMPLES) AND BUFFER SIZE
 			if (x->start[slot] > b_framecount - x->gr_length[slot]) {
 				x->start[slot] = b_framecount - x->gr_length[slot];
 			}
