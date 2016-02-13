@@ -355,18 +355,18 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 	
 	// GET INLET VALUES
 	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
-	t_double startmin 	= x->connect_status[0]? *ins[1] * x->m_sr : x->startmin_float * x->m_sr; // get start min input signal from 2nd inlet
-	t_double startmax 	= x->connect_status[1]? *ins[2] * x->m_sr : x->startmax_float * x->m_sr; // get start max input signal from 3rd inlet
-	t_double lengthmin 	= x->connect_status[2]? *ins[3] * x->m_sr : x->lengthmin_float * x->m_sr; // get grain min length input signal from 4th inlet
-	t_double lengthmax 	= x->connect_status[3]? *ins[4] * x->m_sr : x->lengthmax_float * x->m_sr; // get grain max length input signal from 5th inlet
-	t_double pitchmin 	= x->connect_status[4]? *ins[5] : x->pitchmin_float; // get pitch min input signal from 6th inlet
-	t_double pitchmax 	= x->connect_status[5]? *ins[6] : x->pitchmax_float; // get pitch max input signal from 7th inlet
-	t_double panmin 	= x->connect_status[6]? *ins[7] : x->panmin_float; // get min pan input signal from 8th inlet
-	t_double panmax 	= x->connect_status[7]? *ins[8] : x->panmax_float; // get max pan input signal from 9th inlet
-	t_double gainmin 	= x->connect_status[8]? *ins[9] : x->gainmin_float; // get min gain input signal from 10th inlet
-	t_double gainmax 	= x->connect_status[9]? *ins[10] : x->gainmax_float; // get max gain input signal from 10th inlet
-	t_double alphamin 	= x->connect_status[10]? *ins[11] : x->alphamin_float; // get min gain input signal from 11th inlet
-	t_double alphamax 	= x->connect_status[11]? *ins[12] : x->alphamax_float; // get max gain input signal from 12th inlet
+	t_double startmin 	= x->connect_status[0]? *ins[1]	* x->m_sr	: x->startmin_float * x->m_sr; // get start min input signal from 2nd inlet
+	t_double startmax 	= x->connect_status[1]? *ins[2]	* x->m_sr	: x->startmax_float * x->m_sr; // get start max input signal from 3rd inlet
+	t_double lengthmin 	= x->connect_status[2]? *ins[3]	* x->m_sr	: x->lengthmin_float * x->m_sr; // get grain min length input signal from 4th inlet
+	t_double lengthmax 	= x->connect_status[3]? *ins[4]	* x->m_sr	: x->lengthmax_float * x->m_sr; // get grain max length input signal from 5th inlet
+	t_double pitchmin 	= x->connect_status[4]? *ins[5]				: x->pitchmin_float; // get pitch min input signal from 6th inlet
+	t_double pitchmax 	= x->connect_status[5]? *ins[6]				: x->pitchmax_float; // get pitch max input signal from 7th inlet
+	t_double panmin 	= x->connect_status[6]? *ins[7]				: x->panmin_float; // get min pan input signal from 8th inlet
+	t_double panmax 	= x->connect_status[7]? *ins[8]				: x->panmax_float; // get max pan input signal from 9th inlet
+	t_double gainmin 	= x->connect_status[8]? *ins[9]				: x->gainmin_float; // get min gain input signal from 10th inlet
+	t_double gainmax 	= x->connect_status[9]? *ins[10]			: x->gainmax_float; // get max gain input signal from 10th inlet
+	t_double alphamin 	= x->connect_status[10]? *ins[11]			: x->alphamin_float; // get min gain input signal from 11th inlet
+	t_double alphamax 	= x->connect_status[11]? *ins[12]			: x->alphamax_float; // get max gain input signal from 12th inlet
 	
 	// DSP LOOP
 	while (n--) {
