@@ -39,6 +39,7 @@
 #define MAX_ALPHA 10.0 // max alpha value
 #define ARGUMENTS 2 // constant number of arguments required for the external
 #define MAXGRAINS 128 // maximum number of simultaneously playing grains
+#define INLETS 12 // number of object float inlets
 
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
@@ -48,19 +49,12 @@ typedef struct _cmgaussgrains {
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
-	double startmin_float; // grain start min value received from float inlet
-	double startmax_float; // grain start max value received from float inlet
-	double lengthmin_float; // used to store the min length value received from float inlet
-	double lengthmax_float; // used to store the max length value received from float inlet
-	double pitchmin_float; // used to store the min pitch value received from float inlet
-	double pitchmax_float; // used to store the max pitch value received from float inlet
-	double panmin_float; // used to store the min pan value received from the float inlet
-	double panmax_float; // used to store the max pan value received from the float inlet
-	double gainmin_float; // used to store the min gain value received from the float inlet
-	double gainmax_float; // used to store the max gain value received from the float inlet
-	double alphamin_float; // used to store the min alpha value received from the float inlet
-	double alphamax_float; // used to store the max alpha value received from the float inlet
 	short connect_status[12]; // array for signal inlet connection statuses
+	
+	double *object_inlets; // array to store the incoming values coming from the object inlets
+	double *grain_params; // array to store the processed values coming from the object inlets
+	double *randomized; // array to store the randomized grain values
+	
 	short *busy; // array used to store the flag if a grain is currently playing or not
 	long *grainpos; // used to store the current playback position per grain
 	long *start; // used to store the start position in the buffer for each grain
@@ -256,21 +250,42 @@ void *cmgaussgrains_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
+	// ALLOCATE MEMORY FOR THE OBJET INLETS ARRAY
+	x->object_inlets = (double *)sysmem_newptrclear((INLETS) * sizeof(double *));
+	if (x->object_inlets == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	
+	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
+	x->grain_params = (double *)sysmem_newptrclear((INLETS) * sizeof(double *));
+	if (x->grain_params == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	
+	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
+	x->randomized = (double *)sysmem_newptrclear((INLETS / 2) * sizeof(double *));
+	if (x->randomized == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	
 	
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
-	x->startmin_float = 0.0; // initialize float inlet value for current start min value
-	x->startmax_float = 0.0; // initialize float inlet value for current start max value
-	x->lengthmin_float = 150; // initialize float inlet value for min grain length
-	x->lengthmax_float = 150; // initialize float inlet value for max grain length
-	x->pitchmin_float = 1.0; // initialize inlet value for min pitch
-	x->pitchmax_float = 1.0; // initialize inlet value for min pitch
-	x->panmin_float = 0.0; // initialize value for min pan
-	x->panmax_float = 0.0; // initialize value for max pan
-	x->gainmin_float = 1.0; // initialize value for min gain
-	x->gainmax_float = 1.0; // initialize value for max gain
-	x->alphamin_float = 4.0; // initialize value for min alpha
-	x->alphamax_float = 4.0; // initialize value for max alpha
+	x->object_inlets[0] = 0.0; // initialize float inlet value for current start min value
+	x->object_inlets[1] = 0.0; // initialize float inlet value for current start max value
+	x->object_inlets[2] = 150; // initialize float inlet value for min grain length
+	x->object_inlets[3] = 150; // initialize float inlet value for max grain length
+	x->object_inlets[4] = 1.0; // initialize inlet value for min pitch
+	x->object_inlets[5] = 1.0; // initialize inlet value for min pitch
+	x->object_inlets[6] = 0.0; // initialize value for min pan
+	x->object_inlets[7] = 0.0; // initialize value for max pan
+	x->object_inlets[8] = 1.0; // initialize value for min gain
+	x->object_inlets[9] = 1.0; // initialize value for max gain
+	x->object_inlets[10] = 4.0; // initialize value for min alpha
+	x->object_inlets[11] = 4.0; // initialize value for max alpha
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
 	x->grains_limit_old = 0; // initialize value for the routine when grains limit was modified
@@ -355,18 +370,15 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 	
 	// GET INLET VALUES
 	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
-	t_double startmin 	= x->connect_status[0]? *ins[1]	* x->m_sr	: x->startmin_float * x->m_sr; // get start min input signal from 2nd inlet
-	t_double startmax 	= x->connect_status[1]? *ins[2]	* x->m_sr	: x->startmax_float * x->m_sr; // get start max input signal from 3rd inlet
-	t_double lengthmin 	= x->connect_status[2]? *ins[3]	* x->m_sr	: x->lengthmin_float * x->m_sr; // get grain min length input signal from 4th inlet
-	t_double lengthmax 	= x->connect_status[3]? *ins[4]	* x->m_sr	: x->lengthmax_float * x->m_sr; // get grain max length input signal from 5th inlet
-	t_double pitchmin 	= x->connect_status[4]? *ins[5]				: x->pitchmin_float; // get pitch min input signal from 6th inlet
-	t_double pitchmax 	= x->connect_status[5]? *ins[6]				: x->pitchmax_float; // get pitch max input signal from 7th inlet
-	t_double panmin 	= x->connect_status[6]? *ins[7]				: x->panmin_float; // get min pan input signal from 8th inlet
-	t_double panmax 	= x->connect_status[7]? *ins[8]				: x->panmax_float; // get max pan input signal from 9th inlet
-	t_double gainmin 	= x->connect_status[8]? *ins[9]				: x->gainmin_float; // get min gain input signal from 10th inlet
-	t_double gainmax 	= x->connect_status[9]? *ins[10]			: x->gainmax_float; // get max gain input signal from 10th inlet
-	t_double alphamin 	= x->connect_status[10]? *ins[11]			: x->alphamin_float; // get min gain input signal from 11th inlet
-	t_double alphamax 	= x->connect_status[11]? *ins[12]			: x->alphamax_float; // get max gain input signal from 12th inlet
+	
+	for (i = 0; i < INLETS; i++) {
+		if (i < 4) { // start and length values to be multiplied by the sampling rate
+			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] * x->m_sr : x->object_inlets[i] * x->m_sr;
+		}
+		else {
+			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] : x->object_inlets[i];
+		}
+	}
 	
 	// DSP LOOP
 	while (n--) {
@@ -405,22 +417,22 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 				}
 				i++;
 			}
-			/************************************************************************************************************************/
-			// GET RANDOM START POSITION
-			if (startmin != startmax) { // only call random function when min and max values are not the same!
-				x->start[slot] = (long)cm_random(&startmin, &startmax);
+			// RANDOMIZE THE GRAIN PARAMETERS AND WRITE THEM INTO THE RANDOMIZED ARRAY
+			for (i = 0; i < INLETS; i += 2) {
+				if (x->grain_params[i] != x->grain_params[i+1]) {
+					x->randomized[i] = cm_random(&x->grain_params[i], &x->grain_params[i+1]);
+				}
+				else {
+					x->randomized[i] = x->grain_params[i];
+				}
+				
 			}
-			else {
-				x->start[slot] = startmin;
-			}
-			/************************************************************************************************************************/
-			// GET RANDOM LENGTH
-			if (lengthmin != lengthmax) { // only call random function when min and max values are not the same!
-				x->t_length[slot] = (long)cm_random(&lengthmin, &lengthmax);
-			}
-			else {
-				x->t_length[slot] = lengthmin;
-			}
+
+			
+			
+			
+//--------------------------------------------------------
+			
 			// CHECK IF THE VALUE FOR PERCEPTIBLE GRAIN LENGTH IS LEGAL
 			if (x->t_length[slot] > MAX_GRAINLENGTH * x->m_sr) { // if grain length is larger than the max grain length
 				x->t_length[slot] = MAX_GRAINLENGTH * x->m_sr; // set grain length to max grain length
@@ -428,14 +440,7 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 			else if (x->t_length[slot] < MIN_GRAINLENGTH * x->m_sr) { // if grain length is samller than the min grain length
 				x->t_length[slot] = MIN_GRAINLENGTH * x->m_sr; // set grain length to min grain length
 			}
-			/************************************************************************************************************************/
-			// GET RANDOM PAN
-			if (panmin != panmax) { // only call random function when min and max values are not the same!
-				pan = cm_random(&panmin, &panmax);
-			}
-			else {
-				pan = panmin;
-			}
+
 			// SOME SANITY TESTING
 			if (pan < -1.0) {
 				pan = -1.0;
@@ -446,14 +451,7 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 			cm_panning(&panstruct, &pan); // calculate pan values in panstruct
 			x->pan_left[slot] = panstruct.left;
 			x->pan_right[slot] = panstruct.right;
-			/************************************************************************************************************************/
-			// GET RANDOM PITCH
-			if (pitchmin != pitchmax) { // only call random function when min and max values are not the same!
-				pitch = cm_random(&pitchmin, &pitchmax);
-			}
-			else {
-				pitch = pitchmin;
-			}
+
 			// CHECK IF THE PITCH VALUE IS LEGAL
 			if (pitch < 0.001) {
 				pitch = 0.001;
@@ -461,14 +459,7 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 			if (pitch > MAX_PITCH) {
 				pitch = MAX_PITCH;
 			}
-			/************************************************************************************************************************/
-			// GET RANDOM GAIN
-			if (gainmin != gainmax) {
-				x->gain[slot] = cm_random(&gainmin, &gainmax);
-			}
-			else {
-				x->gain[slot] = gainmin;
-			}
+
 			// CHECK IF THE GAIN VALUE IS LEGAL
 			if (x->gain[slot] < 0.0) {
 				x->gain[slot] = 0.0;
@@ -476,15 +467,8 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 			if (x->gain[slot] > MAX_GAIN) {
 				x->gain[slot] = MAX_GAIN;
 			}
-			/************************************************************************************************************************/
-			// GET RANDOM ALPHA
-			if (alphamin != alphamax) {
-				x->alpha[slot] = cm_random(&alphamin, &alphamax);
-			}
-			else {
-				x->alpha[slot] = alphamin;
-			}
-			// CHECK IF THE GAIN VALUE IS LEGAL
+
+			// CHECK IF THE ALPHA VALUE IS LEGAL
 			if (x->alpha[slot] < MIN_ALPHA) {
 				x->alpha[slot] = MIN_ALPHA;
 			}
@@ -507,6 +491,11 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 				x->start[slot] = 0;
 			}
 		}
+//--------------------------------------------------------
+		
+		
+		
+		
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
 		if (x->grains_count == 0) { // if grains count is zero, there is no playback to be calculated
@@ -672,6 +661,9 @@ void cmgaussgrains_free(t_cmgaussgrains *x) {
 	sysmem_freeptr(x->pan_right); // free memory allocated to the pan_right array
 	sysmem_freeptr(x->gain); // free memory allocated to the gain array
 	sysmem_freeptr(x->alpha); // free memory allocated to the alpha array
+	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
+	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
+	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
 }
 
 /************************************************************************************************************************/
@@ -686,7 +678,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->startmin_float = f;
+				x->object_inlets[0] = f;
 			}
 			break;
 		case 2: // second inlet
@@ -694,7 +686,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->startmax_float = f;
+				x->object_inlets[1] = f;
 			}
 			break;
 		case 3: // 4th inlet
@@ -705,7 +697,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->lengthmin_float = f;
+				x->object_inlets[2] = f;
 			}
 			break;
 		case 4: // 5th inlet
@@ -716,7 +708,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->lengthmax_float = f;
+				x->object_inlets[3] = f;
 			}
 			break;
 		case 5: // 6th inlet
@@ -727,7 +719,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->pitchmin_float = f;
+				x->object_inlets[4] = f;
 			}
 			break;
 		case 6: // 7th inlet
@@ -738,7 +730,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->pitchmax_float = f;
+				x->object_inlets[5] = f;
 			}
 			break;
 		case 7:
@@ -746,7 +738,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->panmin_float = f;
+				x->object_inlets[6] = f;
 			}
 			break;
 		case 8:
@@ -754,7 +746,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->panmax_float = f;
+				x->object_inlets[7] = f;
 			}
 			break;
 		case 9:
@@ -762,7 +754,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->gainmin_float = f;
+				x->object_inlets[8] = f;
 			}
 			break;
 		case 10:
@@ -770,7 +762,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->gainmax_float = f;
+				x->object_inlets[9] = f;
 			}
 			break;
 		case 11:
@@ -778,7 +770,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->alphamin_float = f;
+				x->object_inlets[10] = f;
 			}
 			break;
 		case 12:
@@ -786,7 +778,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 				dump = f;
 			}
 			else {
-				x->alphamax_float = f;
+				x->object_inlets[11] = f;
 			}
 			break;
 	}
