@@ -34,6 +34,7 @@
 #define MAX_GRAINLENGTH 500 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MAX_PITCH 10 // min pitch
+#define MIN_GAIN 0.0 // min gain
 #define MAX_GAIN 2.0  // max gain
 #define MIN_ALPHA 0.1 // min alpha value
 #define MAX_ALPHA 10.0 // max alpha value
@@ -54,6 +55,7 @@ typedef struct _cmgaussgrains {
 	double *object_inlets; // array to store the incoming values coming from the object inlets
 	double *grain_params; // array to store the processed values coming from the object inlets
 	double *randomized; // array to store the randomized grain values
+	double *testvalues; // array for storing the grain parameter test values (sanity testing)
 	
 	short *busy; // array used to store the flag if a grain is currently playing or not
 	long *grainpos; // used to store the current playback position per grain
@@ -271,6 +273,13 @@ void *cmgaussgrains_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
+	// ALLOCATE MEMORY FOR THE TEST VALUES ARRAY
+	x->testvalues = (double *)sysmem_newptrclear((INLETS) * sizeof(double *));
+	if (x->testvalues == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	
 	
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
@@ -292,6 +301,17 @@ void *cmgaussgrains_new(t_symbol *s, long argc, t_atom *argv) {
 	x->limit_modified = 0; // initialize channel change flag
 	x->buffer_modified = 0; // initialize buffer modified flag
 	
+	// initialize the testvalues which are not dependent on sampleRate
+	x->testvalues[0] = MIN_GRAINLENGTH;
+	x->testvalues[1] = MAX_GRAINLENGTH;
+	x->testvalues[2] = 0.001;
+	x->testvalues[3] = MAX_PITCH;
+	x->testvalues[4] = -1.0;
+	x->testvalues[5] = 1.0;
+	x->testvalues[6] = MIN_GAIN;
+	x->testvalues[7] = MAX_GAIN;
+	x->testvalues[8] = MIN_ALPHA;
+	x->testvalues[9] = MAX_ALPHA;
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -320,6 +340,9 @@ void cmgaussgrains_dsp64(t_cmgaussgrains *x, t_object *dsp64, short *count, doub
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
 	}
+	// calcuate the sampleRate-dependant test values
+	x->testvalues[10] = MIN_GRAINLENGTH * x->m_sr;
+	x->testvalues[11] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
 	//object_method(dsp64, gensym("dsp_add64"), x, cmgaussgrains_perform64, 0, NULL);
@@ -336,8 +359,6 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 	long i, limit; // for loop counterS
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr; // current trigger value
-	double pan; // temporary random pan information
-	double pitch; // temporary pitch for new grains
 	double distance; // floating point index for reading from buffers
 	double b_read, w_read; // current sample read from the sample buffer and window array
 	double outsample_left = 0.0; // temporary left output sample used for adding up all grain samples
@@ -355,14 +376,11 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 	long b_framecount; // number of frames in the sample buffer
 	t_atom_long b_channelcount; // number of channels in the sample buffer
 	
-	//float *w_sample = (float *)x->window;
-	
 	
 	// BUFFER CHECKS
 	if (!b_sample) { // if the sample buffer does not exist
 		goto zero;
 	}
-
 	
 	// GET BUFFER INFORMATION
 	b_framecount = buffer_getframecount(buffer); // get number of frames in the sample buffer
@@ -379,6 +397,8 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] : x->object_inlets[i];
 		}
 	}
+	
+	
 	
 	// DSP LOOP
 	while (n--) {
@@ -417,84 +437,71 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 				}
 				i++;
 			}
-			// RANDOMIZE THE GRAIN PARAMETERS AND WRITE THEM INTO THE RANDOMIZED ARRAY
+			// randomize the grain parameters and write them into the randomized array
 			for (i = 0; i < INLETS; i += 2) {
 				if (x->grain_params[i] != x->grain_params[i+1]) {
-					x->randomized[i] = cm_random(&x->grain_params[i], &x->grain_params[i+1]);
+					x->randomized[i/2] = cm_random(&x->grain_params[i], &x->grain_params[i+1]);
 				}
 				else {
-					x->randomized[i] = x->grain_params[i];
+					x->randomized[i/2] = x->grain_params[i];
 				}
 				
 			}
-
 			
 			
 			
-//--------------------------------------------------------
 			
-			// CHECK IF THE VALUE FOR PERCEPTIBLE GRAIN LENGTH IS LEGAL
-			if (x->t_length[slot] > MAX_GRAINLENGTH * x->m_sr) { // if grain length is larger than the max grain length
-				x->t_length[slot] = MAX_GRAINLENGTH * x->m_sr; // set grain length to max grain length
+			
+			
+			
+			
+			// THIS IS WRONG, MUST BE REVISED!!!! ARRAY INDEXING DOES NOT ADD UP!
+			
+			// check for parameter sanity with testvalues array
+			for (i = 0; i < INLETS-2; i += 2) {
+				if (x->randomized[(i/2)+1] < x->testvalues[i]) {
+					x->randomized[(i/2)+1] = x->testvalues[i];
+				}
+				else if (x->randomized[(i/2)+1] > x->testvalues[i+1]) {
+					x->randomized[(i/2)+1] = x->testvalues[i+1];
+				}
 			}
-			else if (x->t_length[slot] < MIN_GRAINLENGTH * x->m_sr) { // if grain length is samller than the min grain length
-				x->t_length[slot] = MIN_GRAINLENGTH * x->m_sr; // set grain length to min grain length
-			}
-
-			// SOME SANITY TESTING
-			if (pan < -1.0) {
-				pan = -1.0;
-			}
-			if (pan > 1.0) {
-				pan = 1.0;
-			}
-			cm_panning(&panstruct, &pan); // calculate pan values in panstruct
-			x->pan_left[slot] = panstruct.left;
-			x->pan_right[slot] = panstruct.right;
-
-			// CHECK IF THE PITCH VALUE IS LEGAL
-			if (pitch < 0.001) {
-				pitch = 0.001;
-			}
-			if (pitch > MAX_PITCH) {
-				pitch = MAX_PITCH;
-			}
-
-			// CHECK IF THE GAIN VALUE IS LEGAL
-			if (x->gain[slot] < 0.0) {
-				x->gain[slot] = 0.0;
-			}
-			if (x->gain[slot] > MAX_GAIN) {
-				x->gain[slot] = MAX_GAIN;
-			}
-
-			// CHECK IF THE ALPHA VALUE IS LEGAL
-			if (x->alpha[slot] < MIN_ALPHA) {
-				x->alpha[slot] = MIN_ALPHA;
-			}
-			if (x->alpha[slot] > MAX_ALPHA) {
-				x->alpha[slot] = MAX_ALPHA;
-			}
-			/************************************************************************************************************************/
-			// CALCULATE THE ACTUAL GRAIN LENGTH (SAMPLES) ACCORDING TO PITCH
-			x->gr_length[slot] = x->t_length[slot] * pitch;
-			// CHECK THAT GRAIN LENGTH IS NOT LARGER THAN SIZE OF BUFFER
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			// write grain lenght slot (non-pitch)
+			x->t_length[slot] = x->randomized[1];
+			x->gr_length[slot] = x->t_length[slot] * x->randomized[2];
+			// check that grain length is not larger than size of buffer
 			if (x->gr_length[slot] > b_framecount) {
 				x->gr_length[slot] = b_framecount;
 			}
-			/************************************************************************************************************************/
-			// CHECK IF START POSITION IS LEGAL ACCORDING TO GRAINLENGTH (SAMPLES) AND BUFFER SIZE
+			// write start position
+			x->start[slot] = x->randomized[0];
+			// start position sanity testing
 			if (x->start[slot] > b_framecount - x->gr_length[slot]) {
 				x->start[slot] = b_framecount - x->gr_length[slot];
 			}
 			if (x->start[slot] < 0) {
 				x->start[slot] = 0;
 			}
+			// compute pan values
+			cm_panning(&panstruct, &x->randomized[3]); // calculate pan values in panstruct
+			x->pan_left[slot] = panstruct.left;
+			x->pan_right[slot] = panstruct.right;
+			// write gain value
+			x->gain[slot] = x->randomized[4];
+			// write alpha value
+			x->alpha[slot] = x->randomized[5];
+			
 		}
-//--------------------------------------------------------
-		
-		
-		
 		
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
@@ -516,7 +523,7 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 			for (i = 0; i < limit; i++) {
 				if (x->busy[i]) { // if the current slot contains grain playback information
 					// GET WINDOW SAMPLE FROM WINDOW BUFFER
-					w_read = cm_gauss(x->grainpos[i], x->t_length[i], x->alpha[i]);
+					w_read = cm_gauss(&x->grainpos[i], &x->t_length[i], &x->alpha[i]);
 					
 					// GET GRAIN SAMPLE FROM SAMPLE BUFFER
 					distance = x->start[i] + (((double)x->grainpos[i]++ / (double)x->t_length[i]) * (double)x->gr_length[i]);
@@ -664,6 +671,7 @@ void cmgaussgrains_free(t_cmgaussgrains *x) {
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
 	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
 	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
+	sysmem_freeptr(x->testvalues); // free memory allocated to the test values array
 }
 
 /************************************************************************************************************************/

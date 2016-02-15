@@ -25,10 +25,10 @@
 #include "cmwindows.h"
 
 
-double cm_gauss(long pos, long length, double alpha) {
+double cm_gauss(long *pos, long *length, double *alpha) {
 	double n;
-	double N = length - 1;
-	double stdev = N / (2 * (alpha));
-	n = pos - N / 2;
+	double N = *length - 1;
+	double stdev = N / (2 * (*alpha));
+	n = *pos - N / 2;
 	return exp(-0.5 * pow((n / stdev), 2));
 }
