@@ -33,7 +33,10 @@
 #include <stdlib.h> // for arc4random_uniform
 #define MAX_GRAINLENGTH 500 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
-#define MAX_PITCH 10 // min pitch
+#define MIN_PITCH 0.001 // min pitch
+#define MAX_PITCH 10 // max pitch
+#define MIN_PAN -1.0 // min pan
+#define MAX_PAN 1.0 // max pan
 #define MIN_GAIN 0.0 // min gain
 #define MAX_GAIN 2.0  // max gain
 #define MIN_ALPHA 0.1 // min alpha value
@@ -302,16 +305,16 @@ void *cmgaussgrains_new(t_symbol *s, long argc, t_atom *argv) {
 	x->buffer_modified = 0; // initialize buffer modified flag
 	
 	// initialize the testvalues which are not dependent on sampleRate
-	x->testvalues[0] = MIN_GRAINLENGTH;
-	x->testvalues[1] = MAX_GRAINLENGTH;
-	x->testvalues[2] = 0.001;
-	x->testvalues[3] = MAX_PITCH;
-	x->testvalues[4] = -1.0;
-	x->testvalues[5] = 1.0;
-	x->testvalues[6] = MIN_GAIN;
-	x->testvalues[7] = MAX_GAIN;
-	x->testvalues[8] = MIN_ALPHA;
-	x->testvalues[9] = MAX_ALPHA;
+	x->testvalues[0] = 0.0; // dummy MIN_START
+	x->testvalues[1] = 0.0; // dummy MAX_START
+	x->testvalues[4] = MIN_PITCH;
+	x->testvalues[5] = MAX_PITCH;
+	x->testvalues[6] = MIN_PAN;
+	x->testvalues[7] = MAX_PAN;
+	x->testvalues[8] = MIN_GAIN;
+	x->testvalues[9] = MAX_GAIN;
+	x->testvalues[10] = MIN_ALPHA;
+	x->testvalues[11] = MAX_ALPHA;
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -341,8 +344,8 @@ void cmgaussgrains_dsp64(t_cmgaussgrains *x, t_object *dsp64, short *count, doub
 		x->m_sr = samplerate * 0.001;
 	}
 	// calcuate the sampleRate-dependant test values
-	x->testvalues[10] = MIN_GRAINLENGTH * x->m_sr;
-	x->testvalues[11] = MAX_GRAINLENGTH * x->m_sr;
+	x->testvalues[2] = MIN_GRAINLENGTH * x->m_sr;
+	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
 	//object_method(dsp64, gensym("dsp_add64"), x, cmgaussgrains_perform64, 0, NULL);
@@ -356,7 +359,7 @@ void cmgaussgrains_dsp64(t_cmgaussgrains *x, t_object *dsp64, short *count, doub
 void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
-	long i, limit; // for loop counterS
+	long i, limit; // for loop counters
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr; // current trigger value
 	double distance; // floating point index for reading from buffers
@@ -393,7 +396,7 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 		if (i < 4) { // start and length values to be multiplied by the sampling rate
 			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] * x->m_sr : x->object_inlets[i] * x->m_sr;
 		}
-		else {
+		else { // the rest is sampleRate independent
 			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] : x->object_inlets[i];
 		}
 	}
@@ -447,38 +450,18 @@ void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, 
 				}
 				
 			}
-			
-			
-			
-			
-			
-			
-			
-			
-			// THIS IS WRONG, MUST BE REVISED!!!! ARRAY INDEXING DOES NOT ADD UP!
-			
-			// check for parameter sanity with testvalues array
-			for (i = 0; i < INLETS-2; i += 2) {
-				if (x->randomized[(i/2)+1] < x->testvalues[i]) {
-					x->randomized[(i/2)+1] = x->testvalues[i];
+			// check for parameter sanity with testvalues array (skip start value, hence i = 1)
+			for (i = 1; i < INLETS / 2; i++) {
+				if (x->randomized[i] < x->testvalues[i*2]) {
+					x->randomized[i] = x->testvalues[i*2];
 				}
-				else if (x->randomized[(i/2)+1] > x->testvalues[i+1]) {
-					x->randomized[(i/2)+1] = x->testvalues[i+1];
+				else if (x->randomized[i] > x->testvalues[(i*2)+1]) {
+					x->randomized[i] = x->testvalues[(i*2)+1];
 				}
 			}
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
 			// write grain lenght slot (non-pitch)
 			x->t_length[slot] = x->randomized[1];
-			x->gr_length[slot] = x->t_length[slot] * x->randomized[2];
+			x->gr_length[slot] = x->t_length[slot] * x->randomized[2]; // length * pitch
 			// check that grain length is not larger than size of buffer
 			if (x->gr_length[slot] > b_framecount) {
 				x->gr_length[slot] = b_framecount;
