@@ -55,17 +55,13 @@ typedef struct _cmgrainbuffer {
 	t_symbol *window_name; // window buffer name
 	t_buffer_ref *w_buffer; // window buffer reference
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
-	double startmin_float; // grain start min value received from float inlet
-	double startmax_float; // grain start max value received from float inlet
-	double lengthmin_float; // used to store the min length value received from float inlet
-	double lengthmax_float; // used to store the max length value received from float inlet
-	double pitchmin_float; // used to store the min pitch value received from float inlet
-	double pitchmax_float; // used to store the max pitch value received from float inlet
-	double panmin_float; // used to store the min pan value received from the float inlet
-	double panmax_float; // used to store the max pan value received from the float inlet
-	double gainmin_float; // used to store the min gain value received from the float inlet
-	double gainmax_float; // used to store the max gain value received from the float inlet
 	short connect_status[INLETS]; // array for signal inlet connection statuses
+	
+	double *object_inlets; // array to store the incoming values coming from the object inlets
+	double *grain_params; // array to store the processed values coming from the object inlets
+	double *randomized; // array to store the randomized grain values
+	double *testvalues; // array for storing the grain parameter test values (sanity testing)
+	
 	short *busy; // array used to store the flag if a grain is currently playing or not
 	long *grainpos; // used to store the current playback position per grain
 	long *start; // used to store the start position in the buffer for each grain
@@ -259,23 +255,62 @@ void *cmgrainbuffer_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
+	// ALLOCATE MEMORY FOR THE OBJET INLETS ARRAY
+	x->object_inlets = (double *)sysmem_newptrclear((INLETS) * sizeof(double *));
+	if (x->object_inlets == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	
+	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
+	x->grain_params = (double *)sysmem_newptrclear((INLETS) * sizeof(double *));
+	if (x->grain_params == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	
+	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
+	x->randomized = (double *)sysmem_newptrclear((INLETS / 2) * sizeof(double *));
+	if (x->randomized == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	
+	// ALLOCATE MEMORY FOR THE TEST VALUES ARRAY
+	x->testvalues = (double *)sysmem_newptrclear((INLETS) * sizeof(double *));
+	if (x->testvalues == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
-	x->startmin_float = 0.0; // initialize float inlet value for current start min value
-	x->startmax_float = 0.0; // initialize float inlet value for current start max value
-	x->lengthmin_float = 150; // initialize float inlet value for min grain length
-	x->lengthmax_float = 150; // initialize float inlet value for max grain length
-	x->pitchmin_float = 1.0; // initialize inlet value for min pitch
-	x->pitchmax_float = 1.0; // initialize inlet value for min pitch
-	x->panmin_float = 0.0; // initialize value for min pan
-	x->panmax_float = 0.0; // initialize value for max pan
-	x->gainmin_float = 1.0; // initialize value for min gain
-	x->gainmax_float = 1.0; // initialize value for max gain
+	x->object_inlets[0] = 0.0; // initialize float inlet value for current start min value
+	x->object_inlets[1] = 0.0; // initialize float inlet value for current start max value
+	x->object_inlets[2] = 150; // initialize float inlet value for min grain length
+	x->object_inlets[3] = 150; // initialize float inlet value for max grain length
+	x->object_inlets[4] = 1.0; // initialize inlet value for min pitch
+	x->object_inlets[5] = 1.0; // initialize inlet value for min pitch
+	x->object_inlets[6] = 0.0; // initialize value for min pan
+	x->object_inlets[7] = 0.0; // initialize value for max pan
+	x->object_inlets[8] = 1.0; // initialize value for min gain
+	x->object_inlets[9] = 1.0; // initialize value for max gain
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
 	x->grains_limit_old = 0; // initialize value for the routine when grains limit was modified
 	x->limit_modified = 0; // initialize channel change flag
 	x->buffer_modified = 0; // initialized buffer modified flag
+	
+	// initialize the testvalues which are not dependent on sampleRate
+	x->testvalues[0] = 0.0; // dummy MIN_START
+	x->testvalues[1] = 0.0; // dummy MAX_START
+	x->testvalues[4] = MIN_PITCH;
+	x->testvalues[5] = MAX_PITCH;
+	x->testvalues[6] = MIN_PAN;
+	x->testvalues[7] = MAX_PAN;
+	x->testvalues[8] = MIN_GAIN;
+	x->testvalues[9] = MAX_GAIN;
+
 	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -304,6 +339,9 @@ void cmgrainbuffer_dsp64(t_cmgrainbuffer *x, t_object *dsp64, short *count, doub
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
 	}
+	// calcuate the sampleRate-dependant test values
+	x->testvalues[2] = MIN_GRAINLENGTH * x->m_sr;
+	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
 	//object_method(dsp64, gensym("dsp_add64"), x, cmgrainbuffer_perform64, 0, NULL);
@@ -320,8 +358,6 @@ void cmgrainbuffer_perform64(t_cmgrainbuffer *x, t_object *dsp64, double **ins, 
 	long i, limit; // for loop counterS
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr; // current trigger value
-	double pan; // temporary random pan information
-	double pitch; // temporary pitch for new grains
 	double distance; // floating point index for reading from buffers
 	long index; // truncated index for reading from buffers
 	double w_read, b_read; // current sample read from the window buffer
@@ -360,16 +396,15 @@ void cmgrainbuffer_perform64(t_cmgrainbuffer *x, t_object *dsp64, double **ins, 
 	
 	// GET INLET VALUES
 	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
-	t_double startmin 	= x->connect_status[0]? *ins[1] * x->m_sr : x->startmin_float * x->m_sr; // get start min input signal from 2nd inlet
-	t_double startmax 	= x->connect_status[1]? *ins[2] * x->m_sr : x->startmax_float * x->m_sr; // get start max input signal from 3rd inlet
-	t_double lengthmin 	= x->connect_status[2]? *ins[3] * x->m_sr : x->lengthmin_float * x->m_sr; // get grain min length input signal from 4th inlet
-	t_double lengthmax 	= x->connect_status[3]? *ins[4] * x->m_sr : x->lengthmax_float * x->m_sr; // get grain max length input signal from 5th inlet
-	t_double pitchmin 	= x->connect_status[4]? *ins[5] : x->pitchmin_float; // get pitch min input signal from 6th inlet
-	t_double pitchmax 	= x->connect_status[5]? *ins[6] : x->pitchmax_float; // get pitch max input signal from 7th inlet
-	t_double panmin 	= x->connect_status[6]? *ins[7] : x->panmin_float; // get min pan input signal from 8th inlet
-	t_double panmax 	= x->connect_status[7]? *ins[8] : x->panmax_float; // get max pan input signal from 9th inlet
-	t_double gainmin 	= x->connect_status[8]? *ins[9] : x->gainmin_float; // get min gain input signal from 10th inlet
-	t_double gainmax 	= x->connect_status[9]? *ins[10] : x->gainmax_float; // get max gain input signal from 10th inlet
+	
+	for (i = 0; i < INLETS; i++) {
+		if (i < 4) { // start and length values to be multiplied by the sampling rate
+			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] * x->m_sr : x->object_inlets[i] * x->m_sr;
+		}
+		else { // the rest is sampleRate independent
+			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] : x->object_inlets[i];
+		}
+	}
 	
 	// DSP LOOP
 	while (n--) {
@@ -408,92 +443,47 @@ void cmgrainbuffer_perform64(t_cmgrainbuffer *x, t_object *dsp64, double **ins, 
 				}
 				i++;
 			}
-			/************************************************************************************************************************/
-			// GET RANDOM START POSITION
-			if (startmin != startmax) { // only call random function when min and max values are not the same!
-				x->start[slot] = (long)cm_random(&startmin, &startmax);
+			// randomize the grain parameters and write them into the randomized array
+			for (i = 0; i < INLETS; i += 2) {
+				if (x->grain_params[i] != x->grain_params[i+1]) {
+					x->randomized[i/2] = cm_random(&x->grain_params[i], &x->grain_params[i+1]);
+				}
+				else {
+					x->randomized[i/2] = x->grain_params[i];
+				}
+				
 			}
-			else {
-				x->start[slot] = startmin;
+			// check for parameter sanity with testvalues array (skip start value, hence i = 1)
+			for (i = 1; i < INLETS / 2; i++) {
+				if (x->randomized[i] < x->testvalues[i*2]) {
+					x->randomized[i] = x->testvalues[i*2];
+				}
+				else if (x->randomized[i] > x->testvalues[(i*2)+1]) {
+					x->randomized[i] = x->testvalues[(i*2)+1];
+				}
 			}
-			/************************************************************************************************************************/
-			// GET RANDOM LENGTH
-			if (lengthmin != lengthmax) { // only call random function when min and max values are not the same!
-				x->t_length[slot] = (long)cm_random(&lengthmin, &lengthmax);
-			}
-			else {
-				x->t_length[slot] = lengthmin;
-			}
-			// CHECK IF THE VALUE FOR PERCEPTIBLE GRAIN LENGTH IS LEGAL
-			if (x->t_length[slot] > MAX_GRAINLENGTH * x->m_sr) { // if grain length is larger than the max grain length
-				x->t_length[slot] = MAX_GRAINLENGTH * x->m_sr; // set grain length to max grain length
-			}
-			else if (x->t_length[slot] < MIN_GRAINLENGTH * x->m_sr) { // if grain length is samller than the min grain length
-				x->t_length[slot] = MIN_GRAINLENGTH * x->m_sr; // set grain length to min grain length
-			}
-			/************************************************************************************************************************/
-			// GET RANDOM PAN
-			if (panmin != panmax) { // only call random function when min and max values are not the same!
-				pan = cm_random(&panmin, &panmax);
-			}
-			else {
-				pan = panmin;
-			}
-			// SOME SANITY TESTING
-			if (pan < -1.0) {
-				pan = -1.0;
-			}
-			if (pan > 1.0) {
-				pan = 1.0;
-			}
-			cm_panning(&panstruct, &pan); // calculate pan values in panstruct
-			x->pan_left[slot] = panstruct.left;
-			x->pan_right[slot] = panstruct.right;
-			/************************************************************************************************************************/
-			// GET RANDOM PITCH
-			if (pitchmin != pitchmax) { // only call random function when min and max values are not the same!
-				pitch = cm_random(&pitchmin, &pitchmax);
-			}
-			else {
-				pitch = pitchmin;
-			}
-			// CHECK IF THE PITCH VALUE IS LEGAL
-			if (pitch < 0.001) {
-				pitch = 0.001;
-			}
-			if (pitch > MAX_PITCH) {
-				pitch = MAX_PITCH;
-			}
-			/************************************************************************************************************************/
-			// GET RANDOM GAIN
-			if (gainmin != gainmax) {
-				x->gain[slot] = cm_random(&gainmin, &gainmax);
-			}
-			else {
-				x->gain[slot] = gainmin;
-			}
-			// CHECK IF THE GAIN VALUE IS LEGAL
-			if (x->gain[slot] < 0.0) {
-				x->gain[slot] = 0.0;
-			}
-			if (x->gain[slot] > MAX_GAIN) {
-				x->gain[slot] = MAX_GAIN;
-			}
-			/************************************************************************************************************************/
-			// CALCULATE THE ACTUAL GRAIN LENGTH (SAMPLES) ACCORDING TO PITCH
-			x->gr_length[slot] = x->t_length[slot] * pitch;
-			// CHECK THAT GRAIN LENGTH IS NOT LARGER THAN SIZE OF BUFFER
+			// write grain lenght slot (non-pitch)
+			x->t_length[slot] = x->randomized[1];
+			x->gr_length[slot] = x->t_length[slot] * x->randomized[2]; // length * pitch
+			// check that grain length is not larger than size of buffer
 			if (x->gr_length[slot] > b_framecount) {
 				x->gr_length[slot] = b_framecount;
 			}
-			/************************************************************************************************************************/
-			// CHECK IF START POSITION IS LEGAL ACCORDING TO GRAINzLENGTH (SAMPLES) AND BUFFER SIZE
+			// write start position
+			x->start[slot] = x->randomized[0];
+			// start position sanity testing
 			if (x->start[slot] > b_framecount - x->gr_length[slot]) {
 				x->start[slot] = b_framecount - x->gr_length[slot];
 			}
 			if (x->start[slot] < 0) {
 				x->start[slot] = 0;
 			}
+			// compute pan values
+			cm_panning(&panstruct, &x->randomized[3]); // calculate pan values in panstruct
+			x->pan_left[slot] = panstruct.left;
+			x->pan_right[slot] = panstruct.right;
+			// write gain value
+			x->gain[slot] = x->randomized[4];
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
@@ -666,6 +656,10 @@ void cmgrainbuffer_free(t_cmgrainbuffer *x) {
 	sysmem_freeptr(x->pan_left); // free memory allocated to the pan_left array
 	sysmem_freeptr(x->pan_right); // free memory allocated to the pan_right array
 	sysmem_freeptr(x->gain); // free memory allocated to the gain array
+	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
+	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
+	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
+	sysmem_freeptr(x->testvalues); // free memory allocated to the test values array
 }
 
 /************************************************************************************************************************/
@@ -680,7 +674,7 @@ void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 				dump = f;
 			}
 			else {
-				x->startmin_float = f;
+				x->object_inlets[0] = f;
 			}
 			break;
 		case 2: // second inlet
@@ -688,7 +682,7 @@ void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 				dump = f;
 			}
 			else {
-				x->startmax_float = f;
+				x->object_inlets[1] = f;
 			}
 			break;
 		case 3: // 4th inlet
@@ -699,7 +693,7 @@ void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 				dump = f;
 			}
 			else {
-				x->lengthmin_float = f;
+				x->object_inlets[2] = f;
 			}
 			break;
 		case 4: // 5th inlet
@@ -710,7 +704,7 @@ void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 				dump = f;
 			}
 			else {
-				x->lengthmax_float = f;
+				x->object_inlets[3] = f;
 			}
 			break;
 		case 5: // 6th inlet
@@ -721,7 +715,7 @@ void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 				dump = f;
 			}
 			else {
-				x->pitchmin_float = f;
+				x->object_inlets[4] = f;
 			}
 			break;
 		case 6: // 7th inlet
@@ -732,7 +726,7 @@ void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 				dump = f;
 			}
 			else {
-				x->pitchmax_float = f;
+				x->object_inlets[5] = f;
 			}
 			break;
 		case 7:
@@ -740,7 +734,7 @@ void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 				dump = f;
 			}
 			else {
-				x->panmin_float = f;
+				x->object_inlets[6] = f;
 			}
 			break;
 		case 8:
@@ -748,7 +742,7 @@ void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 				dump = f;
 			}
 			else {
-				x->panmax_float = f;
+				x->object_inlets[7] = f;
 			}
 			break;
 		case 9:
@@ -756,7 +750,7 @@ void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 				dump = f;
 			}
 			else {
-				x->gainmin_float = f;
+				x->object_inlets[8] = f;
 			}
 			break;
 		case 10:
@@ -764,7 +758,7 @@ void cmgrainbuffer_float(t_cmgrainbuffer *x, double f) {
 				dump = f;
 			}
 			else {
-				x->gainmax_float = f;
+				x->object_inlets[9] = f;
 			}
 			break;
 	}
