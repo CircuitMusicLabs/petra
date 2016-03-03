@@ -53,7 +53,7 @@ typedef struct _cmgaussgrains {
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
-	short connect_status[12]; // array for signal inlet connection statuses
+	short connect_status[INLETS]; // array for signal inlet connection statuses
 	
 	double *object_inlets; // array to store the incoming values coming from the object inlets
 	double *grain_params; // array to store the processed values coming from the object inlets

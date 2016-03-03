@@ -32,10 +32,17 @@
 #include <stdlib.h> // for arc4random_uniform
 #define MAX_GRAINLENGTH 500 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
+#define MIN_PITCH 0.001 // min pitch
 #define MAX_PITCH 10 // max pitch
-#define MAX_GAIN 2.0
-#define ARGUMENTS 3 // constant number of arguments required for the external
+#define MIN_PAN -1.0 // min pan
+#define MAX_PAN 1.0 // max pan
+#define MIN_GAIN 0.0 // min gain
+#define MAX_GAIN 2.0  // max gain
+#define MIN_ALPHA 0.1 // min alpha value
+#define MAX_ALPHA 10.0 // max alpha value
+#define ARGUMENTS 2 // constant number of arguments required for the external
 #define MAXGRAINS 128 // maximum number of simultaneously playing grains
+#define INLETS 10 // number of object float inlets
 
 
 /************************************************************************************************************************/
@@ -58,7 +65,7 @@ typedef struct _cmgrainbuffer {
 	double panmax_float; // used to store the max pan value received from the float inlet
 	double gainmin_float; // used to store the min gain value received from the float inlet
 	double gainmax_float; // used to store the max gain value received from the float inlet
-	short connect_status[10]; // array for signal inlet connection statuses
+	short connect_status[INLETS]; // array for signal inlet connection statuses
 	short *busy; // array used to store the flag if a grain is currently playing or not
 	long *grainpos; // used to store the current playback position per grain
 	long *start; // used to store the start position in the buffer for each grain
