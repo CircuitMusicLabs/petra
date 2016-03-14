@@ -38,8 +38,6 @@
 #define MAX_PAN 1.0 // max pan
 #define MIN_GAIN 0.0 // min gain
 #define MAX_GAIN 2.0  // max gain
-#define MIN_ALPHA 0.1 // min alpha value
-#define MAX_ALPHA 10.0 // max alpha value
 #define ARGUMENTS 2 // constant number of arguments required for the external
 #define MAXGRAINS 128 // maximum number of simultaneously playing grains
 #define INLETS 10 // number of object float inlets
