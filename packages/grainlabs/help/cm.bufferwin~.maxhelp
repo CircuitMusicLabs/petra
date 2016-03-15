@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 193.0, 104.0, 1300.0, 860.0 ],
+		"rect" : [ 172.0, 104.0, 1300.0, 860.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -492,9 +492,9 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 12.0, 815.0, 948.0, 33.0 ],
+					"patching_rect" : [ 12.0, 815.0, 965.0, 33.0 ],
 					"style" : "",
-					"text" : "Note: cm.grainlabs~ does not adjust the sample rates of your samples. Make sure that the samples you load into the sample buffer match the Max sample rate in order to play back your samples at the orignal pitch when the pitch value is set to 1."
+					"text" : "Note: cm.bufferwin~ does not adjust the sample rates of your samples. Make sure that the samples you load into the sample buffer match the Max sample rate in order to play back your samples at the orignal pitch when the pitch value is set to 1."
 				}
 
 			}
@@ -782,7 +782,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 12.0, 114.5, 229.0, 20.0 ],
 					"style" : "",
-					"text" : "cm.grainlabs~ takes 3 arguments:"
+					"text" : "cm.bufferwin~ takes 3 arguments:"
 				}
 
 			}
@@ -1038,7 +1038,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 12.0, 14.0, 380.0, 40.0 ],
 					"style" : "",
-					"text" : "cm.grainbuffer~"
+					"text" : "cm.bufferwin~"
 				}
 
 			}
