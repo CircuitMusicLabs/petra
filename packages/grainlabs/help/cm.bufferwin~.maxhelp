@@ -40,6 +40,22 @@
 				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
+					"id" : "obj-6",
+					"linecount" : 3,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 432.5, 552.0, 531.0, 47.0 ],
+					"presentation_rect" : [ 434.5, 566.0, 0.0, 0.0 ],
+					"style" : "",
+					"text" : "With attribute @zero set to 1: New grains are triggered by means of a zero-crossing from < 0 to > 0. Any audio signal fits this purpose. Every time the value goes from below zero to above zero, a new grain is triggered."
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
 					"id" : "obj-65",
 					"linecount" : 2,
 					"maxclass" : "comment",
@@ -639,13 +655,13 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-24",
-					"linecount" : 3,
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 432.5, 509.0, 364.0, 47.0 ],
+					"patching_rect" : [ 432.5, 514.0, 531.0, 33.0 ],
 					"style" : "",
-					"text" : "New grains are triggered by means of a ramp from 0 to 1. phasor~ is best for this purpose. Every time the value resets to 0, a new grain is triggered."
+					"text" : "With attribute @zero set to 0: New grains are triggered by means of a ramp from 0 to 1. phasor~ is best for this purpose. Every time the value resets to 0, a new grain is triggered."
 				}
 
 			}
