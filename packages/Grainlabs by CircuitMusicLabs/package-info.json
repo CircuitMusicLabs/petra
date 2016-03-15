@@ -1,15 +1,15 @@
 {
-	"author" : "Circuit Music Labs",
+	"author" : "CircuitMusicLabs",
 	"authors" : [  ],
 	"categories" : [  ],
 	"description" : "Granular Synthesis Environment for Max",
 	"displayname" : "",
 	"extends" : "",
 	"extensible" : 0,
-	"homepatcher" : "cm.grainbuffer~.maxhelp",
+	"homepatcher" : "cm.bufferwin~.maxhelp",
 	"max_version_max" : "none",
 	"max_version_min" : "6.1",
-	"name" : "Granular Laboratory",
+	"name" : "Grainlabs by CircuitMusicLabs",
 	"os" : 	{
 		"macintosh" : 		{
 			"platform" : [ "x64" ],
@@ -29,8 +29,8 @@
 	"versions" : null,
 	"website" : "http://www.circuitmusiclabs.com",
 	"filelist" : 	{
-		"patchers" : [ "cm.grainbuffer~.maxhelp" ],
-		"help" : [ "cm.grainbuffer~.maxhelp" ],
+		"patchers" : [ "cm.bufferwin~.maxhelp" ],
+		"help" : [ "cm.bufferwin~.maxhelp" ],
 		"media" : [ "" ],
 		"misc" : [ "" ],
 		"code" : [ "" ],
