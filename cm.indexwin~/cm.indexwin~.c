@@ -1,5 +1,5 @@
 /*
- cm.grainwindow~ - a granular synthesis external audio object for Max/MSP.
+ cm.indexwin~ - a granular synthesis external audio object for Max/MSP.
  Copyright (C) 2014  Matthias Müller - Circuit Music Labs
  
  This program is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
-typedef struct _cmgrainwindow {
+typedef struct _cmindexwin {
 	t_pxobject obj;
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
@@ -85,39 +85,39 @@ typedef struct _cmgrainwindow {
 	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
-} t_cmgrainwindow;
+} t_cmindexwin;
 
 
 /************************************************************************************************************************/
 /* STATIC DECLARATIONS                                                                                                  */
 /************************************************************************************************************************/
-static t_class *cmgrainwindow_class; // class pointer
+static t_class *cmindexwin_class; // class pointer
 static t_symbol *ps_buffer_modified, *ps_stereo;
 
 
 /************************************************************************************************************************/
 /* FUNCTION PROTOTYPES                                                                                                  */
 /************************************************************************************************************************/
-void *cmgrainwindow_new(t_symbol *s, long argc, t_atom *argv);
-void cmgrainwindow_dsp64(t_cmgrainwindow *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
-void cmgrainwindow_perform64(t_cmgrainwindow *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
-void cmgrainwindow_assist(t_cmgrainwindow *x, void *b, long msg, long arg, char *dst);
-void cmgrainwindow_free(t_cmgrainwindow *x);
-void cmgrainwindow_float(t_cmgrainwindow *x, double f);
-void cmgrainwindow_dblclick(t_cmgrainwindow *x);
-t_max_err cmgrainwindow_notify(t_cmgrainwindow *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
-void cmgrainwindow_set(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av);
-void cmgrainwindow_limit(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av);
+void *cmindexwin_new(t_symbol *s, long argc, t_atom *argv);
+void cmindexwin_dsp64(t_cmindexwin *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
+void cmindexwin_perform64(t_cmindexwin *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
+void cmindexwin_assist(t_cmindexwin *x, void *b, long msg, long arg, char *dst);
+void cmindexwin_free(t_cmindexwin *x);
+void cmindexwin_float(t_cmindexwin *x, double f);
+void cmindexwin_dblclick(t_cmindexwin *x);
+t_max_err cmindexwin_notify(t_cmindexwin *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+void cmindexwin_set(t_cmindexwin *x, t_symbol *s, long ac, t_atom *av);
+void cmindexwin_limit(t_cmindexwin *x, t_symbol *s, long ac, t_atom *av);
 
-void cmgrainwindow_w_type(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av);
-void cmgrainwindow_w_length(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av);
+void cmindexwin_w_type(t_cmindexwin *x, t_symbol *s, long ac, t_atom *av);
+void cmindexwin_w_length(t_cmindexwin *x, t_symbol *s, long ac, t_atom *av);
 
-t_max_err cmgrainwindow_stereo_set(t_cmgrainwindow *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgrainwindow_winterp_set(t_cmgrainwindow *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgrainwindow_sinterp_set(t_cmgrainwindow *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgrainwindow_zero_set(t_cmgrainwindow *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmindexwin_stereo_set(t_cmindexwin *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmindexwin_winterp_set(t_cmindexwin *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmindexwin_sinterp_set(t_cmindexwin *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmindexwin_zero_set(t_cmindexwin *x, t_object *attr, long argc, t_atom *argv);
 
-void cmgrainwindow_windowwrite(t_cmgrainwindow *x);
+void cmindexwin_windowwrite(t_cmindexwin *x);
 
 
 /************************************************************************************************************************/
@@ -125,48 +125,48 @@ void cmgrainwindow_windowwrite(t_cmgrainwindow *x);
 /************************************************************************************************************************/
 int C74_EXPORT main(void) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
-	cmgrainwindow_class = class_new("cm.grainwindow~", (method)cmgrainwindow_new, (method)cmgrainwindow_free, sizeof(t_cmgrainwindow), 0, A_GIMME, 0);
+	cmindexwin_class = class_new("cm.indexwin~", (method)cmindexwin_new, (method)cmindexwin_free, sizeof(t_cmindexwin), 0, A_GIMME, 0);
 	
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_dblclick, 	"dblclick",		A_CANT, 0); // Bind the double click message
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_set, 		"set", 			A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_w_type, 		"w_type", 		A_GIMME, 0); // Bind the window type message
-	class_addmethod(cmgrainwindow_class, (method)cmgrainwindow_w_length, 	"w_length", 	A_GIMME, 0); // Bind the window length message
+	class_addmethod(cmindexwin_class, (method)cmindexwin_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
+	class_addmethod(cmindexwin_class, (method)cmindexwin_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
+	class_addmethod(cmindexwin_class, (method)cmindexwin_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
+	class_addmethod(cmindexwin_class, (method)cmindexwin_dblclick, 	"dblclick",		A_CANT, 0); // Bind the double click message
+	class_addmethod(cmindexwin_class, (method)cmindexwin_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
+	class_addmethod(cmindexwin_class, (method)cmindexwin_set, 		"set", 			A_GIMME, 0); // Bind the set message for user buffer set
+	class_addmethod(cmindexwin_class, (method)cmindexwin_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmindexwin_class, (method)cmindexwin_w_type, 		"w_type", 		A_GIMME, 0); // Bind the window type message
+	class_addmethod(cmindexwin_class, (method)cmindexwin_w_length, 	"w_length", 	A_GIMME, 0); // Bind the window length message
 	
-	CLASS_ATTR_ATOM_LONG(cmgrainwindow_class, "stereo", 0, t_cmgrainwindow, attr_stereo);
-	CLASS_ATTR_ACCESSORS(cmgrainwindow_class, "stereo", (method)NULL, (method)cmgrainwindow_stereo_set);
-	CLASS_ATTR_BASIC(cmgrainwindow_class, "stereo", 0);
-	CLASS_ATTR_SAVE(cmgrainwindow_class, "stereo", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgrainwindow_class, "stereo", 0, "onoff", "Multichannel playback");
+	CLASS_ATTR_ATOM_LONG(cmindexwin_class, "stereo", 0, t_cmindexwin, attr_stereo);
+	CLASS_ATTR_ACCESSORS(cmindexwin_class, "stereo", (method)NULL, (method)cmindexwin_stereo_set);
+	CLASS_ATTR_BASIC(cmindexwin_class, "stereo", 0);
+	CLASS_ATTR_SAVE(cmindexwin_class, "stereo", 0);
+	CLASS_ATTR_STYLE_LABEL(cmindexwin_class, "stereo", 0, "onoff", "Multichannel playback");
 	
-	CLASS_ATTR_ATOM_LONG(cmgrainwindow_class, "w_interp", 0, t_cmgrainwindow, attr_winterp);
-	CLASS_ATTR_ACCESSORS(cmgrainwindow_class, "w_interp", (method)NULL, (method)cmgrainwindow_winterp_set);
-	CLASS_ATTR_BASIC(cmgrainwindow_class, "w_interp", 0);
-	CLASS_ATTR_SAVE(cmgrainwindow_class, "w_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgrainwindow_class, "w_interp", 0, "onoff", "Window interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmindexwin_class, "w_interp", 0, t_cmindexwin, attr_winterp);
+	CLASS_ATTR_ACCESSORS(cmindexwin_class, "w_interp", (method)NULL, (method)cmindexwin_winterp_set);
+	CLASS_ATTR_BASIC(cmindexwin_class, "w_interp", 0);
+	CLASS_ATTR_SAVE(cmindexwin_class, "w_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmindexwin_class, "w_interp", 0, "onoff", "Window interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmgrainwindow_class, "s_interp", 0, t_cmgrainwindow, attr_sinterp);
-	CLASS_ATTR_ACCESSORS(cmgrainwindow_class, "s_interp", (method)NULL, (method)cmgrainwindow_sinterp_set);
-	CLASS_ATTR_BASIC(cmgrainwindow_class, "s_interp", 0);
-	CLASS_ATTR_SAVE(cmgrainwindow_class, "s_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgrainwindow_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmindexwin_class, "s_interp", 0, t_cmindexwin, attr_sinterp);
+	CLASS_ATTR_ACCESSORS(cmindexwin_class, "s_interp", (method)NULL, (method)cmindexwin_sinterp_set);
+	CLASS_ATTR_BASIC(cmindexwin_class, "s_interp", 0);
+	CLASS_ATTR_SAVE(cmindexwin_class, "s_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmindexwin_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmgrainwindow_class, "zero", 0, t_cmgrainwindow, attr_zero);
-	CLASS_ATTR_ACCESSORS(cmgrainwindow_class, "zero", (method)NULL, (method)cmgrainwindow_zero_set);
-	CLASS_ATTR_BASIC(cmgrainwindow_class, "zero", 0);
-	CLASS_ATTR_SAVE(cmgrainwindow_class, "zero", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgrainwindow_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
+	CLASS_ATTR_ATOM_LONG(cmindexwin_class, "zero", 0, t_cmindexwin, attr_zero);
+	CLASS_ATTR_ACCESSORS(cmindexwin_class, "zero", (method)NULL, (method)cmindexwin_zero_set);
+	CLASS_ATTR_BASIC(cmindexwin_class, "zero", 0);
+	CLASS_ATTR_SAVE(cmindexwin_class, "zero", 0);
+	CLASS_ATTR_STYLE_LABEL(cmindexwin_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
-	CLASS_ATTR_ORDER(cmgrainwindow_class, "stereo", 0, "1");
-	CLASS_ATTR_ORDER(cmgrainwindow_class, "w_interp", 0, "2");
-	CLASS_ATTR_ORDER(cmgrainwindow_class, "s_interp", 0, "3");
+	CLASS_ATTR_ORDER(cmindexwin_class, "stereo", 0, "1");
+	CLASS_ATTR_ORDER(cmindexwin_class, "w_interp", 0, "2");
+	CLASS_ATTR_ORDER(cmindexwin_class, "s_interp", 0, "3");
 	
-	class_dspinit(cmgrainwindow_class); // Add standard Max/MSP methods to your class
-	class_register(CLASS_BOX, cmgrainwindow_class); // Register the class with Max
+	class_dspinit(cmindexwin_class); // Add standard Max/MSP methods to your class
+	class_register(CLASS_BOX, cmindexwin_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
 	return 0;
@@ -176,8 +176,8 @@ int C74_EXPORT main(void) {
 /************************************************************************************************************************/
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
-void *cmgrainwindow_new(t_symbol *s, long argc, t_atom *argv) {
-	t_cmgrainwindow *x = (t_cmgrainwindow *)object_alloc(cmgrainwindow_class); // create the object and allocate required memory
+void *cmindexwin_new(t_symbol *s, long argc, t_atom *argv) {
+	t_cmindexwin *x = (t_cmindexwin *)object_alloc(cmindexwin_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 11); // create 11 inlets
 	
 	if (argc < ARGUMENTS) {
@@ -350,7 +350,7 @@ void *cmgrainwindow_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	
 	// WRITE WINDOW INTO WINDOW ARRAY
-	cmgrainwindow_windowwrite(x);
+	cmindexwin_windowwrite(x);
 	
 	
 	return x;
@@ -360,7 +360,7 @@ void *cmgrainwindow_new(t_symbol *s, long argc, t_atom *argv) {
 /************************************************************************************************************************/
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmgrainwindow_dsp64(t_cmgrainwindow *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
+void cmindexwin_dsp64(t_cmindexwin *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
 	x->connect_status[0] = count[1]; // 2nd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[1] = count[2]; // 3rd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[2] = count[3]; // 4th inlet: write connection flag into object structure (1 if signal connected)
@@ -380,15 +380,15 @@ void cmgrainwindow_dsp64(t_cmgrainwindow *x, t_object *dsp64, short *count, doub
 	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
-	//object_method(dsp64, gensym("dsp_add64"), x, cmgrainwindow_perform64, 0, NULL);
-	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgrainwindow_perform64, 0, NULL);
+	//object_method(dsp64, gensym("dsp_add64"), x, cmindexwin_perform64, 0, NULL);
+	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmindexwin_perform64, 0, NULL);
 }
 
 
 /************************************************************************************************************************/
 /* THE 64 BIT PERFORM ROUTINE                                                                                           */
 /************************************************************************************************************************/
-void cmgrainwindow_perform64(t_cmgrainwindow *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
+void cmindexwin_perform64(t_cmindexwin *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
 	long i, limit; // for loop counterS
@@ -617,7 +617,7 @@ zero:
 /************************************************************************************************************************/
 /* ASSIST METHOD FOR INLET AND OUTLET ANNOTATION                                                                        */
 /************************************************************************************************************************/
-void cmgrainwindow_assist(t_cmgrainwindow *x, void *b, long msg, long arg, char *dst) {
+void cmindexwin_assist(t_cmindexwin *x, void *b, long msg, long arg, char *dst) {
 	if (msg == ASSIST_INLET) {
 		switch (arg) {
 			case 0:
@@ -674,7 +674,7 @@ void cmgrainwindow_assist(t_cmgrainwindow *x, void *b, long msg, long arg, char 
 /************************************************************************************************************************/
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
-void cmgrainwindow_free(t_cmgrainwindow *x) {
+void cmindexwin_free(t_cmindexwin *x) {
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
 	object_free(x->buffer); // free the buffer reference
 	
@@ -697,7 +697,7 @@ void cmgrainwindow_free(t_cmgrainwindow *x) {
 /************************************************************************************************************************/
 /* FLOAT METHOD FOR FLOAT INLET SUPPORT                                                                                 */
 /************************************************************************************************************************/
-void cmgrainwindow_float(t_cmgrainwindow *x, double f) {
+void cmindexwin_float(t_cmindexwin *x, double f) {
 	double dump;
 	int inlet = ((t_pxobject*)x)->z_in; // get info as to which inlet was addressed (stored in the z_in component of the object structure
 	switch (inlet) {
@@ -800,7 +800,7 @@ void cmgrainwindow_float(t_cmgrainwindow *x, double f) {
 /************************************************************************************************************************/
 /* DOUBLE CLICK METHOD FOR VIEWING BUFFER CONTENT                                                                       */
 /************************************************************************************************************************/
-void cmgrainwindow_dblclick(t_cmgrainwindow *x) {
+void cmindexwin_dblclick(t_cmindexwin *x) {
 	buffer_view(buffer_ref_getobject(x->buffer));
 }
 
@@ -808,7 +808,7 @@ void cmgrainwindow_dblclick(t_cmgrainwindow *x) {
 /************************************************************************************************************************/
 /* NOTIFY METHOD FOR THE BUFFER REFERENCES                                                                              */
 /************************************************************************************************************************/
-t_max_err cmgrainwindow_notify(t_cmgrainwindow *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
+t_max_err cmindexwin_notify(t_cmindexwin *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = 1;
 	}
@@ -819,7 +819,7 @@ t_max_err cmgrainwindow_notify(t_cmgrainwindow *x, t_symbol *s, t_symbol *msg, v
 /************************************************************************************************************************/
 /* THE BUFFER SET METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmgrainwindow_set(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexwin_set(t_cmindexwin *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
 		x->buffer_modified = 1;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
@@ -841,7 +841,7 @@ void cmgrainwindow_set(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE WINDOW TYPE SET METHOD                                                                                           */
 /************************************************************************************************************************/
-void cmgrainwindow_w_type(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexwin_w_type(t_cmindexwin *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
 		if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
@@ -851,7 +851,7 @@ void cmgrainwindow_w_type(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) 
 			}
 			else {
 				x->window_type = arg; // write window type into object structure
-				cmgrainwindow_windowwrite(x); // write window into window array
+				cmindexwin_windowwrite(x); // write window into window array
 			}
 		}
 	}
@@ -865,7 +865,7 @@ void cmgrainwindow_w_type(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) 
 /************************************************************************************************************************/
 /* THE WINDOW LENGTH SET METHOD                                                                                         */
 /************************************************************************************************************************/
-void cmgrainwindow_w_length(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexwin_w_length(t_cmindexwin *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
 		// CHECK IF WINDOW LENGTH ARGUMENT IS VALID
@@ -877,7 +877,7 @@ void cmgrainwindow_w_length(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av
 			x->w_writeflag = 1;
 			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double *)); // resize and clear window array
 			x->w_writeflag = 0;
-			cmgrainwindow_windowwrite(x); // write window into window array
+			cmindexwin_windowwrite(x); // write window into window array
 		}
 	}
 	else {
@@ -891,7 +891,7 @@ void cmgrainwindow_w_length(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av
 /************************************************************************************************************************/
 /* THE GRAINS LIMIT METHOD                                                                                              */
 /************************************************************************************************************************/
-void cmgrainwindow_limit(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexwin_limit(t_cmindexwin *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
 	if (arg < 1 || arg > MAXGRAINS) {
@@ -908,7 +908,7 @@ void cmgrainwindow_limit(t_cmgrainwindow *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE STEREO ATTRIBUTE SET METHOD                                                                                      */
 /************************************************************************************************************************/
-t_max_err cmgrainwindow_stereo_set(t_cmgrainwindow *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmindexwin_stereo_set(t_cmindexwin *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_stereo = atom_getlong(av)? 1 : 0;
 	}
@@ -919,7 +919,7 @@ t_max_err cmgrainwindow_stereo_set(t_cmgrainwindow *x, t_object *attr, long ac, 
 /************************************************************************************************************************/
 /* THE WINDOW INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmgrainwindow_winterp_set(t_cmgrainwindow *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmindexwin_winterp_set(t_cmindexwin *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_winterp = atom_getlong(av)? 1 : 0;
 	}
@@ -930,7 +930,7 @@ t_max_err cmgrainwindow_winterp_set(t_cmgrainwindow *x, t_object *attr, long ac,
 /************************************************************************************************************************/
 /* THE SAMPLE INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmgrainwindow_sinterp_set(t_cmgrainwindow *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmindexwin_sinterp_set(t_cmindexwin *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_sinterp = atom_getlong(av)? 1 : 0;
 	}
@@ -941,7 +941,7 @@ t_max_err cmgrainwindow_sinterp_set(t_cmgrainwindow *x, t_object *attr, long ac,
 /************************************************************************************************************************/
 /* THE ZERO CROSSING ATTRIBUTE SET METHOD                                                                               */
 /************************************************************************************************************************/
-t_max_err cmgrainwindow_zero_set(t_cmgrainwindow *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmindexwin_zero_set(t_cmindexwin *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_zero = atom_getlong(av)? 1 : 0;
 	}
@@ -951,7 +951,7 @@ t_max_err cmgrainwindow_zero_set(t_cmgrainwindow *x, t_object *attr, long ac, t_
 /************************************************************************************************************************/
 /* THE WINDOW_WRITE FUNCTION                                                                                            */
 /************************************************************************************************************************/
-void cmgrainwindow_windowwrite(t_cmgrainwindow *x) {
+void cmindexwin_windowwrite(t_cmindexwin *x) {
 //	int i;
 	long length = x->window_length;
 	x->w_writeflag = 1;
