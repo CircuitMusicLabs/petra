@@ -1,5 +1,5 @@
 /*
- cm.grainwindow~ - a granular synthesis external audio object for Max/MSP.
+ cm.gausswin~ - a granular synthesis external audio object for Max/MSP.
  Copyright (C) 2014  Matthias Müller - Circuit Music Labs
  
  This program is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
-typedef struct _cmgaussgrains {
+typedef struct _cmgausswin {
 	t_pxobject obj;
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
@@ -81,34 +81,34 @@ typedef struct _cmgaussgrains {
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	
 	
-} t_cmgaussgrains;
+} t_cmgausswin;
 
 
 /************************************************************************************************************************/
 /* STATIC DECLARATIONS                                                                                                  */
 /************************************************************************************************************************/
-static t_class *cmgaussgrains_class; // class pointer
+static t_class *cmgausswin_class; // class pointer
 static t_symbol *ps_buffer_modified, *ps_stereo;
 
 
 /************************************************************************************************************************/
 /* FUNCTION PROTOTYPES                                                                                                  */
 /************************************************************************************************************************/
-void *cmgaussgrains_new(t_symbol *s, long argc, t_atom *argv);
-void cmgaussgrains_dsp64(t_cmgaussgrains *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
-void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
-void cmgaussgrains_assist(t_cmgaussgrains *x, void *b, long msg, long arg, char *dst);
-void cmgaussgrains_free(t_cmgaussgrains *x);
-void cmgaussgrains_float(t_cmgaussgrains *x, double f);
-void cmgaussgrains_dblclick(t_cmgaussgrains *x);
-t_max_err cmgaussgrains_notify(t_cmgaussgrains *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
-void cmgaussgrains_set(t_cmgaussgrains *x, t_symbol *s, long ac, t_atom *av);
-void cmgaussgrains_limit(t_cmgaussgrains *x, t_symbol *s, long ac, t_atom *av);
+void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv);
+void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
+void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
+void cmgausswin_assist(t_cmgausswin *x, void *b, long msg, long arg, char *dst);
+void cmgausswin_free(t_cmgausswin *x);
+void cmgausswin_float(t_cmgausswin *x, double f);
+void cmgausswin_dblclick(t_cmgausswin *x);
+t_max_err cmgausswin_notify(t_cmgausswin *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+void cmgausswin_set(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av);
+void cmgausswin_limit(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av);
 
 
-t_max_err cmgaussgrains_stereo_set(t_cmgaussgrains *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgaussgrains_sinterp_set(t_cmgaussgrains *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgaussgrains_zero_set(t_cmgaussgrains *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgausswin_stereo_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
 
 
 /************************************************************************************************************************/
@@ -116,39 +116,39 @@ t_max_err cmgaussgrains_zero_set(t_cmgaussgrains *x, t_object *attr, long argc, 
 /************************************************************************************************************************/
 int C74_EXPORT main(void) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
-	cmgaussgrains_class = class_new("cm.gaussgrains~", (method)cmgaussgrains_new, (method)cmgaussgrains_free, sizeof(t_cmgaussgrains), 0, A_GIMME, 0);
+	cmgausswin_class = class_new("cm.gausswin~", (method)cmgausswin_new, (method)cmgausswin_free, sizeof(t_cmgausswin), 0, A_GIMME, 0);
 	
-	class_addmethod(cmgaussgrains_class, (method)cmgaussgrains_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
-	class_addmethod(cmgaussgrains_class, (method)cmgaussgrains_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
-	class_addmethod(cmgaussgrains_class, (method)cmgaussgrains_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
-	class_addmethod(cmgaussgrains_class, (method)cmgaussgrains_dblclick, 	"dblclick",		A_CANT, 0); // Bind the double click message
-	class_addmethod(cmgaussgrains_class, (method)cmgaussgrains_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
-	class_addmethod(cmgaussgrains_class, (method)cmgaussgrains_set, 		"set", 			A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmgaussgrains_class, (method)cmgaussgrains_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmgausswin_class, (method)cmgausswin_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
+	class_addmethod(cmgausswin_class, (method)cmgausswin_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
+	class_addmethod(cmgausswin_class, (method)cmgausswin_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
+	class_addmethod(cmgausswin_class, (method)cmgausswin_dblclick, 	"dblclick",		A_CANT, 0); // Bind the double click message
+	class_addmethod(cmgausswin_class, (method)cmgausswin_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
+	class_addmethod(cmgausswin_class, (method)cmgausswin_set, 		"set", 			A_GIMME, 0); // Bind the set message for user buffer set
+	class_addmethod(cmgausswin_class, (method)cmgausswin_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
 	
-	CLASS_ATTR_ATOM_LONG(cmgaussgrains_class, "stereo", 0, t_cmgaussgrains, attr_stereo);
-	CLASS_ATTR_ACCESSORS(cmgaussgrains_class, "stereo", (method)NULL, (method)cmgaussgrains_stereo_set);
-	CLASS_ATTR_BASIC(cmgaussgrains_class, "stereo", 0);
-	CLASS_ATTR_SAVE(cmgaussgrains_class, "stereo", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgaussgrains_class, "stereo", 0, "onoff", "Multichannel playback");
+	CLASS_ATTR_ATOM_LONG(cmgausswin_class, "stereo", 0, t_cmgausswin, attr_stereo);
+	CLASS_ATTR_ACCESSORS(cmgausswin_class, "stereo", (method)NULL, (method)cmgausswin_stereo_set);
+	CLASS_ATTR_BASIC(cmgausswin_class, "stereo", 0);
+	CLASS_ATTR_SAVE(cmgausswin_class, "stereo", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgausswin_class, "stereo", 0, "onoff", "Multichannel playback");
 	
-	CLASS_ATTR_ATOM_LONG(cmgaussgrains_class, "s_interp", 0, t_cmgaussgrains, attr_sinterp);
-	CLASS_ATTR_ACCESSORS(cmgaussgrains_class, "s_interp", (method)NULL, (method)cmgaussgrains_sinterp_set);
-	CLASS_ATTR_BASIC(cmgaussgrains_class, "s_interp", 0);
-	CLASS_ATTR_SAVE(cmgaussgrains_class, "s_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgaussgrains_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmgausswin_class, "s_interp", 0, t_cmgausswin, attr_sinterp);
+	CLASS_ATTR_ACCESSORS(cmgausswin_class, "s_interp", (method)NULL, (method)cmgausswin_sinterp_set);
+	CLASS_ATTR_BASIC(cmgausswin_class, "s_interp", 0);
+	CLASS_ATTR_SAVE(cmgausswin_class, "s_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgausswin_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmgaussgrains_class, "zero", 0, t_cmgaussgrains, attr_zero);
-	CLASS_ATTR_ACCESSORS(cmgaussgrains_class, "zero", (method)NULL, (method)cmgaussgrains_zero_set);
-	CLASS_ATTR_BASIC(cmgaussgrains_class, "zero", 0);
-	CLASS_ATTR_SAVE(cmgaussgrains_class, "zero", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgaussgrains_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
+	CLASS_ATTR_ATOM_LONG(cmgausswin_class, "zero", 0, t_cmgausswin, attr_zero);
+	CLASS_ATTR_ACCESSORS(cmgausswin_class, "zero", (method)NULL, (method)cmgausswin_zero_set);
+	CLASS_ATTR_BASIC(cmgausswin_class, "zero", 0);
+	CLASS_ATTR_SAVE(cmgausswin_class, "zero", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgausswin_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
-	CLASS_ATTR_ORDER(cmgaussgrains_class, "stereo", 0, "1");
-	CLASS_ATTR_ORDER(cmgaussgrains_class, "s_interp", 0, "2");
+	CLASS_ATTR_ORDER(cmgausswin_class, "stereo", 0, "1");
+	CLASS_ATTR_ORDER(cmgausswin_class, "s_interp", 0, "2");
 	
-	class_dspinit(cmgaussgrains_class); // Add standard Max/MSP methods to your class
-	class_register(CLASS_BOX, cmgaussgrains_class); // Register the class with Max
+	class_dspinit(cmgausswin_class); // Add standard Max/MSP methods to your class
+	class_register(CLASS_BOX, cmgausswin_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
 	return 0;
@@ -158,8 +158,8 @@ int C74_EXPORT main(void) {
 /************************************************************************************************************************/
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
-void *cmgaussgrains_new(t_symbol *s, long argc, t_atom *argv) {
-	t_cmgaussgrains *x = (t_cmgaussgrains *)object_alloc(cmgaussgrains_class); // create the object and allocate required memory
+void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
+	t_cmgausswin *x = (t_cmgausswin *)object_alloc(cmgausswin_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 13); // create 13 inlets
 	
 	if (argc < ARGUMENTS) {
@@ -326,7 +326,7 @@ void *cmgaussgrains_new(t_symbol *s, long argc, t_atom *argv) {
 /************************************************************************************************************************/
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmgaussgrains_dsp64(t_cmgaussgrains *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
+void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
 	x->connect_status[0] = count[1]; // 2nd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[1] = count[2]; // 3rd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[2] = count[3]; // 4th inlet: write connection flag into object structure (1 if signal connected)
@@ -348,15 +348,15 @@ void cmgaussgrains_dsp64(t_cmgaussgrains *x, t_object *dsp64, short *count, doub
 	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
-	//object_method(dsp64, gensym("dsp_add64"), x, cmgaussgrains_perform64, 0, NULL);
-	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgaussgrains_perform64, 0, NULL);
+	//object_method(dsp64, gensym("dsp_add64"), x, cmgausswin_perform64, 0, NULL);
+	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgausswin_perform64, 0, NULL);
 }
 
 
 /************************************************************************************************************************/
 /* THE 64 BIT PERFORM ROUTINE                                                                                           */
 /************************************************************************************************************************/
-void cmgaussgrains_perform64(t_cmgaussgrains *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
+void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
 	long i, limit; // for loop counters
@@ -575,7 +575,7 @@ zero:
 /************************************************************************************************************************/
 /* ASSIST METHOD FOR INLET AND OUTLET ANNOTATION                                                                        */
 /************************************************************************************************************************/
-void cmgaussgrains_assist(t_cmgaussgrains *x, void *b, long msg, long arg, char *dst) {
+void cmgausswin_assist(t_cmgausswin *x, void *b, long msg, long arg, char *dst) {
 	if (msg == ASSIST_INLET) {
 		switch (arg) {
 			case 0:
@@ -638,7 +638,7 @@ void cmgaussgrains_assist(t_cmgaussgrains *x, void *b, long msg, long arg, char 
 /************************************************************************************************************************/
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
-void cmgaussgrains_free(t_cmgaussgrains *x) {
+void cmgausswin_free(t_cmgausswin *x) {
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
 	object_free(x->buffer); // free the buffer reference
 	
@@ -660,7 +660,7 @@ void cmgaussgrains_free(t_cmgaussgrains *x) {
 /************************************************************************************************************************/
 /* FLOAT METHOD FOR FLOAT INLET SUPPORT                                                                                 */
 /************************************************************************************************************************/
-void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
+void cmgausswin_float(t_cmgausswin *x, double f) {
 	double dump;
 	int inlet = ((t_pxobject*)x)->z_in; // get info as to which inlet was addressed (stored in the z_in component of the object structure
 	switch (inlet) {
@@ -779,7 +779,7 @@ void cmgaussgrains_float(t_cmgaussgrains *x, double f) {
 /************************************************************************************************************************/
 /* DOUBLE CLICK METHOD FOR VIEWING BUFFER CONTENT                                                                       */
 /************************************************************************************************************************/
-void cmgaussgrains_dblclick(t_cmgaussgrains *x) {
+void cmgausswin_dblclick(t_cmgausswin *x) {
 	buffer_view(buffer_ref_getobject(x->buffer));
 }
 
@@ -787,7 +787,7 @@ void cmgaussgrains_dblclick(t_cmgaussgrains *x) {
 /************************************************************************************************************************/
 /* NOTIFY METHOD FOR THE BUFFER REFERENCES                                                                              */
 /************************************************************************************************************************/
-t_max_err cmgaussgrains_notify(t_cmgaussgrains *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
+t_max_err cmgausswin_notify(t_cmgausswin *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = 1;
 	}
@@ -798,7 +798,7 @@ t_max_err cmgaussgrains_notify(t_cmgaussgrains *x, t_symbol *s, t_symbol *msg, v
 /************************************************************************************************************************/
 /* THE BUFFER SET METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmgaussgrains_set(t_cmgaussgrains *x, t_symbol *s, long ac, t_atom *av) {
+void cmgausswin_set(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
 		x->buffer_modified = 1;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
@@ -818,7 +818,7 @@ void cmgaussgrains_set(t_cmgaussgrains *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE GRAINS LIMIT METHOD                                                                                              */
 /************************************************************************************************************************/
-void cmgaussgrains_limit(t_cmgaussgrains *x, t_symbol *s, long ac, t_atom *av) {
+void cmgausswin_limit(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
 	if (arg < 1 || arg > MAXGRAINS) {
@@ -835,7 +835,7 @@ void cmgaussgrains_limit(t_cmgaussgrains *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE STEREO ATTRIBUTE SET METHOD                                                                                      */
 /************************************************************************************************************************/
-t_max_err cmgaussgrains_stereo_set(t_cmgaussgrains *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgausswin_stereo_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_stereo = atom_getlong(av)? 1 : 0;
 	}
@@ -846,7 +846,7 @@ t_max_err cmgaussgrains_stereo_set(t_cmgaussgrains *x, t_object *attr, long ac, 
 /************************************************************************************************************************/
 /* THE SAMPLE INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmgaussgrains_sinterp_set(t_cmgaussgrains *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_sinterp = atom_getlong(av)? 1 : 0;
 	}
@@ -857,7 +857,7 @@ t_max_err cmgaussgrains_sinterp_set(t_cmgaussgrains *x, t_object *attr, long ac,
 /************************************************************************************************************************/
 /* THE ZERO CROSSING ATTRIBUTE SET METHOD                                                                               */
 /************************************************************************************************************************/
-t_max_err cmgaussgrains_zero_set(t_cmgaussgrains *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_zero = atom_getlong(av)? 1 : 0;
 	}
