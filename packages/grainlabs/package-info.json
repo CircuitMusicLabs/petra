@@ -9,7 +9,7 @@
 	"homepatcher" : "cm.bufferwin~.maxhelp",
 	"max_version_max" : "none",
 	"max_version_min" : "6.1",
-	"name" : "Grainlabs by CircuitMusicLabs",
+	"name" : "grainlabs",
 	"os" : 	{
 		"macintosh" : 		{
 			"platform" : [ "x64" ],

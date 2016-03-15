@@ -1256,7 +1256,7 @@
 					}
 ,
 					"style" : "",
-					"text" : "cm.grainbuffer~ a_sample window 64"
+					"text" : "cm.bufferwin~ a_sample window 64"
 				}
 
 			}
@@ -1690,7 +1690,7 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "cm.grainbuffer~.mxo",
+				"name" : "cm.bufferwin~.mxo",
 				"type" : "iLaX"
 			}
  ],
