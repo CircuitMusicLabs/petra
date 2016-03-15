@@ -1,3 +1,0 @@
-1 - cm.bufferwin~
-2 - cm.indexwin~
-3 - cm.gausswin~
