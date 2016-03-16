@@ -6,7 +6,7 @@
 	"displayname" : "",
 	"extends" : "",
 	"extensible" : 0,
-	"homepatcher" : "cm.bufferwin~.maxhelp",
+	"homepatcher" : "grainlabs_Overview.maxpat",
 	"max_version_max" : "none",
 	"max_version_min" : "6.1",
 	"name" : "grainlabs",
