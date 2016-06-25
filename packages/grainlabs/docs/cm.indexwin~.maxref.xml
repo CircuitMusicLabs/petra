@@ -152,7 +152,7 @@
 				Name of the buffer used for playback.
 			</description>
 		</objarg>
-		<objarg name="window type index" optional="0" type="int">
+		<objarg name="index" optional="0" type="int">
 			<digest>
 				Window buffer type
 			</digest>
@@ -160,7 +160,7 @@
 				Index number of the desired window buffer. See the helpfile for a detailed specification.
 			</description>
 		</objarg>
-		<objarg name="window length" optional="0" type="int">
+		<objarg name="length" optional="0" type="int">
 			<digest>
 				Window buffer length
 			</digest>
