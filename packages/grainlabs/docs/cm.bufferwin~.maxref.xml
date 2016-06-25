@@ -4,10 +4,10 @@
 
 <c74object name="cm.grainbuffer~" module="msp" category="MSP Sampling">
 	<digest>
-		Polyphonic granular synthesizer by Circuit Music Labs
+		Buffer based window polyphonic granular synthesizer
 	</digest>
 	<description>
-		<o>cm.grainbuffer~</o> is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and a window buffer for windowing the individual grains.
+		<o>cm.grainbuffer~</o> by Circuit Music Labs is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and a window buffer for windowing the individual grains.
 	</description>
 	<!--METADATA-->
 	<metadatalist>

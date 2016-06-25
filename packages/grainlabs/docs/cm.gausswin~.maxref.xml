@@ -4,10 +4,10 @@
 
 <c74object name="cm.grainbuffer~" module="msp" category="MSP Sampling">
 	<digest>
-		Polyphonic granular synthesizer by Circuit Music Labs
+		Gaussian window polyphonic granular synthesizer
 	</digest>
 	<description>
-		<o>cm.grainbuffer~</o> is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and utilizes an internal gaussian window buffer for windowing the individual grains. The slopes of the internal gaussian window can be adjusted with the "alpha" inlets.
+		<o>cm.gausswin~</o> by Circuit Music Labs is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and utilizes an internal gaussian window buffer for windowing the individual grains. The slopes of the internal gaussian window can be adjusted with the "alpha" inlets.
 	</description>
 	<!--METADATA-->
 	<metadatalist>
