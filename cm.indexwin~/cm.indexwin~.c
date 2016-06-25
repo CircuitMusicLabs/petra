@@ -130,12 +130,12 @@ int C74_EXPORT main(void) {
 	class_addmethod(cmindexwin_class, (method)cmindexwin_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
 	class_addmethod(cmindexwin_class, (method)cmindexwin_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
 	class_addmethod(cmindexwin_class, (method)cmindexwin_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
-	class_addmethod(cmindexwin_class, (method)cmindexwin_dblclick, 	"dblclick",		A_CANT, 0); // Bind the double click message
+	class_addmethod(cmindexwin_class, (method)cmindexwin_dblclick,		"dblclick",		A_CANT, 0); // Bind the double click message
 	class_addmethod(cmindexwin_class, (method)cmindexwin_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
-	class_addmethod(cmindexwin_class, (method)cmindexwin_set, 		"set", 			A_GIMME, 0); // Bind the set message for user buffer set
+	class_addmethod(cmindexwin_class, (method)cmindexwin_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmindexwin_class, (method)cmindexwin_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
-	class_addmethod(cmindexwin_class, (method)cmindexwin_w_type, 		"w_type", 		A_GIMME, 0); // Bind the window type message
-	class_addmethod(cmindexwin_class, (method)cmindexwin_w_length, 	"w_length", 	A_GIMME, 0); // Bind the window length message
+	class_addmethod(cmindexwin_class, (method)cmindexwin_w_type,		"w_type", 		A_GIMME, 0); // Bind the window type message
+	class_addmethod(cmindexwin_class, (method)cmindexwin_w_length,		"w_length", 	A_GIMME, 0); // Bind the window length message
 	
 	CLASS_ATTR_ATOM_LONG(cmindexwin_class, "stereo", 0, t_cmindexwin, attr_stereo);
 	CLASS_ATTR_ACCESSORS(cmindexwin_class, "stereo", (method)NULL, (method)cmindexwin_stereo_set);

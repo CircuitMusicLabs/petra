@@ -121,9 +121,9 @@ int C74_EXPORT main(void) {
 	class_addmethod(cmgausswin_class, (method)cmgausswin_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
 	class_addmethod(cmgausswin_class, (method)cmgausswin_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
 	class_addmethod(cmgausswin_class, (method)cmgausswin_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
-	class_addmethod(cmgausswin_class, (method)cmgausswin_dblclick, 	"dblclick",		A_CANT, 0); // Bind the double click message
+	class_addmethod(cmgausswin_class, (method)cmgausswin_dblclick,		"dblclick",		A_CANT, 0); // Bind the double click message
 	class_addmethod(cmgausswin_class, (method)cmgausswin_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
-	class_addmethod(cmgausswin_class, (method)cmgausswin_set, 		"set", 			A_GIMME, 0); // Bind the set message for user buffer set
+	class_addmethod(cmgausswin_class, (method)cmgausswin_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmgausswin_class, (method)cmgausswin_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
 	
 	CLASS_ATTR_ATOM_LONG(cmgausswin_class, "stereo", 0, t_cmgausswin, attr_stereo);
