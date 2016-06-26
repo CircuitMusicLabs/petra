@@ -123,7 +123,7 @@ void cmindexwin_windowwrite(t_cmindexwin *x);
 /************************************************************************************************************************/
 /* MAIN FUNCTION (INITIALIZATION ROUTINE)                                                                               */
 /************************************************************************************************************************/
-int C74_EXPORT main(void) {
+void ext_main(void * r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
 	cmindexwin_class = class_new("cm.indexwin~", (method)cmindexwin_new, (method)cmindexwin_free, sizeof(t_cmindexwin), 0, A_GIMME, 0);
 	
@@ -169,7 +169,6 @@ int C74_EXPORT main(void) {
 	class_register(CLASS_BOX, cmindexwin_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
-	return 0;
 }
 
 
