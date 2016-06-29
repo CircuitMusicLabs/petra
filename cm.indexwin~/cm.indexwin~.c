@@ -123,7 +123,7 @@ void cmindexwin_windowwrite(t_cmindexwin *x);
 /************************************************************************************************************************/
 /* MAIN FUNCTION (INITIALIZATION ROUTINE)                                                                               */
 /************************************************************************************************************************/
-void ext_main(void * r) {
+void ext_main(void *r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
 	cmindexwin_class = class_new("cm.indexwin~", (method)cmindexwin_new, (method)cmindexwin_free, sizeof(t_cmindexwin), 0, A_GIMME, 0);
 	

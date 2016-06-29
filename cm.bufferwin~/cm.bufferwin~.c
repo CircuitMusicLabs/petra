@@ -111,7 +111,7 @@ t_max_err cmbufferwin_zero_set(t_cmbufferwin *x, t_object *attr, long argc, t_at
 /************************************************************************************************************************/
 /* MAIN FUNCTION (INITIALIZATION ROUTINE)                                                                               */
 /************************************************************************************************************************/
-void ext_main(void * r) {
+void ext_main(void *r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
 	cmbufferwin_class = class_new("cm.bufferwin~", (method)cmbufferwin_new, (method)cmbufferwin_free, sizeof(t_cmbufferwin), 0, A_GIMME, 0);
 	

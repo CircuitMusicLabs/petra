@@ -114,7 +114,7 @@ t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long argc, t_atom
 /************************************************************************************************************************/
 /* MAIN FUNCTION (INITIALIZATION ROUTINE)                                                                               */
 /************************************************************************************************************************/
-void ext_main(void * r) {
+void ext_main(void *r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
 	cmgausswin_class = class_new("cm.gausswin~", (method)cmgausswin_new, (method)cmgausswin_free, sizeof(t_cmgausswin), 0, A_GIMME, 0);
 	
