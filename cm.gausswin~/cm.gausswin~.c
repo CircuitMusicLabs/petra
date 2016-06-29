@@ -911,3 +911,5 @@ double cm_gauss(long *pos, long *length, double *alpha) {
 	n = *pos - N / 2;
 	return exp(-0.5 * pow((n / stdev), 2));
 }
+
+
