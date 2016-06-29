@@ -27,10 +27,8 @@
 #include "buffer.h"
 #include "ext_atomic.h"
 #include "ext_obex.h"
-#include "cmstereo.h" // for cm_pan
-#include "cmutil.h" // for cm utility functions
-#include "cmwindows.h" // for windowing function
 #include <stdlib.h> // for arc4random_uniform
+#include <math.h> // for stereo functions
 #define MAX_GRAINLENGTH 500 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MIN_PITCH 0.001 // min pitch
@@ -44,6 +42,7 @@
 #define ARGUMENTS 2 // constant number of arguments required for the external
 #define MAXGRAINS 128 // maximum number of simultaneously playing grains
 #define INLETS 12 // number of object float inlets
+#define RANDMAX 10000
 
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
@@ -85,6 +84,15 @@ typedef struct _cmgausswin {
 
 
 /************************************************************************************************************************/
+/* STEREO STRUCTURE                                                                                                     */
+/************************************************************************************************************************/
+typedef struct cmpanner {
+	double left;
+	double right;
+} cm_panstruct;
+
+
+/************************************************************************************************************************/
 /* STATIC DECLARATIONS                                                                                                  */
 /************************************************************************************************************************/
 static t_class *cmgausswin_class; // class pointer
@@ -109,6 +117,15 @@ void cmgausswin_limit(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av);
 t_max_err cmgausswin_stereo_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
+
+// PANNING FUNCTION
+void cm_panning(cm_panstruct *panstruct, double *pos);
+// RANDOM NUMBER GENERATOR
+double cm_random(double *min, double *max);
+// LINEAR INTERPOLATION FUNCTION
+double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
+// GAUSS WINDOW FUNCTION
+double cm_gauss(long *pos, long *length, double *alpha);
 
 
 /************************************************************************************************************************/
@@ -865,6 +882,32 @@ t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *
 }
 
 
-
-
-
+/************************************************************************************************************************/
+/* CUSTOM FUNCTIONS																										*/
+/************************************************************************************************************************/
+// constant power stereo function
+void cm_panning(cm_panstruct *panstruct, double *pos) {
+	const double piovr2 = 4.0 * atan(1.0) * 0.5;
+	const double root2ovr2 = sqrt(2.0) * 0.5;
+	panstruct->left = root2ovr2 * (cos((*pos * piovr2) * 0.5) - sin((*pos * piovr2) * 0.5));
+	panstruct->right = root2ovr2 * (cos((*pos * piovr2) * 0.5) + sin((*pos * piovr2) * 0.5));
+	return;
+}
+// RANDOM NUMBER GENERATOR (USE POINTERS FOR MORE EFFICIENCY)
+double cm_random(double *min, double *max) {
+	return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+}
+// LINEAR INTERPOLATION FUNCTION
+double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
+	long index = (long)distance; // get truncated index
+	distance -= (long)distance; // calculate fraction value for interpolation
+	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+}
+// GAUSS WINDOW FUNCTION
+double cm_gauss(long *pos, long *length, double *alpha) {
+	double n;
+	double N = *length - 1;
+	double stdev = N / (2 * (*alpha));
+	n = *pos - N / 2;
+	return exp(-0.5 * pow((n / stdev), 2));
+}
