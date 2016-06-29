@@ -2,12 +2,12 @@
 
 <?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
 
-<c74object name="cm.grainbuffer~" module="msp" category="MSP Sampling">
+<c74object name="cm.bufferwin~" module="msp" category="MSP Sampling">
 	<digest>
 		Buffer based window polyphonic granular synthesizer
 	</digest>
 	<description>
-		<o>cm.grainbuffer~</o> by Circuit Music Labs is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and a window buffer for windowing the individual grains.
+		<o>cm.bufferwin~</o> by Circuit Music Labs is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and a window buffer for windowing the individual grains.
 	</description>
 	<!--METADATA-->
 	<metadatalist>
