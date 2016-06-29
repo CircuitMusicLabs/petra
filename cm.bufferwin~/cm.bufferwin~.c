@@ -111,7 +111,7 @@ t_max_err cmbufferwin_zero_set(t_cmbufferwin *x, t_object *attr, long argc, t_at
 /************************************************************************************************************************/
 /* MAIN FUNCTION (INITIALIZATION ROUTINE)                                                                               */
 /************************************************************************************************************************/
-int C74_EXPORT main(void) {
+void ext_main(void *r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
 	cmbufferwin_class = class_new("cm.bufferwin~", (method)cmbufferwin_new, (method)cmbufferwin_free, sizeof(t_cmbufferwin), 0, A_GIMME, 0);
 	
@@ -155,7 +155,6 @@ int C74_EXPORT main(void) {
 	class_register(CLASS_BOX, cmbufferwin_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
-	return 0;
 }
 
 
