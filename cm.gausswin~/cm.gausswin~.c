@@ -895,7 +895,12 @@ void cm_panning(cm_panstruct *panstruct, double *pos) {
 }
 // RANDOM NUMBER GENERATOR (USE POINTERS FOR MORE EFFICIENCY)
 double cm_random(double *min, double *max) {
-	return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+	#ifdef MAC_VERSION
+		return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+	#endif
+	#ifdef WIN_VERSION
+		return *min + ((*max - *min) * (((double)rand(RANDMAX)) / (double)RANDMAX));
+	#endif
 }
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
