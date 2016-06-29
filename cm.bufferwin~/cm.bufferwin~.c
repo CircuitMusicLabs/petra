@@ -341,8 +341,8 @@ void cmbufferwin_dsp64(t_cmbufferwin *x, t_object *dsp64, short *count, double s
 	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
-	//object_method(dsp64, gensym("dsp_add64"), x, cmbufferwin_perform64, 0, NULL);
-	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmbufferwin_perform64, 0, NULL);
+	object_method(dsp64, gensym("dsp_add64"), x, cmbufferwin_perform64, 0, NULL);
+//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmbufferwin_perform64, 0, NULL);
 }
 
 

@@ -348,8 +348,8 @@ void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double sam
 	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
-	//object_method(dsp64, gensym("dsp_add64"), x, cmgausswin_perform64, 0, NULL);
-	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgausswin_perform64, 0, NULL);
+	object_method(dsp64, gensym("dsp_add64"), x, cmgausswin_perform64, 0, NULL);
+//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgausswin_perform64, 0, NULL);
 }
 
 
