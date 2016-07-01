@@ -189,6 +189,7 @@ void ext_main(void *r) {
 	CLASS_ATTR_ORDER(cmindexwin_class, "stereo", 0, "1");
 	CLASS_ATTR_ORDER(cmindexwin_class, "w_interp", 0, "2");
 	CLASS_ATTR_ORDER(cmindexwin_class, "s_interp", 0, "3");
+	CLASS_ATTR_ORDER(cmindexwin_class, "zero", 0, "4");
 	
 	class_dspinit(cmindexwin_class); // Add standard Max/MSP methods to your class
 	class_register(CLASS_BOX, cmindexwin_class); // Register the class with Max
