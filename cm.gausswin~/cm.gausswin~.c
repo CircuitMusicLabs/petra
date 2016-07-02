@@ -78,8 +78,8 @@ typedef struct _cmgausswin {
 	t_atom_long attr_stereo; // attribute: number of channels to be played
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
-	
-	
+	double piovr2; // pi over two for panning function
+	double root2ovr2; // root of 2 over two for panning function
 } t_cmgausswin;
 
 
@@ -119,7 +119,7 @@ t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long argc, t_a
 t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
 
 // PANNING FUNCTION
-void cm_panning(cm_panstruct *panstruct, double *pos);
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausswin *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTION
@@ -333,6 +333,11 @@ void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
 	x->testvalues[9] = MAX_GAIN;
 	x->testvalues[10] = MIN_ALPHA;
 	x->testvalues[11] = MAX_ALPHA;
+	
+	// calculate constants for panning function
+	x->piovr2 = 4.0 * atan(1.0) * 0.5;
+	x->root2ovr2 = sqrt(2.0) * 0.5;
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -494,7 +499,7 @@ void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long n
 				x->start[slot] = 0;
 			}
 			// compute pan values
-			cm_panning(&panstruct, &x->randomized[3]); // calculate pan values in panstruct
+			cm_panning(&panstruct, &x->randomized[3], x); // calculate pan values in panstruct
 			x->pan_left[slot] = panstruct.left;
 			x->pan_right[slot] = panstruct.right;
 			// write gain value
@@ -887,11 +892,9 @@ t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *
 /* CUSTOM FUNCTIONS																										*/
 /************************************************************************************************************************/
 // constant power stereo function
-void cm_panning(cm_panstruct *panstruct, double *pos) {
-	const double piovr2 = 4.0 * atan(1.0) * 0.5;
-	const double root2ovr2 = sqrt(2.0) * 0.5;
-	panstruct->left = root2ovr2 * (cos((*pos * piovr2) * 0.5) - sin((*pos * piovr2) * 0.5));
-	panstruct->right = root2ovr2 * (cos((*pos * piovr2) * 0.5) + sin((*pos * piovr2) * 0.5));
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausswin *x) {
+	panstruct->left = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) - sin((*pos * x->piovr2) * 0.5));
+	panstruct->right = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) + sin((*pos * x->piovr2) * 0.5));
 	return;
 }
 // RANDOM NUMBER GENERATOR (USE POINTERS FOR MORE EFFICIENCY)
