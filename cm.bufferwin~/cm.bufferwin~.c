@@ -38,7 +38,7 @@
 #define MIN_GAIN 0.0 // min gain
 #define MAX_GAIN 2.0  // max gain
 #define ARGUMENTS 2 // constant number of arguments required for the external
-#define MAXGRAINS 128 // maximum number of simultaneously playing grains
+#define MAXGRAINS 512 // maximum number of simultaneously playing grains
 #define INLETS 10 // number of object float inlets
 #define RANDMAX 10000
 
@@ -400,10 +400,7 @@ void cmbufferwin_perform64(t_cmbufferwin *x, t_object *dsp64, double **ins, long
 	t_atom_long w_channelcount; // number of channels in the window buffer
 	
 	// BUFFER CHECKS
-	if (!b_sample) { // if the sample buffer does not exist
-		goto zero;
-	}
-	if (!w_sample) { // if the window buffer does not exist
+	if (!b_sample || !w_sample) { // if the sample buffer does not exist
 		goto zero;
 	}
 	
@@ -506,15 +503,7 @@ void cmbufferwin_perform64(t_cmbufferwin *x, t_object *dsp64, double **ins, long
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->grains_count == 0) { // if grains count is zero, there is no playback to be calculated
-			*out_left++ = 0.0;
-			*out_right++ = 0.0;
-		}
-		else if (!b_sample) {
-			*out_left++ = 0.0;
-			*out_right++ = 0.0;
-		}
-		else if (!w_sample) {
+		if (x->grains_count == 0 || !b_sample || !w_sample) { // if grains count is zero, there is no playback to be calculated
 			*out_left++ = 0.0;
 			*out_right++ = 0.0;
 		}

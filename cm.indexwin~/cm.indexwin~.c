@@ -38,7 +38,7 @@
 #define MIN_GAIN 0.0 // min gain
 #define MAX_GAIN 2.0  // max gain
 #define ARGUMENTS 4 // constant number of arguments required for the external
-#define MAXGRAINS 128 // maximum number of simultaneously playing grains
+#define MAXGRAINS 512 // maximum number of simultaneously playing grains
 #define MIN_WINDOWLENGTH 16 // min window length in samples
 #define MAX_WININDEX 7 // max object attribute value for window type
 #define INLETS 10 // number of object float inlets
@@ -447,10 +447,7 @@ void cmindexwin_perform64(t_cmindexwin *x, t_object *dsp64, double **ins, long n
 	
 	
 	// BUFFER CHECKS
-	if (!b_sample) { // if the sample buffer does not exist
-		goto zero;
-	}
-	if (x->w_writeflag) { // if the window array is currently being rewritten
+	if (!b_sample || x->w_writeflag) { // if the sample buffer does not exist
 		goto zero;
 	}
 	
@@ -551,15 +548,7 @@ void cmindexwin_perform64(t_cmindexwin *x, t_object *dsp64, double **ins, long n
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->grains_count == 0) { // if grains count is zero, there is no playback to be calculated
-			*out_left++ = 0.0;
-			*out_right++ = 0.0;
-		}
-		else if (!b_sample) {
-			*out_left++ = 0.0;
-			*out_right++ = 0.0;
-		}
-		else if (x->w_writeflag) {
+		if (x->grains_count == 0 || !b_sample || x->w_writeflag) { // if grains count is zero, there is no playback to be calculated
 			*out_left++ = 0.0;
 			*out_right++ = 0.0;
 		}
