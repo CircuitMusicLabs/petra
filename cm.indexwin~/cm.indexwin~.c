@@ -27,10 +27,8 @@
 #include "buffer.h"
 #include "ext_atomic.h"
 #include "ext_obex.h"
-#include "cmstereo.h" // for cm_pan
-#include "cmutil.h" // for cm utility functions
-#include "cmwindows.h" // for windowing function
 #include <stdlib.h> // for arc4random_uniform
+#include <math.h> // for stereo functions
 #define MAX_GRAINLENGTH 500 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MIN_PITCH 0.001 // min pitch
@@ -44,6 +42,7 @@
 #define MIN_WINDOWLENGTH 16 // min window length in samples
 #define MAX_WININDEX 7 // max object attribute value for window type
 #define INLETS 10 // number of object float inlets
+#define RANDMAX 10000
 
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
@@ -85,7 +84,18 @@ typedef struct _cmindexwin {
 	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
+	double piovr2; // pi over two for panning function
+	double root2ovr2; // root of 2 over two for panning function
 } t_cmindexwin;
+
+
+/************************************************************************************************************************/
+/* STEREO STRUCTURE                                                                                                     */
+/************************************************************************************************************************/
+typedef struct cmpanner {
+	double left;
+	double right;
+} cm_panstruct;
 
 
 /************************************************************************************************************************/
@@ -118,6 +128,23 @@ t_max_err cmindexwin_sinterp_set(t_cmindexwin *x, t_object *attr, long argc, t_a
 t_max_err cmindexwin_zero_set(t_cmindexwin *x, t_object *attr, long argc, t_atom *argv);
 
 void cmindexwin_windowwrite(t_cmindexwin *x);
+
+// PANNING FUNCTION
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmindexwin *x);
+// RANDOM NUMBER GENERATOR
+double cm_random(double *min, double *max);
+// LINEAR INTERPOLATION FUNCTIONS
+double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
+double cm_lininterpwin(double distance, double *buffer, t_atom_long b_channelcount, short channel);
+// WINDOW FUNCTIONS
+void cm_hann(double *window, long *length);
+void cm_hamming(double *window, long *length);
+void cm_rectangular(double *window, long *length);
+void cm_bartlett(double *window, long *length);
+void cm_flattop(double *window, long *length);
+void cm_gauss2(double *window, long *length);
+void cm_gauss4(double *window, long *length);
+void cm_gauss8(double *window, long *length);
 
 
 /************************************************************************************************************************/
@@ -164,6 +191,7 @@ void ext_main(void *r) {
 	CLASS_ATTR_ORDER(cmindexwin_class, "stereo", 0, "1");
 	CLASS_ATTR_ORDER(cmindexwin_class, "w_interp", 0, "2");
 	CLASS_ATTR_ORDER(cmindexwin_class, "s_interp", 0, "3");
+	CLASS_ATTR_ORDER(cmindexwin_class, "zero", 0, "4");
 	
 	class_dspinit(cmindexwin_class); // Add standard Max/MSP methods to your class
 	class_register(CLASS_BOX, cmindexwin_class); // Register the class with Max
@@ -343,6 +371,10 @@ void *cmindexwin_new(t_symbol *s, long argc, t_atom *argv) {
 	x->testvalues[8] = MIN_GAIN;
 	x->testvalues[9] = MAX_GAIN;
 	
+	// calculate constants for panning function
+	x->piovr2 = 4.0 * atan(1.0) * 0.5;
+	x->root2ovr2 = sqrt(2.0) * 0.5;
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -511,7 +543,7 @@ void cmindexwin_perform64(t_cmindexwin *x, t_object *dsp64, double **ins, long n
 				x->start[slot] = 0;
 			}
 			// compute pan values
-			cm_panning(&panstruct, &x->randomized[3]); // calculate pan values in panstruct
+			cm_panning(&panstruct, &x->randomized[3], x); // calculate pan values in panstruct
 			x->pan_left[slot] = panstruct.left;
 			x->pan_right[slot] = panstruct.right;
 			// write gain value
@@ -998,6 +1030,138 @@ void cmindexwin_windowwrite(t_cmindexwin *x) {
 }
 
 
+/************************************************************************************************************************/
+/* CUSTOM FUNCTIONS																										*/
+/************************************************************************************************************************/
+// constant power stereo function
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmindexwin *x) {
+	panstruct->left = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) - sin((*pos * x->piovr2) * 0.5));
+	panstruct->right = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) + sin((*pos * x->piovr2) * 0.5));
+	return;
+}
+// RANDOM NUMBER GENERATOR (USE POINTERS FOR MORE EFFICIENCY)
+double cm_random(double *min, double *max) {
+	#ifdef MAC_VERSION
+		return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+	#endif
+	#ifdef WIN_VERSION
+		return *min + ((*max - *min) * (((double)rand(RANDMAX)) / (double)RANDMAX));
+	#endif
+}
+// LINEAR INTERPOLATION FUNCTION
+double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
+	long index = (long)distance; // get truncated index
+	distance -= (long)distance; // calculate fraction value for interpolation
+	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+}
+// LINEAR INTERPOLATION FUNCTION FOR WINDOW (passing douple pointer)
+double cm_lininterpwin(double distance, double *buffer, t_atom_long b_channelcount, short channel) {
+	long index = (long)distance; // get truncated index
+	distance -= (long)distance; // calculate fraction value for interpolation
+	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+}
 
 
+/************************************************************************************************************************/
+/* WINDOW FUNCTIONS																										*/
+/************************************************************************************************************************/
+void cm_hann(double *window, long *length) {
+	int i;
+	long N = *length - 1;
+	for (i = 0; i < *length; i++) {
+		window[i] = 0.5 * (1.0 - cos((2.0 * M_PI) * ((double)i / (double)N)));
+	}
+	return;
+}
 
+
+void cm_hamming(double *window, long *length) {
+	int i;
+	long N = *length - 1;
+	for (i = 0; i < *length; i++) {
+		window[i] = 0.54 - (0.46 * cos((2.0 * M_PI) * ((double)i / (double)N)));
+	}
+	return;
+}
+
+
+void cm_rectangular(double *window, long *length) {
+	int i;
+	for (i = 0; i < *length; i++) {
+		window[i] = 1;
+	}
+	return;
+}
+
+
+void cm_bartlett(double *window, long *length) {
+	int i;
+	long N = *length - 1;
+	for (i = 0; i < *length; i++) {
+		if (i < (*length / 2)) {
+			window[i] = (2 * (double)i) / (double)N;
+		}
+		else {
+			window[i] = 2 - ((2 * (double)i) / (double)N);
+		}
+	}
+	return;
+}
+
+
+void cm_flattop(double *window, long *length) {
+	int i;
+	long N = *length - 1;
+	double a0 = 0.21557895;
+	double a1 = 0.41663158;
+	double a2 = 0.277263158;
+	double a3 = 0.083578947;
+	double a4 = 0.006947368;
+	double twopi = M_PI * 2.0;
+	double fourpi = M_PI * 4.0;
+	double sixpi = M_PI * 6.0;
+	double eightpi = M_PI * 8.0;
+	for (i = 0; i < *length; i++) {
+		window[i] = a0 - (a1 * cos((twopi * i) / N)) + (a2 * cos((fourpi * i) / N)) - (a3 * cos((sixpi * i) / N)) + (a4 * cos((eightpi * i) / N));
+	}
+	return;
+}
+
+
+void cm_gauss2(double *window, long *length) {
+	int i;
+	double n;
+	double N = *length - 1;
+	double alpha = 2.0;
+	double stdev = N / (2 * alpha);
+	for (i = 0; i < *length; i++) {
+		n = i - N / 2;
+		window[i] = exp(-0.5 * pow((n / stdev), 2));
+	}
+}
+
+
+void cm_gauss4(double *window, long *length) {
+	int i;
+	double n;
+	double N = *length - 1;
+	double alpha = 4.0;
+	double stdev = N / (2 * alpha);
+	for (i = 0; i < *length; i++) {
+		n = i - N / 2;
+		window[i] = exp(-0.5 * pow((n / stdev), 2));
+	}
+}
+
+
+void cm_gauss8(double *window, long *length) {
+	int i;
+	double n;
+	double N = *length - 1;
+	double alpha = 8.0;
+	double stdev = N / (2 * alpha);
+	for (i = 0; i < *length; i++) {
+		n = i - N / 2;
+		window[i] = exp(-0.5 * pow((n / stdev), 2));
+	}
+}

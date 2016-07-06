@@ -2,7 +2,7 @@
 
 <?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
 
-<c74object name="cm.grainbuffer~" module="msp" category="MSP Sampling">
+<c74object name="cm.gausswin~" module="msp" category="MSP Sampling">
 	<digest>
 		Gaussian window polyphonic granular synthesizer
 	</digest>

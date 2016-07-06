@@ -2,7 +2,7 @@
 
 <?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
 
-<c74object name="cm.grainbuffer~" module="msp" category="MSP Sampling">
+<c74object name="cm.indexwin~" module="msp" category="MSP Sampling">
 	<digest>
 		Indexed window polyphonic granular synthesizer
 	</digest>

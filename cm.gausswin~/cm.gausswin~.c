@@ -27,10 +27,8 @@
 #include "buffer.h"
 #include "ext_atomic.h"
 #include "ext_obex.h"
-#include "cmstereo.h" // for cm_pan
-#include "cmutil.h" // for cm utility functions
-#include "cmwindows.h" // for windowing function
 #include <stdlib.h> // for arc4random_uniform
+#include <math.h> // for stereo functions
 #define MAX_GRAINLENGTH 500 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MIN_PITCH 0.001 // min pitch
@@ -44,6 +42,7 @@
 #define ARGUMENTS 2 // constant number of arguments required for the external
 #define MAXGRAINS 128 // maximum number of simultaneously playing grains
 #define INLETS 12 // number of object float inlets
+#define RANDMAX 10000
 
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
@@ -79,9 +78,18 @@ typedef struct _cmgausswin {
 	t_atom_long attr_stereo; // attribute: number of channels to be played
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
-	
-	
+	double piovr2; // pi over two for panning function
+	double root2ovr2; // root of 2 over two for panning function
 } t_cmgausswin;
+
+
+/************************************************************************************************************************/
+/* STEREO STRUCTURE                                                                                                     */
+/************************************************************************************************************************/
+typedef struct cmpanner {
+	double left;
+	double right;
+} cm_panstruct;
 
 
 /************************************************************************************************************************/
@@ -109,6 +117,15 @@ void cmgausswin_limit(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av);
 t_max_err cmgausswin_stereo_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
+
+// PANNING FUNCTION
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausswin *x);
+// RANDOM NUMBER GENERATOR
+double cm_random(double *min, double *max);
+// LINEAR INTERPOLATION FUNCTION
+double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
+// GAUSS WINDOW FUNCTION
+double cm_gauss(long *pos, long *length, double *alpha);
 
 
 /************************************************************************************************************************/
@@ -146,6 +163,7 @@ void ext_main(void *r) {
 	
 	CLASS_ATTR_ORDER(cmgausswin_class, "stereo", 0, "1");
 	CLASS_ATTR_ORDER(cmgausswin_class, "s_interp", 0, "2");
+	CLASS_ATTR_ORDER(cmgausswin_class, "zero", 0, "3");
 	
 	class_dspinit(cmgausswin_class); // Add standard Max/MSP methods to your class
 	class_register(CLASS_BOX, cmgausswin_class); // Register the class with Max
@@ -315,6 +333,11 @@ void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
 	x->testvalues[9] = MAX_GAIN;
 	x->testvalues[10] = MIN_ALPHA;
 	x->testvalues[11] = MAX_ALPHA;
+	
+	// calculate constants for panning function
+	x->piovr2 = 4.0 * atan(1.0) * 0.5;
+	x->root2ovr2 = sqrt(2.0) * 0.5;
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -476,7 +499,7 @@ void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long n
 				x->start[slot] = 0;
 			}
 			// compute pan values
-			cm_panning(&panstruct, &x->randomized[3]); // calculate pan values in panstruct
+			cm_panning(&panstruct, &x->randomized[3], x); // calculate pan values in panstruct
 			x->pan_left[slot] = panstruct.left;
 			x->pan_right[slot] = panstruct.right;
 			// write gain value
@@ -865,6 +888,37 @@ t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *
 }
 
 
-
+/************************************************************************************************************************/
+/* CUSTOM FUNCTIONS																										*/
+/************************************************************************************************************************/
+// constant power stereo function
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausswin *x) {
+	panstruct->left = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) - sin((*pos * x->piovr2) * 0.5));
+	panstruct->right = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) + sin((*pos * x->piovr2) * 0.5));
+	return;
+}
+// RANDOM NUMBER GENERATOR (USE POINTERS FOR MORE EFFICIENCY)
+double cm_random(double *min, double *max) {
+	#ifdef MAC_VERSION
+		return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+	#endif
+	#ifdef WIN_VERSION
+		return *min + ((*max - *min) * (((double)rand(RANDMAX)) / (double)RANDMAX));
+	#endif
+}
+// LINEAR INTERPOLATION FUNCTION
+double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
+	long index = (long)distance; // get truncated index
+	distance -= (long)distance; // calculate fraction value for interpolation
+	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+}
+// GAUSS WINDOW FUNCTION
+double cm_gauss(long *pos, long *length, double *alpha) {
+	double n;
+	double N = *length - 1;
+	double stdev = N / (2 * (*alpha));
+	n = *pos - N / 2;
+	return exp(-0.5 * pow((n / stdev), 2));
+}
 
 
