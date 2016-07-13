@@ -156,6 +156,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				DSTROOT = "$(SRCROOT)/../_build";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				PRODUCT_NAME = "cm.gausswin~";
 			};
@@ -167,6 +168,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
+				DSTROOT = "$(SRCROOT)/../_build";
 				PRODUCT_NAME = "cm.gausswin~";
 			};
 			name = Deployment;
