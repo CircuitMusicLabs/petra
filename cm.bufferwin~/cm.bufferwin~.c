@@ -54,12 +54,10 @@ typedef struct _cmbufferwin {
 	t_buffer_ref *w_buffer; // window buffer reference
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
 	short connect_status[INLETS]; // array for signal inlet connection statuses
-	
 	double *object_inlets; // array to store the incoming values coming from the object inlets
 	double *grain_params; // array to store the processed values coming from the object inlets
 	double *randomized; // array to store the randomized grain values
 	double *testvalues; // array for storing the grain parameter test values (sanity testing)
-	
 	short *busy; // array used to store the flag if a grain is currently playing or not
 	long *grainpos; // used to store the current playback position per grain
 	long *start; // used to store the start position in the buffer for each grain
