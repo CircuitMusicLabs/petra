@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:/Users/matthias/Documents/MaxDeveloper/max-sdk/source/CMGrainStudio/cm.gausswin~/cm.gausswin~.xcodeproj">
+      location = "self:/Users/matthias/Documents/MaxDeveloper/max-sdk/source/grainlabs/cm.gausswin~/cm.gausswin~.xcodeproj">
    </FileRef>
 </Workspace>

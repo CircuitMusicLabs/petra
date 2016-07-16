@@ -408,7 +408,7 @@ void cmindexwin_dsp64(t_cmindexwin *x, t_object *dsp64, short *count, double sam
 	
 	// CALL THE PERFORM ROUTINE
 	object_method(dsp64, gensym("dsp_add64"), x, cmindexwin_perform64, 0, NULL);
-//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmindexwin_perform64, 0, NULL);
+	//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmindexwin_perform64, 0, NULL);
 }
 
 
@@ -968,16 +968,16 @@ t_max_err cmindexwin_zero_set(t_cmindexwin *x, t_object *attr, long ac, t_atom *
 /* THE WINDOW_WRITE FUNCTION                                                                                            */
 /************************************************************************************************************************/
 void cmindexwin_windowwrite(t_cmindexwin *x) {
-//	int i;
+	//	int i;
 	long length = x->window_length;
 	x->w_writeflag = 1;
 	switch (x->window_type) {
 		case 0:
 			object_post((t_object*)x, "hann - %d", length);
 			cm_hann(x->window, &length);
-//			for (i = 0; i < length; i++) {
-//				object_post((t_object*)x, "%d : %f", i, x->window[i]);
-//			}
+			//			for (i = 0; i < length; i++) {
+			//				object_post((t_object*)x, "%d : %f", i, x->window[i]);
+			//			}
 			break;
 		case 1:
 			object_post((t_object*)x, "hamming - %d", length);
@@ -1026,12 +1026,12 @@ void cm_panning(cm_panstruct *panstruct, double *pos, t_cmindexwin *x) {
 }
 // RANDOM NUMBER GENERATOR (USE POINTERS FOR MORE EFFICIENCY)
 double cm_random(double *min, double *max) {
-	#ifdef MAC_VERSION
-		return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
-	#endif
-	#ifdef WIN_VERSION
-		return *min + ((*max - *min) * (((double)rand(RANDMAX)) / (double)RANDMAX));
-	#endif
+#ifdef MAC_VERSION
+	return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+#endif
+#ifdef WIN_VERSION
+	return *min + ((*max - *min) * (((double)rand(RANDMAX)) / (double)RANDMAX));
+#endif
 }
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {

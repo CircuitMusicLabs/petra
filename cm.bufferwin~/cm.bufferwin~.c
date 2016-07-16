@@ -324,7 +324,7 @@ void *cmbufferwin_new(t_symbol *s, long argc, t_atom *argv) {
 	x->testvalues[7] = MAX_PAN;
 	x->testvalues[8] = MIN_GAIN;
 	x->testvalues[9] = MAX_GAIN;
-
+	
 	// calculate constants for panning function
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
 	x->root2ovr2 = sqrt(2.0) * 0.5;
@@ -362,7 +362,7 @@ void cmbufferwin_dsp64(t_cmbufferwin *x, t_object *dsp64, short *count, double s
 	
 	// CALL THE PERFORM ROUTINE
 	object_method(dsp64, gensym("dsp_add64"), x, cmbufferwin_perform64, 0, NULL);
-//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmbufferwin_perform64, 0, NULL);
+	//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmbufferwin_perform64, 0, NULL);
 }
 
 
@@ -895,12 +895,12 @@ void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbufferwin *x) {
 }
 // RANDOM NUMBER GENERATOR (USE POINTERS FOR MORE EFFICIENCY)
 double cm_random(double *min, double *max) {
-	#ifdef MAC_VERSION
-		return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
-	#endif
-	#ifdef WIN_VERSION
-		return *min + ((*max - *min) * (((double)rand(RANDMAX)) / (double)RANDMAX));
-	#endif
+#ifdef MAC_VERSION
+	return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+#endif
+#ifdef WIN_VERSION
+	return *min + ((*max - *min) * (((double)rand(RANDMAX)) / (double)RANDMAX));
+#endif
 }
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
@@ -908,8 +908,6 @@ double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, 
 	distance -= (long)distance; // calculate fraction value for interpolation
 	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
 }
-
-
 
 
 
