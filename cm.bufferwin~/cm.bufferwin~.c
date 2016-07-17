@@ -182,6 +182,7 @@ void *cmbufferwin_new(t_symbol *s, long argc, t_atom *argv) {
 	t_cmbufferwin *x = (t_cmbufferwin *)object_alloc(cmbufferwin_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 11); // create 11 inlets
 	
+	
 	if (argc < ARGUMENTS) {
 		object_error((t_object *)x, "%d arguments required (sample/window/voices)", ARGUMENTS);
 		return NULL;
@@ -219,42 +220,42 @@ void *cmbufferwin_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-	
+
 	// ALLOCATE MEMORY FOR THE GRAINPOS ARRAY
 	x->grainpos = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long *));
 	if (x->grainpos == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-	
+
 	// ALLOCATE MEMORY FOR THE START ARRAY
 	x->start = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long *));
 	if (x->start == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-	
+
 	// ALLOCATE MEMORY FOR THE T_LENGTH ARRAY
 	x->t_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long *));
 	if (x->t_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-	
+
 	// ALLOCATE MEMORY FOR THE GR_LENGTH ARRAY
 	x->gr_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long *));
 	if (x->gr_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-	
+
 	// ALLOCATE MEMORY FOR THE PAN_LEFT ARRAY
 	x->pan_left = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double *));
 	if (x->pan_left == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-	
+
 	// ALLOCATE MEMORY FOR THE PAN_RIGHT ARRAY
 	x->pan_right = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double *));
 	if (x->pan_right == NULL) {
@@ -268,7 +269,7 @@ void *cmbufferwin_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-	
+
 	// ALLOCATE MEMORY FOR THE OBJET INLETS ARRAY
 	x->object_inlets = (double *)sysmem_newptrclear((INLETS) * sizeof(double *));
 	if (x->object_inlets == NULL) {
@@ -296,7 +297,7 @@ void *cmbufferwin_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-	
+
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
 	x->object_inlets[0] = 0.0; // initialize float inlet value for current start min value
@@ -314,7 +315,6 @@ void *cmbufferwin_new(t_symbol *s, long argc, t_atom *argv) {
 	x->grains_limit_old = 0; // initialize value for the routine when grains limit was modified
 	x->limit_modified = 0; // initialize channel change flag
 	x->buffer_modified = 0; // initialized buffer modified flag
-	
 	// initialize the testvalues which are not dependent on sampleRate
 	x->testvalues[0] = 0.0; // dummy MIN_START
 	x->testvalues[1] = 0.0; // dummy MAX_START
@@ -362,7 +362,6 @@ void cmbufferwin_dsp64(t_cmbufferwin *x, t_object *dsp64, short *count, double s
 	
 	// CALL THE PERFORM ROUTINE
 	object_method(dsp64, gensym("dsp_add64"), x, cmbufferwin_perform64, 0, NULL);
-	//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmbufferwin_perform64, 0, NULL);
 }
 
 
