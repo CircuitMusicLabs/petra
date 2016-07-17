@@ -1,5 +1,6 @@
 build/
 _build/
+_archive/
 *.pbxuser
 !default.pbxuser
 *.mode1v3

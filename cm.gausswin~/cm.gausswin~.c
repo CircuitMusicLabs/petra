@@ -53,12 +53,10 @@ typedef struct _cmgausswin {
 	t_buffer_ref *buffer; // sample buffer reference
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
 	short connect_status[INLETS]; // array for signal inlet connection statuses
-	
 	double *object_inlets; // array to store the incoming values coming from the object inlets
 	double *grain_params; // array to store the processed values coming from the object inlets
 	double *randomized; // array to store the randomized grain values
 	double *testvalues; // array for storing the grain parameter test values (sanity testing)
-	
 	short *busy; // array used to store the flag if a grain is currently playing or not
 	long *grainpos; // used to store the current playback position per grain
 	long *start; // used to store the start position in the buffer for each grain
@@ -169,7 +167,7 @@ void ext_main(void *r) {
 	class_register(CLASS_BOX, cmgausswin_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
-
+	
 }
 
 
@@ -372,7 +370,7 @@ void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double sam
 	
 	// CALL THE PERFORM ROUTINE
 	object_method(dsp64, gensym("dsp_add64"), x, cmgausswin_perform64, 0, NULL);
-//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgausswin_perform64, 0, NULL);
+	//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgausswin_perform64, 0, NULL);
 }
 
 
@@ -895,12 +893,12 @@ void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausswin *x) {
 }
 // RANDOM NUMBER GENERATOR (USE POINTERS FOR MORE EFFICIENCY)
 double cm_random(double *min, double *max) {
-	#ifdef MAC_VERSION
-		return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
-	#endif
-	#ifdef WIN_VERSION
-		return *min + ((*max - *min) * (((double)rand(RANDMAX)) / (double)RANDMAX));
-	#endif
+#ifdef MAC_VERSION
+	return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+#endif
+#ifdef WIN_VERSION
+	return *min + ((*max - *min) * (((double)rand(RANDMAX)) / (double)RANDMAX));
+#endif
 }
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {

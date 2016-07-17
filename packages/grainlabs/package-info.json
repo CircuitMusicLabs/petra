@@ -12,7 +12,7 @@
 	"name" : "grainlabs",
 	"os" : 	{
 		"macintosh" : 		{
-			"platform" : [ "x64" ],
+			"platform" : [ "ia32", "x64" ],
 			"min_version" : "10.9.x"
 		}
 ,
