@@ -209,91 +209,91 @@ void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	/************************************************************************************************************************/
 	// ALLOCATE MEMORY FOR THE BUSY ARRAY
-	x->busy = (short *)sysmem_newptrclear((MAXGRAINS) * sizeof(short *));
+	x->busy = (short *)sysmem_newptrclear((MAXGRAINS) * sizeof(short));
 	if (x->busy == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAINPOS ARRAY
-	x->grainpos = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long *));
+	x->grainpos = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
 	if (x->grainpos == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE START ARRAY
-	x->start = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long *));
+	x->start = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
 	if (x->start == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE T_LENGTH ARRAY
-	x->t_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long *));
+	x->t_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
 	if (x->t_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GR_LENGTH ARRAY
-	x->gr_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long *));
+	x->gr_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
 	if (x->gr_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE PAN_LEFT ARRAY
-	x->pan_left = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double *));
+	x->pan_left = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double));
 	if (x->pan_left == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE PAN_RIGHT ARRAY
-	x->pan_right = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double *));
+	x->pan_right = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double));
 	if (x->pan_right == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GAIN ARRAY
-	x->gain = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double *));
+	x->gain = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double));
 	if (x->gain == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE ALPHA ARRAY
-	x->alpha = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double *));
+	x->alpha = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double));
 	if (x->alpha == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE OBJET INLETS ARRAY
-	x->object_inlets = (double *)sysmem_newptrclear((INLETS) * sizeof(double *));
+	x->object_inlets = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
 	if (x->object_inlets == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
-	x->grain_params = (double *)sysmem_newptrclear((INLETS) * sizeof(double *));
+	x->grain_params = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
 	if (x->grain_params == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
-	x->randomized = (double *)sysmem_newptrclear((INLETS / 2) * sizeof(double *));
+	x->randomized = (double *)sysmem_newptrclear((INLETS / 2) * sizeof(double));
 	if (x->randomized == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE TEST VALUES ARRAY
-	x->testvalues = (double *)sysmem_newptrclear((INLETS) * sizeof(double *));
+	x->testvalues = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
 	if (x->testvalues == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
