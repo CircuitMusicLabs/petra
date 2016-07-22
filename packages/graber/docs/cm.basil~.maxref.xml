@@ -182,13 +182,12 @@
 		<method name="set">
 			<arglist>
 				<arg name="sample buffer" optional="0" type="symbol" />
-				<arg name="window buffer" optional="0" type="symbol" />
 			</arglist>
 			<digest>
 				Sets the buffer references
 			</digest>
 			<description>
-				Specifies the sample and window buffer references.
+				Specifies the sample buffer reference.
 			</description>
 		</method>
 		<method name="limit">
