@@ -1,5 +1,5 @@
 /*
- cm.gausswin~ - a granular synthesis external audio object for Max/MSP.
+ cm.basil~ - a granular synthesis external audio object for Max/MSP.
  Copyright (C) 2014  Matthias Müller - Circuit Music Labs
  
  This program is free software: you can redistribute it and/or modify
@@ -37,20 +37,24 @@
 #define MAX_PAN 1.0 // max pan
 #define MIN_GAIN 0.0 // min gain
 #define MAX_GAIN 2.0  // max gain
-#define MIN_ALPHA 0.1 // min alpha value
-#define MAX_ALPHA 10.0 // max alpha value
-#define ARGUMENTS 2 // constant number of arguments required for the external
+#define ARGUMENTS 4 // constant number of arguments required for the external
 #define MAXGRAINS 512 // maximum number of simultaneously playing grains
-#define INLETS 12 // number of object float inlets
+#define MIN_WINDOWLENGTH 16 // min window length in samples
+#define MAX_WININDEX 7 // max object attribute value for window type
+#define INLETS 10 // number of object float inlets
 #define RANDMAX 10000
 
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
-typedef struct _cmgausswin {
+typedef struct _cmbasil {
 	t_pxobject obj;
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
+	double *window; // window array
+	long window_type; // window typedef
+	long window_length; // window length
+	short w_writeflag; // checkflag to see if window array is currently re-witten
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
 	short connect_status[INLETS]; // array for signal inlet connection statuses
 	double *object_inlets; // array to store the incoming values coming from the object inlets
@@ -65,7 +69,6 @@ typedef struct _cmgausswin {
 	double *pan_left; // pan information for left channel for each grain
 	double *pan_right; // pan information for right channel for each grain
 	double *gain; // gain information for each grain
-	double *alpha; // alpha for gauss window for each grain
 	double tr_prev; // trigger sample from previous signal vector (required to check if input ramp resets to zero)
 	short grains_limit; // user defined maximum number of grains
 	short grains_limit_old; // used to store the previous grains count limit when user changes the limit via the "limit" message
@@ -74,11 +77,12 @@ typedef struct _cmgausswin {
 	short grains_count; // currently playing grains
 	void *grains_count_out; // outlet for number of currently playing grains (for debugging)
 	t_atom_long attr_stereo; // attribute: number of channels to be played
+	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
-} t_cmgausswin;
+} t_cmbasil;
 
 
 /************************************************************************************************************************/
@@ -93,37 +97,50 @@ typedef struct cmpanner {
 /************************************************************************************************************************/
 /* STATIC DECLARATIONS                                                                                                  */
 /************************************************************************************************************************/
-static t_class *cmgausswin_class; // class pointer
+static t_class *cmbasil_class; // class pointer
 static t_symbol *ps_buffer_modified, *ps_stereo;
 
 
 /************************************************************************************************************************/
 /* FUNCTION PROTOTYPES                                                                                                  */
 /************************************************************************************************************************/
-void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv);
-void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
-void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
-void cmgausswin_assist(t_cmgausswin *x, void *b, long msg, long arg, char *dst);
-void cmgausswin_free(t_cmgausswin *x);
-void cmgausswin_float(t_cmgausswin *x, double f);
-void cmgausswin_dblclick(t_cmgausswin *x);
-t_max_err cmgausswin_notify(t_cmgausswin *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
-void cmgausswin_set(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av);
-void cmgausswin_limit(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av);
+void *cmbasil_new(t_symbol *s, long argc, t_atom *argv);
+void cmbasil_dsp64(t_cmbasil *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
+void cmbasil_perform64(t_cmbasil *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
+void cmbasil_assist(t_cmbasil *x, void *b, long msg, long arg, char *dst);
+void cmbasil_free(t_cmbasil *x);
+void cmbasil_float(t_cmbasil *x, double f);
+void cmbasil_dblclick(t_cmbasil *x);
+t_max_err cmbasil_notify(t_cmbasil *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+void cmbasil_set(t_cmbasil *x, t_symbol *s, long ac, t_atom *av);
+void cmbasil_limit(t_cmbasil *x, t_symbol *s, long ac, t_atom *av);
 
+void cmbasil_w_type(t_cmbasil *x, t_symbol *s, long ac, t_atom *av);
+void cmbasil_w_length(t_cmbasil *x, t_symbol *s, long ac, t_atom *av);
 
-t_max_err cmgausswin_stereo_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmbasil_stereo_set(t_cmbasil *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmbasil_winterp_set(t_cmbasil *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmbasil_sinterp_set(t_cmbasil *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmbasil_zero_set(t_cmbasil *x, t_object *attr, long argc, t_atom *argv);
+
+void cmbasil_windowwrite(t_cmbasil *x);
 
 // PANNING FUNCTION
-void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausswin *x);
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbasil *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
-// LINEAR INTERPOLATION FUNCTION
+// LINEAR INTERPOLATION FUNCTIONS
 double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
-// GAUSS WINDOW FUNCTION
-double cm_gauss(long *pos, long *length, double *alpha);
+double cm_lininterpwin(double distance, double *buffer, t_atom_long b_channelcount, short channel);
+// WINDOW FUNCTIONS
+void cm_hann(double *window, long *length);
+void cm_hamming(double *window, long *length);
+void cm_rectangular(double *window, long *length);
+void cm_bartlett(double *window, long *length);
+void cm_flattop(double *window, long *length);
+void cm_gauss2(double *window, long *length);
+void cm_gauss4(double *window, long *length);
+void cm_gauss8(double *window, long *length);
 
 
 /************************************************************************************************************************/
@@ -131,64 +148,86 @@ double cm_gauss(long *pos, long *length, double *alpha);
 /************************************************************************************************************************/
 void ext_main(void *r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
-	cmgausswin_class = class_new("cm.gausswin~", (method)cmgausswin_new, (method)cmgausswin_free, sizeof(t_cmgausswin), 0, A_GIMME, 0);
+	cmbasil_class = class_new("cm.basil~", (method)cmbasil_new, (method)cmbasil_free, sizeof(t_cmbasil), 0, A_GIMME, 0);
 	
-	class_addmethod(cmgausswin_class, (method)cmgausswin_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
-	class_addmethod(cmgausswin_class, (method)cmgausswin_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
-	class_addmethod(cmgausswin_class, (method)cmgausswin_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
-	class_addmethod(cmgausswin_class, (method)cmgausswin_dblclick,		"dblclick",		A_CANT, 0); // Bind the double click message
-	class_addmethod(cmgausswin_class, (method)cmgausswin_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
-	class_addmethod(cmgausswin_class, (method)cmgausswin_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmgausswin_class, (method)cmgausswin_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmbasil_class, (method)cmbasil_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
+	class_addmethod(cmbasil_class, (method)cmbasil_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
+	class_addmethod(cmbasil_class, (method)cmbasil_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
+	class_addmethod(cmbasil_class, (method)cmbasil_dblclick,		"dblclick",		A_CANT, 0); // Bind the double click message
+	class_addmethod(cmbasil_class, (method)cmbasil_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
+	class_addmethod(cmbasil_class, (method)cmbasil_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
+	class_addmethod(cmbasil_class, (method)cmbasil_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmbasil_class, (method)cmbasil_w_type,		"w_type", 		A_GIMME, 0); // Bind the window type message
+	class_addmethod(cmbasil_class, (method)cmbasil_w_length,		"w_length", 	A_GIMME, 0); // Bind the window length message
 	
-	CLASS_ATTR_ATOM_LONG(cmgausswin_class, "stereo", 0, t_cmgausswin, attr_stereo);
-	CLASS_ATTR_ACCESSORS(cmgausswin_class, "stereo", (method)NULL, (method)cmgausswin_stereo_set);
-	CLASS_ATTR_BASIC(cmgausswin_class, "stereo", 0);
-	CLASS_ATTR_SAVE(cmgausswin_class, "stereo", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgausswin_class, "stereo", 0, "onoff", "Multichannel playback");
+	CLASS_ATTR_ATOM_LONG(cmbasil_class, "stereo", 0, t_cmbasil, attr_stereo);
+	CLASS_ATTR_ACCESSORS(cmbasil_class, "stereo", (method)NULL, (method)cmbasil_stereo_set);
+	CLASS_ATTR_BASIC(cmbasil_class, "stereo", 0);
+	CLASS_ATTR_SAVE(cmbasil_class, "stereo", 0);
+	CLASS_ATTR_STYLE_LABEL(cmbasil_class, "stereo", 0, "onoff", "Multichannel playback");
 	
-	CLASS_ATTR_ATOM_LONG(cmgausswin_class, "s_interp", 0, t_cmgausswin, attr_sinterp);
-	CLASS_ATTR_ACCESSORS(cmgausswin_class, "s_interp", (method)NULL, (method)cmgausswin_sinterp_set);
-	CLASS_ATTR_BASIC(cmgausswin_class, "s_interp", 0);
-	CLASS_ATTR_SAVE(cmgausswin_class, "s_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgausswin_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmbasil_class, "w_interp", 0, t_cmbasil, attr_winterp);
+	CLASS_ATTR_ACCESSORS(cmbasil_class, "w_interp", (method)NULL, (method)cmbasil_winterp_set);
+	CLASS_ATTR_BASIC(cmbasil_class, "w_interp", 0);
+	CLASS_ATTR_SAVE(cmbasil_class, "w_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmbasil_class, "w_interp", 0, "onoff", "Window interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmgausswin_class, "zero", 0, t_cmgausswin, attr_zero);
-	CLASS_ATTR_ACCESSORS(cmgausswin_class, "zero", (method)NULL, (method)cmgausswin_zero_set);
-	CLASS_ATTR_BASIC(cmgausswin_class, "zero", 0);
-	CLASS_ATTR_SAVE(cmgausswin_class, "zero", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgausswin_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
+	CLASS_ATTR_ATOM_LONG(cmbasil_class, "s_interp", 0, t_cmbasil, attr_sinterp);
+	CLASS_ATTR_ACCESSORS(cmbasil_class, "s_interp", (method)NULL, (method)cmbasil_sinterp_set);
+	CLASS_ATTR_BASIC(cmbasil_class, "s_interp", 0);
+	CLASS_ATTR_SAVE(cmbasil_class, "s_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmbasil_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
 	
-	CLASS_ATTR_ORDER(cmgausswin_class, "stereo", 0, "1");
-	CLASS_ATTR_ORDER(cmgausswin_class, "s_interp", 0, "2");
-	CLASS_ATTR_ORDER(cmgausswin_class, "zero", 0, "3");
+	CLASS_ATTR_ATOM_LONG(cmbasil_class, "zero", 0, t_cmbasil, attr_zero);
+	CLASS_ATTR_ACCESSORS(cmbasil_class, "zero", (method)NULL, (method)cmbasil_zero_set);
+	CLASS_ATTR_BASIC(cmbasil_class, "zero", 0);
+	CLASS_ATTR_SAVE(cmbasil_class, "zero", 0);
+	CLASS_ATTR_STYLE_LABEL(cmbasil_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
-	class_dspinit(cmgausswin_class); // Add standard Max/MSP methods to your class
-	class_register(CLASS_BOX, cmgausswin_class); // Register the class with Max
+	CLASS_ATTR_ORDER(cmbasil_class, "stereo", 0, "1");
+	CLASS_ATTR_ORDER(cmbasil_class, "w_interp", 0, "2");
+	CLASS_ATTR_ORDER(cmbasil_class, "s_interp", 0, "3");
+	CLASS_ATTR_ORDER(cmbasil_class, "zero", 0, "4");
+	
+	class_dspinit(cmbasil_class); // Add standard Max/MSP methods to your class
+	class_register(CLASS_BOX, cmbasil_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
-	
 }
 
 
 /************************************************************************************************************************/
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
-void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
-	t_cmgausswin *x = (t_cmgausswin *)object_alloc(cmgausswin_class); // create the object and allocate required memory
-	dsp_setup((t_pxobject *)x, 13); // create 13 inlets
+void *cmbasil_new(t_symbol *s, long argc, t_atom *argv) {
+	t_cmbasil *x = (t_cmbasil *)object_alloc(cmbasil_class); // create the object and allocate required memory
+	dsp_setup((t_pxobject *)x, 11); // create 11 inlets
 	
 	if (argc < ARGUMENTS) {
-		object_error((t_object *)x, "%d arguments required (sample buffer / voices)", ARGUMENTS);
+		object_error((t_object *)x, "%d arguments required (sample buffer / window type / window length / voices)", ARGUMENTS);
 		return NULL;
 	}
 	
 	x->buffer_name = atom_getsymarg(0, argc, argv); // get user supplied argument for sample buffer
-	x->grains_limit = atom_getintarg(1, argc, argv); // get user supplied argument for maximum grains
+	x->window_type = atom_getintarg(1, argc, argv); // get user supplied argument for window type
+	x->window_length = atom_getintarg(2, argc, argv); // get user supplied argument for window length
+	x->grains_limit = atom_getintarg(3, argc, argv); // get user supplied argument for maximum grains
 	
+	// CHECK IF WINDOW TYPE ARGUMENT IS VALID
+	if (x->window_type < 0 || x->window_type > MAX_WININDEX) {
+		object_error((t_object *)x, "invalid window type");
+		return NULL;
+	}
+	
+	// CHECK IF WINDOW LENGTH ARGUMENT IS VALID
+	if (x->window_length < MIN_WINDOWLENGTH) {
+		object_error((t_object *)x, "window length must be greater than %d", MIN_WINDOWLENGTH);
+		return NULL;
+	}
 	
 	// HANDLE ATTRIBUTES
 	object_attr_setlong(x, gensym("stereo"), 0); // initialize stereo attribute
+	object_attr_setlong(x, gensym("w_interp"), 0); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("s_interp"), 1); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("zero"), 0); // initialize zero crossing attribute
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
@@ -264,9 +303,9 @@ void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
-	// ALLOCATE MEMORY FOR THE ALPHA ARRAY
-	x->alpha = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double));
-	if (x->alpha == NULL) {
+	// ALLOCATE MEMORY FOR THE WINDOW ARRAY; this is new
+	x->window = (double *)sysmem_newptrclear((x->window_length) * sizeof(double));
+	if (x->window == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
@@ -299,7 +338,6 @@ void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
-	
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
 	x->object_inlets[0] = 0.0; // initialize float inlet value for current start min value
@@ -312,13 +350,12 @@ void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
 	x->object_inlets[7] = 0.0; // initialize value for max pan
 	x->object_inlets[8] = 1.0; // initialize value for min gain
 	x->object_inlets[9] = 1.0; // initialize value for max gain
-	x->object_inlets[10] = 4.0; // initialize value for min alpha
-	x->object_inlets[11] = 4.0; // initialize value for max alpha
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
 	x->grains_limit_old = 0; // initialize value for the routine when grains limit was modified
 	x->limit_modified = 0; // initialize channel change flag
 	x->buffer_modified = 0; // initialize buffer modified flag
+	x->w_writeflag = 0; // initialize window write flag
 	
 	// initialize the testvalues which are not dependent on sampleRate
 	x->testvalues[0] = 0.0; // dummy MIN_START
@@ -329,8 +366,6 @@ void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
 	x->testvalues[7] = MAX_PAN;
 	x->testvalues[8] = MIN_GAIN;
 	x->testvalues[9] = MAX_GAIN;
-	x->testvalues[10] = MIN_ALPHA;
-	x->testvalues[11] = MAX_ALPHA;
 	
 	// calculate constants for panning function
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
@@ -340,6 +375,11 @@ void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
 	
+	
+	// WRITE WINDOW INTO WINDOW ARRAY
+	cmbasil_windowwrite(x);
+	
+	
 	return x;
 }
 
@@ -347,7 +387,7 @@ void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
 /************************************************************************************************************************/
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
+void cmbasil_dsp64(t_cmbasil *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
 	x->connect_status[0] = count[1]; // 2nd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[1] = count[2]; // 3rd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[2] = count[3]; // 4th inlet: write connection flag into object structure (1 if signal connected)
@@ -358,8 +398,6 @@ void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double sam
 	x->connect_status[7] = count[8]; // 9th inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[8] = count[9]; // 10th inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[9] = count[10]; // 11th inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[10] = count[11]; // 12th inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[11] = count[12]; // 13th inlet: write connection flag into object structure (1 if signal connected)
 	
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
@@ -369,21 +407,22 @@ void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double sam
 	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
-	object_method(dsp64, gensym("dsp_add64"), x, cmgausswin_perform64, 0, NULL);
-	//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgausswin_perform64, 0, NULL);
+	object_method(dsp64, gensym("dsp_add64"), x, cmbasil_perform64, 0, NULL);
+	//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmbasil_perform64, 0, NULL);
 }
 
 
 /************************************************************************************************************************/
 /* THE 64 BIT PERFORM ROUTINE                                                                                           */
 /************************************************************************************************************************/
-void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
+void cmbasil_perform64(t_cmbasil *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
-	long i, limit; // for loop counters
+	long i, limit; // for loop counterS
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr; // current trigger value
 	double distance; // floating point index for reading from buffers
+	long index; // truncated index for reading from buffers
 	double b_read, w_read; // current sample read from the sample buffer and window array
 	double outsample_left = 0.0; // temporary left output sample used for adding up all grain samples
 	double outsample_right = 0.0; // temporary right output sample used for adding up all grain samples
@@ -400,9 +439,11 @@ void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long n
 	long b_framecount; // number of frames in the sample buffer
 	t_atom_long b_channelcount; // number of channels in the sample buffer
 	
+	//float *w_sample = (float *)x->window;
+	
 	
 	// BUFFER CHECKS
-	if (!b_sample) { // if the sample buffer does not exist
+	if (!b_sample || x->w_writeflag) { // if the sample buffer does not exist
 		goto zero;
 	}
 	
@@ -421,8 +462,6 @@ void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long n
 			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] : x->object_inlets[i];
 		}
 	}
-	
-	
 	
 	// DSP LOOP
 	while (n--) {
@@ -502,14 +541,10 @@ void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long n
 			x->pan_right[slot] = panstruct.right;
 			// write gain value
 			x->gain[slot] = x->randomized[4];
-			// write alpha value
-			x->alpha[slot] = x->randomized[5];
-			
 		}
-		
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->grains_count == 0 || !b_sample) { // if grains count is zero, there is no playback to be calculated
+		if (x->grains_count == 0 || !b_sample || x->w_writeflag) { // if grains count is zero, there is no playback to be calculated
 			*out_left++ = 0.0;
 			*out_right++ = 0.0;
 		}
@@ -523,8 +558,14 @@ void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long n
 			for (i = 0; i < limit; i++) {
 				if (x->busy[i]) { // if the current slot contains grain playback information
 					// GET WINDOW SAMPLE FROM WINDOW BUFFER
-					w_read = cm_gauss(&x->grainpos[i], &x->t_length[i], &x->alpha[i]);
-					
+					if (x->attr_winterp) {
+						distance = ((double)x->grainpos[i] / (double)x->t_length[i]) * (double)x->window_length;
+						w_read = cm_lininterpwin(distance, x->window, 1, 0);
+					}
+					else {
+						index = (long)(((double)x->grainpos[i] / (double)x->t_length[i]) * (double)x->window_length);
+						w_read = x->window[index];
+					}
 					// GET GRAIN SAMPLE FROM SAMPLE BUFFER
 					distance = x->start[i] + (((double)x->grainpos[i]++ / (double)x->t_length[i]) * (double)x->gr_length[i]);
 					
@@ -592,7 +633,7 @@ zero:
 /************************************************************************************************************************/
 /* ASSIST METHOD FOR INLET AND OUTLET ANNOTATION                                                                        */
 /************************************************************************************************************************/
-void cmgausswin_assist(t_cmgausswin *x, void *b, long msg, long arg, char *dst) {
+void cmbasil_assist(t_cmbasil *x, void *b, long msg, long arg, char *dst) {
 	if (msg == ASSIST_INLET) {
 		switch (arg) {
 			case 0:
@@ -628,12 +669,6 @@ void cmgausswin_assist(t_cmgausswin *x, void *b, long msg, long arg, char *dst) 
 			case 10:
 				snprintf_zero(dst, 256, "(signal/float) gain max");
 				break;
-			case 11:
-				snprintf_zero(dst, 256, "(signal/float) alpha min");
-				break;
-			case 12:
-				snprintf_zero(dst, 256, "(signal/float) alpha max");
-				break;
 		}
 	}
 	else if (msg == ASSIST_OUTLET) {
@@ -655,9 +690,11 @@ void cmgausswin_assist(t_cmgausswin *x, void *b, long msg, long arg, char *dst) 
 /************************************************************************************************************************/
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
-void cmgausswin_free(t_cmgausswin *x) {
+void cmbasil_free(t_cmbasil *x) {
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
 	object_free(x->buffer); // free the buffer reference
+	
+	sysmem_freeptr(x->window); // free memory allocated to the window array
 	
 	sysmem_freeptr(x->busy); // free memory allocated to the busy array
 	sysmem_freeptr(x->grainpos); // free memory allocated to the grainpos array
@@ -667,7 +704,6 @@ void cmgausswin_free(t_cmgausswin *x) {
 	sysmem_freeptr(x->pan_left); // free memory allocated to the pan_left array
 	sysmem_freeptr(x->pan_right); // free memory allocated to the pan_right array
 	sysmem_freeptr(x->gain); // free memory allocated to the gain array
-	sysmem_freeptr(x->alpha); // free memory allocated to the alpha array
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
 	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
 	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
@@ -677,7 +713,7 @@ void cmgausswin_free(t_cmgausswin *x) {
 /************************************************************************************************************************/
 /* FLOAT METHOD FOR FLOAT INLET SUPPORT                                                                                 */
 /************************************************************************************************************************/
-void cmgausswin_float(t_cmgausswin *x, double f) {
+void cmbasil_float(t_cmbasil *x, double f) {
 	double dump;
 	int inlet = ((t_pxobject*)x)->z_in; // get info as to which inlet was addressed (stored in the z_in component of the object structure
 	switch (inlet) {
@@ -773,22 +809,6 @@ void cmgausswin_float(t_cmgausswin *x, double f) {
 				x->object_inlets[9] = f;
 			}
 			break;
-		case 11:
-			if (f < MIN_ALPHA || f > MAX_ALPHA) {
-				dump = f;
-			}
-			else {
-				x->object_inlets[10] = f;
-			}
-			break;
-		case 12:
-			if (f < MIN_ALPHA || f > MAX_ALPHA) {
-				dump = f;
-			}
-			else {
-				x->object_inlets[11] = f;
-			}
-			break;
 	}
 }
 
@@ -796,7 +816,7 @@ void cmgausswin_float(t_cmgausswin *x, double f) {
 /************************************************************************************************************************/
 /* DOUBLE CLICK METHOD FOR VIEWING BUFFER CONTENT                                                                       */
 /************************************************************************************************************************/
-void cmgausswin_dblclick(t_cmgausswin *x) {
+void cmbasil_dblclick(t_cmbasil *x) {
 	buffer_view(buffer_ref_getobject(x->buffer));
 }
 
@@ -804,7 +824,7 @@ void cmgausswin_dblclick(t_cmgausswin *x) {
 /************************************************************************************************************************/
 /* NOTIFY METHOD FOR THE BUFFER REFERENCES                                                                              */
 /************************************************************************************************************************/
-t_max_err cmgausswin_notify(t_cmgausswin *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
+t_max_err cmbasil_notify(t_cmbasil *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = 1;
 	}
@@ -815,7 +835,7 @@ t_max_err cmgausswin_notify(t_cmgausswin *x, t_symbol *s, t_symbol *msg, void *s
 /************************************************************************************************************************/
 /* THE BUFFER SET METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmgausswin_set(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av) {
+void cmbasil_set(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
 		x->buffer_modified = 1;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
@@ -832,10 +852,62 @@ void cmgausswin_set(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av) {
 
 
 
+
+
+/************************************************************************************************************************/
+/* THE WINDOW TYPE SET METHOD                                                                                           */
+/************************************************************************************************************************/
+void cmbasil_w_type(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
+	long arg = atom_getlong(av);
+	if (ac && av) {
+		if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
+			// CHECK IF WINDOW TYPE ARGUMENT IS VALID
+			if (arg < 0 || arg > MAX_WININDEX) {
+				object_error((t_object *)x, "invalid window type");
+			}
+			else {
+				x->window_type = arg; // write window type into object structure
+				cmbasil_windowwrite(x); // write window into window array
+			}
+		}
+	}
+	else {
+		object_error((t_object *)x, "argument required (window type)");
+	}
+}
+
+
+
+/************************************************************************************************************************/
+/* THE WINDOW LENGTH SET METHOD                                                                                         */
+/************************************************************************************************************************/
+void cmbasil_w_length(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
+	long arg = atom_getlong(av);
+	if (ac && av) {
+		// CHECK IF WINDOW LENGTH ARGUMENT IS VALID
+		if (arg < MIN_WINDOWLENGTH) {
+			object_error((t_object *)x, "window length must be greater than %d", MIN_WINDOWLENGTH);
+		}
+		else if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
+			x->window_length = arg; // write window length into object structure
+			x->w_writeflag = 1;
+			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double *)); // resize and clear window array
+			x->w_writeflag = 0;
+			cmbasil_windowwrite(x); // write window into window array
+		}
+	}
+	else {
+		object_error((t_object *)x, "argument required (window length)");
+	}
+}
+
+
+
+
 /************************************************************************************************************************/
 /* THE GRAINS LIMIT METHOD                                                                                              */
 /************************************************************************************************************************/
-void cmgausswin_limit(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av) {
+void cmbasil_limit(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
 	if (arg < 1 || arg > MAXGRAINS) {
@@ -852,7 +924,7 @@ void cmgausswin_limit(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE STEREO ATTRIBUTE SET METHOD                                                                                      */
 /************************************************************************************************************************/
-t_max_err cmgausswin_stereo_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmbasil_stereo_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_stereo = atom_getlong(av)? 1 : 0;
 	}
@@ -861,9 +933,20 @@ t_max_err cmgausswin_stereo_set(t_cmgausswin *x, t_object *attr, long ac, t_atom
 
 
 /************************************************************************************************************************/
+/* THE WINDOW INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
+/************************************************************************************************************************/
+t_max_err cmbasil_winterp_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av) {
+	if (ac && av) {
+		x->attr_winterp = atom_getlong(av)? 1 : 0;
+	}
+	return MAX_ERR_NONE;
+}
+
+
+/************************************************************************************************************************/
 /* THE SAMPLE INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmbasil_sinterp_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_sinterp = atom_getlong(av)? 1 : 0;
 	}
@@ -874,11 +957,61 @@ t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long ac, t_ato
 /************************************************************************************************************************/
 /* THE ZERO CROSSING ATTRIBUTE SET METHOD                                                                               */
 /************************************************************************************************************************/
-t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmbasil_zero_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_zero = atom_getlong(av)? 1 : 0;
 	}
 	return MAX_ERR_NONE;
+}
+
+/************************************************************************************************************************/
+/* THE WINDOW_WRITE FUNCTION                                                                                            */
+/************************************************************************************************************************/
+void cmbasil_windowwrite(t_cmbasil *x) {
+	//	int i;
+	long length = x->window_length;
+	x->w_writeflag = 1;
+	switch (x->window_type) {
+		case 0:
+			object_post((t_object*)x, "hann - %d", length);
+			cm_hann(x->window, &length);
+			//			for (i = 0; i < length; i++) {
+			//				object_post((t_object*)x, "%d : %f", i, x->window[i]);
+			//			}
+			break;
+		case 1:
+			object_post((t_object*)x, "hamming - %d", length);
+			cm_hamming(x->window, &length);
+			break;
+		case 2:
+			object_post((t_object*)x, "rectangular - %d", length);
+			cm_rectangular(x->window, &length);
+			break;
+		case 3:
+			object_post((t_object*)x, "bartlett - %d", length);
+			cm_bartlett(x->window, &length);
+			break;
+		case 4:
+			object_post((t_object*)x, "flattop - %d", length);
+			cm_flattop(x->window, &length);
+			break;
+		case 5:
+			object_post((t_object*)x, "gauss (alpha 2) - %d", length);
+			cm_gauss2(x->window, &length);
+			break;
+		case 6:
+			object_post((t_object*)x, "gauss (alpha 4) - %d", length);
+			cm_gauss4(x->window, &length);
+			break;
+		case 7:
+			object_post((t_object*)x, "gauss (alpha 8) - %d", length);
+			cm_gauss8(x->window, &length);
+			break;
+		default:
+			cm_hann(x->window, &length);
+	}
+	x->w_writeflag = 0;
+	return;
 }
 
 
@@ -886,7 +1019,7 @@ t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *
 /* CUSTOM FUNCTIONS																										*/
 /************************************************************************************************************************/
 // constant power stereo function
-void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausswin *x) {
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbasil *x) {
 	panstruct->left = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) - sin((*pos * x->piovr2) * 0.5));
 	panstruct->right = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) + sin((*pos * x->piovr2) * 0.5));
 	return;
@@ -906,13 +1039,114 @@ double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, 
 	distance -= (long)distance; // calculate fraction value for interpolation
 	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
 }
-// GAUSS WINDOW FUNCTION
-double cm_gauss(long *pos, long *length, double *alpha) {
-	double n;
-	double N = *length - 1;
-	double stdev = N / (2 * (*alpha));
-	n = *pos - N / 2;
-	return exp(-0.5 * pow((n / stdev), 2));
+// LINEAR INTERPOLATION FUNCTION FOR WINDOW (passing douple pointer)
+double cm_lininterpwin(double distance, double *buffer, t_atom_long b_channelcount, short channel) {
+	long index = (long)distance; // get truncated index
+	distance -= (long)distance; // calculate fraction value for interpolation
+	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
 }
 
 
+/************************************************************************************************************************/
+/* WINDOW FUNCTIONS																										*/
+/************************************************************************************************************************/
+void cm_hann(double *window, long *length) {
+	int i;
+	long N = *length - 1;
+	for (i = 0; i < *length; i++) {
+		window[i] = 0.5 * (1.0 - cos((2.0 * M_PI) * ((double)i / (double)N)));
+	}
+	return;
+}
+
+
+void cm_hamming(double *window, long *length) {
+	int i;
+	long N = *length - 1;
+	for (i = 0; i < *length; i++) {
+		window[i] = 0.54 - (0.46 * cos((2.0 * M_PI) * ((double)i / (double)N)));
+	}
+	return;
+}
+
+
+void cm_rectangular(double *window, long *length) {
+	int i;
+	for (i = 0; i < *length; i++) {
+		window[i] = 1;
+	}
+	return;
+}
+
+
+void cm_bartlett(double *window, long *length) {
+	int i;
+	long N = *length - 1;
+	for (i = 0; i < *length; i++) {
+		if (i < (*length / 2)) {
+			window[i] = (2 * (double)i) / (double)N;
+		}
+		else {
+			window[i] = 2 - ((2 * (double)i) / (double)N);
+		}
+	}
+	return;
+}
+
+
+void cm_flattop(double *window, long *length) {
+	int i;
+	long N = *length - 1;
+	double a0 = 0.21557895;
+	double a1 = 0.41663158;
+	double a2 = 0.277263158;
+	double a3 = 0.083578947;
+	double a4 = 0.006947368;
+	double twopi = M_PI * 2.0;
+	double fourpi = M_PI * 4.0;
+	double sixpi = M_PI * 6.0;
+	double eightpi = M_PI * 8.0;
+	for (i = 0; i < *length; i++) {
+		window[i] = a0 - (a1 * cos((twopi * i) / N)) + (a2 * cos((fourpi * i) / N)) - (a3 * cos((sixpi * i) / N)) + (a4 * cos((eightpi * i) / N));
+	}
+	return;
+}
+
+
+void cm_gauss2(double *window, long *length) {
+	int i;
+	double n;
+	double N = *length - 1;
+	double alpha = 2.0;
+	double stdev = N / (2 * alpha);
+	for (i = 0; i < *length; i++) {
+		n = i - N / 2;
+		window[i] = exp(-0.5 * pow((n / stdev), 2));
+	}
+}
+
+
+void cm_gauss4(double *window, long *length) {
+	int i;
+	double n;
+	double N = *length - 1;
+	double alpha = 4.0;
+	double stdev = N / (2 * alpha);
+	for (i = 0; i < *length; i++) {
+		n = i - N / 2;
+		window[i] = exp(-0.5 * pow((n / stdev), 2));
+	}
+}
+
+
+void cm_gauss8(double *window, long *length) {
+	int i;
+	double n;
+	double N = *length - 1;
+	double alpha = 8.0;
+	double stdev = N / (2 * alpha);
+	for (i = 0; i < *length; i++) {
+		n = i - N / 2;
+		window[i] = exp(-0.5 * pow((n / stdev), 2));
+	}
+}

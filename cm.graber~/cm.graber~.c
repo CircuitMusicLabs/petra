@@ -1,5 +1,5 @@
 /*
- cm.bufferwin~ - a granular synthesis external audio object for Max/MSP.
+ cm.graber~ - a granular synthesis external audio object for Max/MSP.
  Copyright (C) 2014  Matthias Müller - Circuit Music Labs
  
  This program is free software: you can redistribute it and/or modify
@@ -46,7 +46,7 @@
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
-typedef struct _cmbufferwin {
+typedef struct _cmgraber {
 	t_pxobject obj;
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
@@ -79,7 +79,7 @@ typedef struct _cmbufferwin {
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
-} t_cmbufferwin;
+} t_cmgraber;
 
 
 /************************************************************************************************************************/
@@ -94,30 +94,30 @@ typedef struct cmpanner {
 /************************************************************************************************************************/
 /* STATIC DECLARATIONS                                                                                                  */
 /************************************************************************************************************************/
-static t_class *cmbufferwin_class; // class pointer
+static t_class *cmgraber_class; // class pointer
 static t_symbol *ps_buffer_modified, *ps_stereo;
 
 
 /************************************************************************************************************************/
 /* FUNCTION PROTOTYPES                                                                                                  */
 /************************************************************************************************************************/
-void *cmbufferwin_new(t_symbol *s, long argc, t_atom *argv);
-void cmbufferwin_dsp64(t_cmbufferwin *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
-void cmbufferwin_perform64(t_cmbufferwin *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
-void cmbufferwin_assist(t_cmbufferwin *x, void *b, long msg, long arg, char *dst);
-void cmbufferwin_free(t_cmbufferwin *x);
-void cmbufferwin_float(t_cmbufferwin *x, double f);
-void cmbufferwin_dblclick(t_cmbufferwin *x);
-t_max_err cmbufferwin_notify(t_cmbufferwin *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
-void cmbufferwin_set(t_cmbufferwin *x, t_symbol *s, long ac, t_atom *av);
-void cmbufferwin_limit(t_cmbufferwin *x, t_symbol *s, long ac, t_atom *av);
-t_max_err cmbufferwin_stereo_set(t_cmbufferwin *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmbufferwin_winterp_set(t_cmbufferwin *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmbufferwin_sinterp_set(t_cmbufferwin *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmbufferwin_zero_set(t_cmbufferwin *x, t_object *attr, long argc, t_atom *argv);
+void *cmgraber_new(t_symbol *s, long argc, t_atom *argv);
+void cmgraber_dsp64(t_cmgraber *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
+void cmgraber_perform64(t_cmgraber *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
+void cmgraber_assist(t_cmgraber *x, void *b, long msg, long arg, char *dst);
+void cmgraber_free(t_cmgraber *x);
+void cmgraber_float(t_cmgraber *x, double f);
+void cmgraber_dblclick(t_cmgraber *x);
+t_max_err cmgraber_notify(t_cmgraber *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+void cmgraber_set(t_cmgraber *x, t_symbol *s, long ac, t_atom *av);
+void cmgraber_limit(t_cmgraber *x, t_symbol *s, long ac, t_atom *av);
+t_max_err cmgraber_stereo_set(t_cmgraber *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgraber_winterp_set(t_cmgraber *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgraber_sinterp_set(t_cmgraber *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgraber_zero_set(t_cmgraber *x, t_object *attr, long argc, t_atom *argv);
 
 // PANNING FUNCTION
-void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbufferwin *x);
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgraber *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTION
@@ -129,47 +129,47 @@ double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount
 /************************************************************************************************************************/
 void ext_main(void *r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
-	cmbufferwin_class = class_new("cm.bufferwin~", (method)cmbufferwin_new, (method)cmbufferwin_free, sizeof(t_cmbufferwin), 0, A_GIMME, 0);
+	cmgraber_class = class_new("cm.graber~", (method)cmgraber_new, (method)cmgraber_free, sizeof(t_cmgraber), 0, A_GIMME, 0);
 	
-	class_addmethod(cmbufferwin_class, (method)cmbufferwin_dsp64, 		"dsp64", 	A_CANT, 0);  // Bind the 64 bit dsp method
-	class_addmethod(cmbufferwin_class, (method)cmbufferwin_assist, 		"assist", 	A_CANT, 0); // Bind the assist message
-	class_addmethod(cmbufferwin_class, (method)cmbufferwin_float, 		"float", 	A_FLOAT, 0); // Bind the float message (allowing float input)
-	class_addmethod(cmbufferwin_class, (method)cmbufferwin_dblclick, 	"dblclick",	A_CANT, 0); // Bind the double click message
-	class_addmethod(cmbufferwin_class, (method)cmbufferwin_notify, 		"notify", 	A_CANT, 0); // Bind the notify message
-	class_addmethod(cmbufferwin_class, (method)cmbufferwin_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmbufferwin_class, (method)cmbufferwin_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmgraber_class, (method)cmgraber_dsp64, 		"dsp64", 	A_CANT, 0);  // Bind the 64 bit dsp method
+	class_addmethod(cmgraber_class, (method)cmgraber_assist, 		"assist", 	A_CANT, 0); // Bind the assist message
+	class_addmethod(cmgraber_class, (method)cmgraber_float, 		"float", 	A_FLOAT, 0); // Bind the float message (allowing float input)
+	class_addmethod(cmgraber_class, (method)cmgraber_dblclick, 	"dblclick",	A_CANT, 0); // Bind the double click message
+	class_addmethod(cmgraber_class, (method)cmgraber_notify, 		"notify", 	A_CANT, 0); // Bind the notify message
+	class_addmethod(cmgraber_class, (method)cmgraber_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
+	class_addmethod(cmgraber_class, (method)cmgraber_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
 	
-	CLASS_ATTR_ATOM_LONG(cmbufferwin_class, "stereo", 0, t_cmbufferwin, attr_stereo);
-	CLASS_ATTR_ACCESSORS(cmbufferwin_class, "stereo", (method)NULL, (method)cmbufferwin_stereo_set);
-	CLASS_ATTR_BASIC(cmbufferwin_class, "stereo", 0);
-	CLASS_ATTR_SAVE(cmbufferwin_class, "stereo", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbufferwin_class, "stereo", 0, "onoff", "Multichannel playback");
+	CLASS_ATTR_ATOM_LONG(cmgraber_class, "stereo", 0, t_cmgraber, attr_stereo);
+	CLASS_ATTR_ACCESSORS(cmgraber_class, "stereo", (method)NULL, (method)cmgraber_stereo_set);
+	CLASS_ATTR_BASIC(cmgraber_class, "stereo", 0);
+	CLASS_ATTR_SAVE(cmgraber_class, "stereo", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgraber_class, "stereo", 0, "onoff", "Multichannel playback");
 	
-	CLASS_ATTR_ATOM_LONG(cmbufferwin_class, "w_interp", 0, t_cmbufferwin, attr_winterp);
-	CLASS_ATTR_ACCESSORS(cmbufferwin_class, "w_interp", (method)NULL, (method)cmbufferwin_winterp_set);
-	CLASS_ATTR_BASIC(cmbufferwin_class, "w_interp", 0);
-	CLASS_ATTR_SAVE(cmbufferwin_class, "w_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbufferwin_class, "w_interp", 0, "onoff", "Window interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmgraber_class, "w_interp", 0, t_cmgraber, attr_winterp);
+	CLASS_ATTR_ACCESSORS(cmgraber_class, "w_interp", (method)NULL, (method)cmgraber_winterp_set);
+	CLASS_ATTR_BASIC(cmgraber_class, "w_interp", 0);
+	CLASS_ATTR_SAVE(cmgraber_class, "w_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgraber_class, "w_interp", 0, "onoff", "Window interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmbufferwin_class, "s_interp", 0, t_cmbufferwin, attr_sinterp);
-	CLASS_ATTR_ACCESSORS(cmbufferwin_class, "s_interp", (method)NULL, (method)cmbufferwin_sinterp_set);
-	CLASS_ATTR_BASIC(cmbufferwin_class, "s_interp", 0);
-	CLASS_ATTR_SAVE(cmbufferwin_class, "s_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbufferwin_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmgraber_class, "s_interp", 0, t_cmgraber, attr_sinterp);
+	CLASS_ATTR_ACCESSORS(cmgraber_class, "s_interp", (method)NULL, (method)cmgraber_sinterp_set);
+	CLASS_ATTR_BASIC(cmgraber_class, "s_interp", 0);
+	CLASS_ATTR_SAVE(cmgraber_class, "s_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgraber_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmbufferwin_class, "zero", 0, t_cmbufferwin, attr_zero);
-	CLASS_ATTR_ACCESSORS(cmbufferwin_class, "zero", (method)NULL, (method)cmbufferwin_zero_set);
-	CLASS_ATTR_BASIC(cmbufferwin_class, "zero", 0);
-	CLASS_ATTR_SAVE(cmbufferwin_class, "zero", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbufferwin_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
+	CLASS_ATTR_ATOM_LONG(cmgraber_class, "zero", 0, t_cmgraber, attr_zero);
+	CLASS_ATTR_ACCESSORS(cmgraber_class, "zero", (method)NULL, (method)cmgraber_zero_set);
+	CLASS_ATTR_BASIC(cmgraber_class, "zero", 0);
+	CLASS_ATTR_SAVE(cmgraber_class, "zero", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgraber_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
-	CLASS_ATTR_ORDER(cmbufferwin_class, "stereo", 0, "1");
-	CLASS_ATTR_ORDER(cmbufferwin_class, "w_interp", 0, "2");
-	CLASS_ATTR_ORDER(cmbufferwin_class, "s_interp", 0, "3");
-	CLASS_ATTR_ORDER(cmbufferwin_class, "zero", 0, "4");
+	CLASS_ATTR_ORDER(cmgraber_class, "stereo", 0, "1");
+	CLASS_ATTR_ORDER(cmgraber_class, "w_interp", 0, "2");
+	CLASS_ATTR_ORDER(cmgraber_class, "s_interp", 0, "3");
+	CLASS_ATTR_ORDER(cmgraber_class, "zero", 0, "4");
 	
-	class_dspinit(cmbufferwin_class); // Add standard Max/MSP methods to your class
-	class_register(CLASS_BOX, cmbufferwin_class); // Register the class with Max
+	class_dspinit(cmgraber_class); // Add standard Max/MSP methods to your class
+	class_register(CLASS_BOX, cmgraber_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
 }
@@ -178,8 +178,8 @@ void ext_main(void *r) {
 /************************************************************************************************************************/
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
-void *cmbufferwin_new(t_symbol *s, long argc, t_atom *argv) {
-	t_cmbufferwin *x = (t_cmbufferwin *)object_alloc(cmbufferwin_class); // create the object and allocate required memory
+void *cmgraber_new(t_symbol *s, long argc, t_atom *argv) {
+	t_cmgraber *x = (t_cmgraber *)object_alloc(cmgraber_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 11); // create 11 inlets
 	
 	
@@ -341,7 +341,7 @@ void *cmbufferwin_new(t_symbol *s, long argc, t_atom *argv) {
 /************************************************************************************************************************/
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmbufferwin_dsp64(t_cmbufferwin *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
+void cmgraber_dsp64(t_cmgraber *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
 	x->connect_status[0] = count[1]; // 2nd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[1] = count[2]; // 3rd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[2] = count[3]; // 4th inlet: write connection flag into object structure (1 if signal connected)
@@ -361,14 +361,14 @@ void cmbufferwin_dsp64(t_cmbufferwin *x, t_object *dsp64, short *count, double s
 	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
-	object_method(dsp64, gensym("dsp_add64"), x, cmbufferwin_perform64, 0, NULL);
+	object_method(dsp64, gensym("dsp_add64"), x, cmgraber_perform64, 0, NULL);
 }
 
 
 /************************************************************************************************************************/
 /* THE 64 BIT PERFORM ROUTINE                                                                                           */
 /************************************************************************************************************************/
-void cmbufferwin_perform64(t_cmbufferwin *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
+void cmgraber_perform64(t_cmgraber *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
 	long i, limit; // for loop counterS
@@ -591,7 +591,7 @@ zero:
 /************************************************************************************************************************/
 /* ASSIST METHOD FOR INLET AND OUTLET ANNOTATION                                                                        */
 /************************************************************************************************************************/
-void cmbufferwin_assist(t_cmbufferwin *x, void *b, long msg, long arg, char *dst) {
+void cmgraber_assist(t_cmgraber *x, void *b, long msg, long arg, char *dst) {
 	if (msg == ASSIST_INLET) {
 		switch (arg) {
 			case 0:
@@ -648,7 +648,7 @@ void cmbufferwin_assist(t_cmbufferwin *x, void *b, long msg, long arg, char *dst
 /************************************************************************************************************************/
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
-void cmbufferwin_free(t_cmbufferwin *x) {
+void cmgraber_free(t_cmgraber *x) {
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
 	object_free(x->buffer); // free the buffer reference
 	object_free(x->w_buffer); // free the window buffer reference
@@ -670,7 +670,7 @@ void cmbufferwin_free(t_cmbufferwin *x) {
 /************************************************************************************************************************/
 /* FLOAT METHOD FOR FLOAT INLET SUPPORT                                                                                 */
 /************************************************************************************************************************/
-void cmbufferwin_float(t_cmbufferwin *x, double f) {
+void cmgraber_float(t_cmgraber *x, double f) {
 	double dump;
 	int inlet = ((t_pxobject*)x)->z_in; // get info as to which inlet was addressed (stored in the z_in component of the object structure
 	switch (inlet) {
@@ -773,7 +773,7 @@ void cmbufferwin_float(t_cmbufferwin *x, double f) {
 /************************************************************************************************************************/
 /* DOUBLE CLICK METHOD FOR VIEWING BUFFER CONTENT                                                                       */
 /************************************************************************************************************************/
-void cmbufferwin_dblclick(t_cmbufferwin *x) {
+void cmgraber_dblclick(t_cmgraber *x) {
 	buffer_view(buffer_ref_getobject(x->buffer));
 	buffer_view(buffer_ref_getobject(x->w_buffer));
 }
@@ -782,7 +782,7 @@ void cmbufferwin_dblclick(t_cmbufferwin *x) {
 /************************************************************************************************************************/
 /* NOTIFY METHOD FOR THE BUFFER REFERENCES                                                                              */
 /************************************************************************************************************************/
-t_max_err cmbufferwin_notify(t_cmbufferwin *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
+t_max_err cmgraber_notify(t_cmgraber *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	t_symbol *buffer_name = (t_symbol *)object_method((t_object *)sender, gensym("getname"));
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = 1;
@@ -802,7 +802,7 @@ t_max_err cmbufferwin_notify(t_cmbufferwin *x, t_symbol *s, t_symbol *msg, void 
 /************************************************************************************************************************/
 /* THE BUFFER SET METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmbufferwin_set(t_cmbufferwin *x, t_symbol *s, long ac, t_atom *av) {
+void cmgraber_set(t_cmgraber *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 2) {
 		x->buffer_modified = 1;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
@@ -825,7 +825,7 @@ void cmbufferwin_set(t_cmbufferwin *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE GRAINS LIMIT METHOD                                                                                              */
 /************************************************************************************************************************/
-void cmbufferwin_limit(t_cmbufferwin *x, t_symbol *s, long ac, t_atom *av) {
+void cmgraber_limit(t_cmgraber *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
 	if (arg < 1 || arg > MAXGRAINS) {
@@ -842,7 +842,7 @@ void cmbufferwin_limit(t_cmbufferwin *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE STEREO ATTRIBUTE SET METHOD                                                                                      */
 /************************************************************************************************************************/
-t_max_err cmbufferwin_stereo_set(t_cmbufferwin *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgraber_stereo_set(t_cmgraber *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_stereo = atom_getlong(av)? 1 : 0;
 	}
@@ -853,7 +853,7 @@ t_max_err cmbufferwin_stereo_set(t_cmbufferwin *x, t_object *attr, long ac, t_at
 /************************************************************************************************************************/
 /* THE WINDOW INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmbufferwin_winterp_set(t_cmbufferwin *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgraber_winterp_set(t_cmgraber *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_winterp = atom_getlong(av)? 1 : 0;
 	}
@@ -864,7 +864,7 @@ t_max_err cmbufferwin_winterp_set(t_cmbufferwin *x, t_object *attr, long ac, t_a
 /************************************************************************************************************************/
 /* THE SAMPLE INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmbufferwin_sinterp_set(t_cmbufferwin *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgraber_sinterp_set(t_cmgraber *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_sinterp = atom_getlong(av)? 1 : 0;
 	}
@@ -875,7 +875,7 @@ t_max_err cmbufferwin_sinterp_set(t_cmbufferwin *x, t_object *attr, long ac, t_a
 /************************************************************************************************************************/
 /* THE ZERO CROSSING ATTRIBUTE SET METHOD                                                                               */
 /************************************************************************************************************************/
-t_max_err cmbufferwin_zero_set(t_cmbufferwin *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmgraber_zero_set(t_cmgraber *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_zero = atom_getlong(av)? 1 : 0;
 	}
@@ -887,7 +887,7 @@ t_max_err cmbufferwin_zero_set(t_cmbufferwin *x, t_object *attr, long ac, t_atom
 /* CUSTOM FUNCTIONS																										*/
 /************************************************************************************************************************/
 // constant power stereo function
-void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbufferwin *x) {
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgraber *x) {
 	panstruct->left = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) - sin((*pos * x->piovr2) * 0.5));
 	panstruct->right = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) + sin((*pos * x->piovr2) * 0.5));
 	return;
