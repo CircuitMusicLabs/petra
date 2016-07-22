@@ -1,5 +1,5 @@
 /*
- cm.gausswin~ - a granular synthesis external audio object for Max/MSP.
+ cm.timon~ - a granular synthesis external audio object for Max/MSP.
  Copyright (C) 2014  Matthias Müller - Circuit Music Labs
  
  This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
-typedef struct _cmgausswin {
+typedef struct _cmtimon {
 	t_pxobject obj;
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
@@ -78,7 +78,7 @@ typedef struct _cmgausswin {
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
-} t_cmgausswin;
+} t_cmtimon;
 
 
 /************************************************************************************************************************/
@@ -93,31 +93,31 @@ typedef struct cmpanner {
 /************************************************************************************************************************/
 /* STATIC DECLARATIONS                                                                                                  */
 /************************************************************************************************************************/
-static t_class *cmgausswin_class; // class pointer
+static t_class *cmtimon_class; // class pointer
 static t_symbol *ps_buffer_modified, *ps_stereo;
 
 
 /************************************************************************************************************************/
 /* FUNCTION PROTOTYPES                                                                                                  */
 /************************************************************************************************************************/
-void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv);
-void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
-void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
-void cmgausswin_assist(t_cmgausswin *x, void *b, long msg, long arg, char *dst);
-void cmgausswin_free(t_cmgausswin *x);
-void cmgausswin_float(t_cmgausswin *x, double f);
-void cmgausswin_dblclick(t_cmgausswin *x);
-t_max_err cmgausswin_notify(t_cmgausswin *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
-void cmgausswin_set(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av);
-void cmgausswin_limit(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av);
+void *cmtimon_new(t_symbol *s, long argc, t_atom *argv);
+void cmtimon_dsp64(t_cmtimon *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
+void cmtimon_perform64(t_cmtimon *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
+void cmtimon_assist(t_cmtimon *x, void *b, long msg, long arg, char *dst);
+void cmtimon_free(t_cmtimon *x);
+void cmtimon_float(t_cmtimon *x, double f);
+void cmtimon_dblclick(t_cmtimon *x);
+t_max_err cmtimon_notify(t_cmtimon *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+void cmtimon_set(t_cmtimon *x, t_symbol *s, long ac, t_atom *av);
+void cmtimon_limit(t_cmtimon *x, t_symbol *s, long ac, t_atom *av);
 
 
-t_max_err cmgausswin_stereo_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmtimon_stereo_set(t_cmtimon *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmtimon_sinterp_set(t_cmtimon *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmtimon_zero_set(t_cmtimon *x, t_object *attr, long argc, t_atom *argv);
 
 // PANNING FUNCTION
-void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausswin *x);
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmtimon *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTION
@@ -131,40 +131,40 @@ double cm_gauss(long *pos, long *length, double *alpha);
 /************************************************************************************************************************/
 void ext_main(void *r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
-	cmgausswin_class = class_new("cm.gausswin~", (method)cmgausswin_new, (method)cmgausswin_free, sizeof(t_cmgausswin), 0, A_GIMME, 0);
+	cmtimon_class = class_new("cm.timon~", (method)cmtimon_new, (method)cmtimon_free, sizeof(t_cmtimon), 0, A_GIMME, 0);
 	
-	class_addmethod(cmgausswin_class, (method)cmgausswin_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
-	class_addmethod(cmgausswin_class, (method)cmgausswin_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
-	class_addmethod(cmgausswin_class, (method)cmgausswin_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
-	class_addmethod(cmgausswin_class, (method)cmgausswin_dblclick,		"dblclick",		A_CANT, 0); // Bind the double click message
-	class_addmethod(cmgausswin_class, (method)cmgausswin_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
-	class_addmethod(cmgausswin_class, (method)cmgausswin_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmgausswin_class, (method)cmgausswin_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmtimon_class, (method)cmtimon_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
+	class_addmethod(cmtimon_class, (method)cmtimon_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
+	class_addmethod(cmtimon_class, (method)cmtimon_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
+	class_addmethod(cmtimon_class, (method)cmtimon_dblclick,		"dblclick",		A_CANT, 0); // Bind the double click message
+	class_addmethod(cmtimon_class, (method)cmtimon_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
+	class_addmethod(cmtimon_class, (method)cmtimon_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
+	class_addmethod(cmtimon_class, (method)cmtimon_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
 	
-	CLASS_ATTR_ATOM_LONG(cmgausswin_class, "stereo", 0, t_cmgausswin, attr_stereo);
-	CLASS_ATTR_ACCESSORS(cmgausswin_class, "stereo", (method)NULL, (method)cmgausswin_stereo_set);
-	CLASS_ATTR_BASIC(cmgausswin_class, "stereo", 0);
-	CLASS_ATTR_SAVE(cmgausswin_class, "stereo", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgausswin_class, "stereo", 0, "onoff", "Multichannel playback");
+	CLASS_ATTR_ATOM_LONG(cmtimon_class, "stereo", 0, t_cmtimon, attr_stereo);
+	CLASS_ATTR_ACCESSORS(cmtimon_class, "stereo", (method)NULL, (method)cmtimon_stereo_set);
+	CLASS_ATTR_BASIC(cmtimon_class, "stereo", 0);
+	CLASS_ATTR_SAVE(cmtimon_class, "stereo", 0);
+	CLASS_ATTR_STYLE_LABEL(cmtimon_class, "stereo", 0, "onoff", "Multichannel playback");
 	
-	CLASS_ATTR_ATOM_LONG(cmgausswin_class, "s_interp", 0, t_cmgausswin, attr_sinterp);
-	CLASS_ATTR_ACCESSORS(cmgausswin_class, "s_interp", (method)NULL, (method)cmgausswin_sinterp_set);
-	CLASS_ATTR_BASIC(cmgausswin_class, "s_interp", 0);
-	CLASS_ATTR_SAVE(cmgausswin_class, "s_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgausswin_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmtimon_class, "s_interp", 0, t_cmtimon, attr_sinterp);
+	CLASS_ATTR_ACCESSORS(cmtimon_class, "s_interp", (method)NULL, (method)cmtimon_sinterp_set);
+	CLASS_ATTR_BASIC(cmtimon_class, "s_interp", 0);
+	CLASS_ATTR_SAVE(cmtimon_class, "s_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmtimon_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmgausswin_class, "zero", 0, t_cmgausswin, attr_zero);
-	CLASS_ATTR_ACCESSORS(cmgausswin_class, "zero", (method)NULL, (method)cmgausswin_zero_set);
-	CLASS_ATTR_BASIC(cmgausswin_class, "zero", 0);
-	CLASS_ATTR_SAVE(cmgausswin_class, "zero", 0);
-	CLASS_ATTR_STYLE_LABEL(cmgausswin_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
+	CLASS_ATTR_ATOM_LONG(cmtimon_class, "zero", 0, t_cmtimon, attr_zero);
+	CLASS_ATTR_ACCESSORS(cmtimon_class, "zero", (method)NULL, (method)cmtimon_zero_set);
+	CLASS_ATTR_BASIC(cmtimon_class, "zero", 0);
+	CLASS_ATTR_SAVE(cmtimon_class, "zero", 0);
+	CLASS_ATTR_STYLE_LABEL(cmtimon_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
-	CLASS_ATTR_ORDER(cmgausswin_class, "stereo", 0, "1");
-	CLASS_ATTR_ORDER(cmgausswin_class, "s_interp", 0, "2");
-	CLASS_ATTR_ORDER(cmgausswin_class, "zero", 0, "3");
+	CLASS_ATTR_ORDER(cmtimon_class, "stereo", 0, "1");
+	CLASS_ATTR_ORDER(cmtimon_class, "s_interp", 0, "2");
+	CLASS_ATTR_ORDER(cmtimon_class, "zero", 0, "3");
 	
-	class_dspinit(cmgausswin_class); // Add standard Max/MSP methods to your class
-	class_register(CLASS_BOX, cmgausswin_class); // Register the class with Max
+	class_dspinit(cmtimon_class); // Add standard Max/MSP methods to your class
+	class_register(CLASS_BOX, cmtimon_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
 	
@@ -174,8 +174,8 @@ void ext_main(void *r) {
 /************************************************************************************************************************/
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
-void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
-	t_cmgausswin *x = (t_cmgausswin *)object_alloc(cmgausswin_class); // create the object and allocate required memory
+void *cmtimon_new(t_symbol *s, long argc, t_atom *argv) {
+	t_cmtimon *x = (t_cmtimon *)object_alloc(cmtimon_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 13); // create 13 inlets
 	
 	if (argc < ARGUMENTS) {
@@ -347,7 +347,7 @@ void *cmgausswin_new(t_symbol *s, long argc, t_atom *argv) {
 /************************************************************************************************************************/
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
+void cmtimon_dsp64(t_cmtimon *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
 	x->connect_status[0] = count[1]; // 2nd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[1] = count[2]; // 3rd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[2] = count[3]; // 4th inlet: write connection flag into object structure (1 if signal connected)
@@ -369,15 +369,15 @@ void cmgausswin_dsp64(t_cmgausswin *x, t_object *dsp64, short *count, double sam
 	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
-	object_method(dsp64, gensym("dsp_add64"), x, cmgausswin_perform64, 0, NULL);
-	//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmgausswin_perform64, 0, NULL);
+	object_method(dsp64, gensym("dsp_add64"), x, cmtimon_perform64, 0, NULL);
+	//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmtimon_perform64, 0, NULL);
 }
 
 
 /************************************************************************************************************************/
 /* THE 64 BIT PERFORM ROUTINE                                                                                           */
 /************************************************************************************************************************/
-void cmgausswin_perform64(t_cmgausswin *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
+void cmtimon_perform64(t_cmtimon *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
 	long i, limit; // for loop counters
@@ -592,7 +592,7 @@ zero:
 /************************************************************************************************************************/
 /* ASSIST METHOD FOR INLET AND OUTLET ANNOTATION                                                                        */
 /************************************************************************************************************************/
-void cmgausswin_assist(t_cmgausswin *x, void *b, long msg, long arg, char *dst) {
+void cmtimon_assist(t_cmtimon *x, void *b, long msg, long arg, char *dst) {
 	if (msg == ASSIST_INLET) {
 		switch (arg) {
 			case 0:
@@ -655,7 +655,7 @@ void cmgausswin_assist(t_cmgausswin *x, void *b, long msg, long arg, char *dst) 
 /************************************************************************************************************************/
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
-void cmgausswin_free(t_cmgausswin *x) {
+void cmtimon_free(t_cmtimon *x) {
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
 	object_free(x->buffer); // free the buffer reference
 	
@@ -677,7 +677,7 @@ void cmgausswin_free(t_cmgausswin *x) {
 /************************************************************************************************************************/
 /* FLOAT METHOD FOR FLOAT INLET SUPPORT                                                                                 */
 /************************************************************************************************************************/
-void cmgausswin_float(t_cmgausswin *x, double f) {
+void cmtimon_float(t_cmtimon *x, double f) {
 	double dump;
 	int inlet = ((t_pxobject*)x)->z_in; // get info as to which inlet was addressed (stored in the z_in component of the object structure
 	switch (inlet) {
@@ -796,7 +796,7 @@ void cmgausswin_float(t_cmgausswin *x, double f) {
 /************************************************************************************************************************/
 /* DOUBLE CLICK METHOD FOR VIEWING BUFFER CONTENT                                                                       */
 /************************************************************************************************************************/
-void cmgausswin_dblclick(t_cmgausswin *x) {
+void cmtimon_dblclick(t_cmtimon *x) {
 	buffer_view(buffer_ref_getobject(x->buffer));
 }
 
@@ -804,7 +804,7 @@ void cmgausswin_dblclick(t_cmgausswin *x) {
 /************************************************************************************************************************/
 /* NOTIFY METHOD FOR THE BUFFER REFERENCES                                                                              */
 /************************************************************************************************************************/
-t_max_err cmgausswin_notify(t_cmgausswin *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
+t_max_err cmtimon_notify(t_cmtimon *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = 1;
 	}
@@ -815,7 +815,7 @@ t_max_err cmgausswin_notify(t_cmgausswin *x, t_symbol *s, t_symbol *msg, void *s
 /************************************************************************************************************************/
 /* THE BUFFER SET METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmgausswin_set(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av) {
+void cmtimon_set(t_cmtimon *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
 		x->buffer_modified = 1;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
@@ -835,7 +835,7 @@ void cmgausswin_set(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE GRAINS LIMIT METHOD                                                                                              */
 /************************************************************************************************************************/
-void cmgausswin_limit(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av) {
+void cmtimon_limit(t_cmtimon *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
 	if (arg < 1 || arg > MAXGRAINS) {
@@ -852,7 +852,7 @@ void cmgausswin_limit(t_cmgausswin *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE STEREO ATTRIBUTE SET METHOD                                                                                      */
 /************************************************************************************************************************/
-t_max_err cmgausswin_stereo_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmtimon_stereo_set(t_cmtimon *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_stereo = atom_getlong(av)? 1 : 0;
 	}
@@ -863,7 +863,7 @@ t_max_err cmgausswin_stereo_set(t_cmgausswin *x, t_object *attr, long ac, t_atom
 /************************************************************************************************************************/
 /* THE SAMPLE INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmtimon_sinterp_set(t_cmtimon *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_sinterp = atom_getlong(av)? 1 : 0;
 	}
@@ -874,7 +874,7 @@ t_max_err cmgausswin_sinterp_set(t_cmgausswin *x, t_object *attr, long ac, t_ato
 /************************************************************************************************************************/
 /* THE ZERO CROSSING ATTRIBUTE SET METHOD                                                                               */
 /************************************************************************************************************************/
-t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmtimon_zero_set(t_cmtimon *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_zero = atom_getlong(av)? 1 : 0;
 	}
@@ -886,7 +886,7 @@ t_max_err cmgausswin_zero_set(t_cmgausswin *x, t_object *attr, long ac, t_atom *
 /* CUSTOM FUNCTIONS																										*/
 /************************************************************************************************************************/
 // constant power stereo function
-void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausswin *x) {
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmtimon *x) {
 	panstruct->left = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) - sin((*pos * x->piovr2) * 0.5));
 	panstruct->right = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) + sin((*pos * x->piovr2) * 0.5));
 	return;
