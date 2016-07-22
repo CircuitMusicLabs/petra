@@ -4,12 +4,12 @@
 		"appversion" : 		{
 			"major" : 7,
 			"minor" : 2,
-			"revision" : 1,
+			"revision" : 3,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 172.0, 104.0, 1300.0, 860.0 ],
+		"rect" : [ 2168.0, 126.0, 1300.0, 860.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -38,6 +38,35 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"autofit" : 1,
+					"forceaspect" : 1,
+					"id" : "obj-59",
+					"maxclass" : "fpic",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "jit_matrix" ],
+					"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+					"pic" : "maxOverviewIcon.png"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontface" : 0,
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-25",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 166.0, 56.0, 768.0, 20.0 ],
+					"style" : "",
+					"text" : "Granulator object using a windowing function loaded into a buffer~ object."
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-6",
@@ -46,7 +75,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 432.5, 552.0, 531.0, 47.0 ],
-					"presentation_rect" : [ 434.5, 566.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "With attribute @zero set to 1: New grains are triggered by means of a zero-crossing from < 0 to > 0. Any audio signal fits this purpose. Every time the value goes from below zero to above zero, a new grain is triggered."
 				}
@@ -137,7 +165,7 @@
 						"appversion" : 						{
 							"major" : 7,
 							"minor" : 2,
-							"revision" : 1,
+							"revision" : 3,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -508,9 +536,9 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 12.0, 815.0, 965.0, 33.0 ],
+					"patching_rect" : [ 12.0, 815.0, 1048.0, 33.0 ],
 					"style" : "",
-					"text" : "Note: cm.bufferwin~ does not adjust the sample rates of your samples. Make sure that the samples you load into the sample buffer match the Max sample rate in order to play back your samples at the orignal pitch when the pitch value is set to 1."
+					"text" : "Note: The graber externals not adjust the sample rates of your samples. Make sure that the samples you load into the sample buffer match the Max sample rate in order to play back your samples at the orignal pitch when the pitch value is set to 1."
 				}
 
 			}
@@ -659,7 +687,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 432.5, 514.0, 531.0, 33.0 ],
+					"patching_rect" : [ 432.5, 514.0, 535.0, 33.0 ],
 					"style" : "",
 					"text" : "With attribute @zero set to 0: New grains are triggered by means of a ramp from 0 to 1. phasor~ is best for this purpose. Every time the value resets to 0, a new grain is triggered."
 				}
@@ -798,7 +826,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 12.0, 114.5, 229.0, 20.0 ],
 					"style" : "",
-					"text" : "cm.bufferwin~ takes 3 arguments:"
+					"text" : "cm.graber~ takes 3 arguments:"
 				}
 
 			}
@@ -1030,21 +1058,6 @@
 			}
 , 			{
 				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-25",
-					"linecount" : 2,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 12.0, 50.0, 979.0, 33.0 ],
-					"style" : "",
-					"text" : "2014 by Circuit Music Labs. A polyphonic granular synthesizer based on Curtis Roads' asynchronous granular synthesis.\nThe external can load and play back both mono and stereo audio files loaded into the sample buffer."
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"fontface" : 3,
 					"fontname" : "Arial Bold",
 					"fontsize" : 30.0,
@@ -1052,9 +1065,9 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 12.0, 14.0, 380.0, 40.0 ],
+					"patching_rect" : [ 166.0, 14.0, 380.0, 40.0 ],
 					"style" : "",
-					"text" : "cm.bufferwin~"
+					"text" : "cm.graber~"
 				}
 
 			}
@@ -1263,7 +1276,7 @@
 					"numinlets" : 11,
 					"numoutlets" : 3,
 					"outlettype" : [ "signal", "signal", "int" ],
-					"patching_rect" : [ 377.0, 474.0, 738.249878, 22.0 ],
+					"patching_rect" : [ 377.0, 474.0, 738.25, 22.0 ],
 					"saved_object_attributes" : 					{
 						"s_interp" : 1,
 						"stereo" : 0,
@@ -1272,7 +1285,7 @@
 					}
 ,
 					"style" : "",
-					"text" : "cm.bufferwin~ a_sample window 64"
+					"text" : "cm.graber~ a_sample window 64"
 				}
 
 			}
@@ -1706,7 +1719,13 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "cm.bufferwin~.mxo",
+				"name" : "maxOverviewIcon.png",
+				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
+				"type" : "PNG ",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "cm.graber~.mxo",
 				"type" : "iLaX"
 			}
  ],

@@ -4,12 +4,12 @@
 		"appversion" : 		{
 			"major" : 7,
 			"minor" : 2,
-			"revision" : 1,
+			"revision" : 3,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 362.0, 106.0, 969.0, 747.0 ],
+		"rect" : [ 2364.0, 178.0, 969.0, 747.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -62,8 +62,8 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 30.0, 664.0, 219.0, 31.0 ],
 					"style" : "",
-					"text" : "open the cm.bufferwin~ helpfile",
-					"texton" : "open the cm.bufferwin~ helpfile"
+					"text" : "open the cm.graber~ helpfile",
+					"texton" : "open the cm.graber~ helpfile"
 				}
 
 			}
@@ -76,9 +76,9 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 30.0, 697.0, 144.0, 22.0 ],
+					"patching_rect" : [ 30.0, 697.0, 130.0, 22.0 ],
 					"style" : "",
-					"text" : "zl.reg help cm.bufferwin~"
+					"text" : "zl.reg help cm.graber~"
 				}
 
 			}
@@ -107,7 +107,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 231.0, 17.0, 551.0, 47.0 ],
 					"style" : "",
-					"text" : "grainlabs by Circuit Music Labs"
+					"text" : "graber by Circuit Music Labs"
 				}
 
 			}
@@ -147,7 +147,7 @@
  ],
 		"dependency_cache" : [ 			{
 				"name" : "maxOverviewIcon.png",
-				"bootpath" : "~/Documents/Max 7/Packages/grainlabs/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
