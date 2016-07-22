@@ -2,12 +2,12 @@
 
 <?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
 
-<c74object name="cm.indexwin~" module="msp" category="MSP Sampling">
+<c74object name="cm.basil~" module="msp" category="MSP Sampling">
 	<digest>
 		Indexed window polyphonic granular synthesizer
 	</digest>
 	<description>
-		<o>cm.indexwin~</o> by Circuit Music Labs is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and utilizes an internal window buffer for windowing the individual grains. A number of windows can be selected with the window index and window length arguments. The window type and window length parameters can also be customized with the "w_type" and "w_size" messages.
+		<o>cm.basil~</o> by Circuit Music Labs is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and utilizes an internal window buffer for windowing the individual grains. A number of windows can be selected with the window index and window length arguments. The window type and window length parameters can also be customized with the "w_type" and "w_size" messages.
 	</description>
 	<!--METADATA-->
 	<metadatalist>

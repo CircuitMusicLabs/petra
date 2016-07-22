@@ -2,12 +2,12 @@
 
 <?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
 
-<c74object name="cm.gausswin~" module="msp" category="MSP Sampling">
+<c74object name="cm.graber~" module="msp" category="MSP Sampling">
 	<digest>
-		Gaussian window polyphonic granular synthesizer
+		Buffer based window polyphonic granular synthesizer
 	</digest>
 	<description>
-		<o>cm.gausswin~</o> by Circuit Music Labs is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and utilizes an internal gaussian window buffer for windowing the individual grains. The slopes of the internal gaussian window can be adjusted with the "alpha" inlets.
+		<o>cm.graber~</o> by Circuit Music Labs is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and a window buffer for windowing the individual grains.
 	</description>
 	<!--METADATA-->
 	<metadatalist>
@@ -117,22 +117,6 @@
 				Maximum gain value
 			</description>
 		</inlet>
-		<inlet id="11" type="INLET_TYPE">
-			<digest>
-				min alpha
-			</digest>
-			<description>
-				Minimum alpha value
-			</description>
-		</inlet>
-		<inlet id="12" type="INLET_TYPE">
-			<digest>
-				max alpha
-			</digest>
-			<description>
-				Maximum alpha value
-			</description>
-		</inlet>
 	</inletlist>
 	<!--OUTLETS-->
 	<outletlist>
@@ -168,6 +152,14 @@
 				Name of the buffer used for playback.
 			</description>
 		</objarg>
+		<objarg name="window" optional="0" type="symbol">
+			<digest>
+				Window buffer reference
+			</digest>
+			<description>
+				Name of the buffer used for the grain window.
+			</description>
+		</objarg>
 		<objarg name="limit" optional="0" type="int">
 			<digest>
 				Max grains
@@ -179,17 +171,6 @@
 	</objarglist>
 	<!--MESSAGES-->
 	<methodlist>
-		<method name="limit">
-			<arglist>
-				<arg name="max. grains" optional="0" type="int" />
-			</arglist>
-			<digest>
-				Sets the maximum grains value
-			</digest>
-			<description>
-				Specifies the maximum number of simultaneously playing grains (max value 128).
-			</description>
-		</method>
 		<method name="set">
 			<arglist>
 				<arg name="sample buffer" optional="0" type="symbol" />
@@ -202,6 +183,17 @@
 				Specifies the sample and window buffer references.
 			</description>
 		</method>
+		<method name="limit">
+			<arglist>
+				<arg name="max. grains" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Sets the maximum grains value
+			</digest>
+			<description>
+				Specifies the maximum number of simultaneously playing grains (max value 128).
+			</description>
+		</method>
 	</methodlist>
 	<!--ATTRIBUTES-->
 	<attributelist>
@@ -211,6 +203,14 @@
 			</digest>
 			<description>
 				Activates and deactivates stereo playback of multi-channel files loaded into the sample buffer.
+			</description>
+		</attribute>
+		<attribute name="w_interp" get="0" set="1" type="int" size="1">
+			<digest>
+				Window interpolation on/off
+			</digest>
+			<description>
+				Activates and deactivates window sample interpolation.
 			</description>
 		</attribute>
 		<attribute name="s_interp" get="0" set="1" type="int" size="1">

@@ -6,10 +6,10 @@
 	"displayname" : "",
 	"extends" : "",
 	"extensible" : 0,
-	"homepatcher" : "grainlabs_Overview.maxpat",
+	"homepatcher" : "graber_Overview.maxpat",
 	"max_version_max" : "none",
 	"max_version_min" : "6.1",
-	"name" : "grainlabs",
+	"name" : "graber",
 	"os" : 	{
 		"macintosh" : 		{
 			"platform" : [ "ia32", "x64" ],
@@ -29,8 +29,8 @@
 	"versions" : null,
 	"website" : "http://www.circuitmusiclabs.com",
 	"filelist" : 	{
-		"patchers" : [ "cm.bufferwin~.maxhelp" ],
-		"help" : [ "cm.bufferwin~.maxhelp" ],
+		"patchers" : [ "cm.graber~.maxhelp" ],
+		"help" : [ "cm.graber~.maxhelp" ],
 		"media" : [ "" ],
 		"misc" : [ "" ],
 		"code" : [ "" ],
