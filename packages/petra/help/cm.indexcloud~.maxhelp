@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 2000.0, 112.0, 1328.0, 860.0 ],
+		"rect" : [ 100.0, 100.0, 1328.0, 860.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -38,6 +38,7 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"bgcolor" : [ 0.145098, 0.352941, 0.670588, 1.0 ],
 					"fontface" : 1,
 					"fontsize" : 18.0,
 					"id" : "obj-68",
@@ -46,10 +47,12 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 1059.599976, 613.25, 157.0, 77.5 ],
+					"patching_rect" : [ 1106.0, 734.0, 157.0, 79.0 ],
+					"rounded" : 8.0,
 					"style" : "",
 					"text" : "window index information",
 					"texton" : "window index information",
+					"textoncolor" : [ 1.0, 1.0, 1.0, 1.0 ],
 					"truncate" : 0
 				}
 
@@ -76,7 +79,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 1059.599976, 736.0, 35.0, 22.0 ],
+					"patching_rect" : [ 1106.0, 815.5, 35.0, 22.0 ],
 					"style" : "",
 					"text" : "front"
 				}
@@ -99,7 +102,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 673.0, 262.0, 487.0, 433.0 ],
+						"rect" : [ 712.0, 288.0, 487.0, 433.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -258,7 +261,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 354.68103, 260.563232, 110.680084, 110.680084 ],
+									"patching_rect" : [ 354.68103, 260.563232, 110.680084, 87.432213 ],
 									"pic" : "window_gauss8.png"
 								}
 
@@ -272,7 +275,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 241.787354, 260.563232, 110.680084, 110.680084 ],
+									"patching_rect" : [ 241.787354, 260.563232, 110.680084, 87.432213 ],
 									"pic" : "window_gauss4.png"
 								}
 
@@ -316,7 +319,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 128.893677, 260.563232, 110.680084, 110.680084 ],
+									"patching_rect" : [ 128.893677, 260.563232, 110.680084, 87.432213 ],
 									"pic" : "window_gauss2.png"
 								}
 
@@ -345,7 +348,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 16.0, 260.563232, 110.680084, 110.680084 ],
+									"patching_rect" : [ 16.0, 260.563232, 110.680084, 87.432213 ],
 									"pic" : "window_flattop.png"
 								}
 
@@ -374,7 +377,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 353.574249, 72.563232, 110.680084, 110.680084 ],
+									"patching_rect" : [ 353.574249, 72.563232, 110.680084, 87.432213 ],
 									"pic" : "window_bartlett.png"
 								}
 
@@ -403,7 +406,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 241.787369, 72.563232, 110.680084, 110.680084 ],
+									"patching_rect" : [ 241.787369, 72.563232, 110.680084, 87.432213 ],
 									"pic" : "window_rectangular.png"
 								}
 
@@ -432,7 +435,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 128.893692, 72.563232, 110.680084, 110.680084 ],
+									"patching_rect" : [ 128.893692, 72.563232, 110.680084, 87.432213 ],
 									"pic" : "window_hamming.png"
 								}
 
@@ -461,7 +464,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 16.0, 72.563232, 110.680084, 110.680084 ],
+									"patching_rect" : [ 16.0, 72.563232, 110.680084, 87.432213 ],
 									"pic" : "window_hanning.png"
 								}
 
@@ -523,7 +526,7 @@
  ]
 					}
 ,
-					"patching_rect" : [ 1059.599976, 769.0, 157.0, 22.0 ],
+					"patching_rect" : [ 1106.0, 839.5, 157.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -543,13 +546,13 @@
 					"fontname" : "Arial",
 					"fontsize" : 13.0,
 					"id" : "obj-61",
-					"linecount" : 6,
+					"linecount" : 3,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 1155.099976, 126.5, 129.0, 98.0 ],
+					"patching_rect" : [ 126.200012, 614.75, 202.674988, 54.0 ],
 					"style" : "",
-					"text" : "\"w_type\" message followed by value sets the window type according to the index number"
+					"text" : "\"w_length\" message followed by int sets window length in samples (min. length 16)"
 				}
 
 			}
@@ -562,7 +565,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "int", "", "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 1064.224976, 114.5, 46.75, 22.0 ],
+					"patching_rect" : [ 14.0, 580.75, 82.75, 22.0 ],
 					"style" : ""
 				}
 
@@ -576,7 +579,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 1078.099976, 164.5, 75.0, 22.0 ],
+					"patching_rect" : [ 45.875, 630.75, 75.0, 22.0 ],
 					"style" : "",
 					"text" : "w_length $1"
 				}
@@ -588,11 +591,11 @@
 					"fontname" : "Arial",
 					"fontsize" : 13.0,
 					"id" : "obj-25",
-					"linecount" : 6,
+					"linecount" : 3,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 922.099976, 126.5, 129.0, 98.0 ],
+					"patching_rect" : [ 118.400024, 498.0, 210.474976, 54.0 ],
 					"style" : "",
 					"text" : "\"w_type\" message followed by value sets the window type according to the index number"
 				}
@@ -607,7 +610,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "int", "", "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 841.224976, 114.5, 46.75, 22.0 ],
+					"patching_rect" : [ 14.0, 465.0, 82.75, 22.0 ],
 					"style" : ""
 				}
 
@@ -621,7 +624,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 855.099976, 164.5, 65.0, 22.0 ],
+					"patching_rect" : [ 45.875, 514.0, 65.0, 22.0 ],
 					"style" : "",
 					"text" : "w_type $1"
 				}
@@ -633,28 +636,12 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-41",
-					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 166.0, 54.0, 771.0, 33.0 ],
+					"patching_rect" : [ 166.0, 54.0, 1042.0, 20.0 ],
 					"style" : "",
-					"text" : "Granulator object using a windowing function stored inside the external itself. The windowing functions can be accessed with and index number supplied as an argument or with a message"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-6",
-					"linecount" : 3,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 432.5, 552.0, 531.0, 47.0 ],
-					"style" : "",
-					"text" : "With attribute @zero set to 1: New grains are triggered by means of a zero-crossing from < 0 to > 0. Any audio signal fits this purpose. Every time the value goes from below zero to above zero, a new grain is triggered."
+					"text" : "Granulator object using a windowing function stored inside the external itself. The windowing functions can be accessed with and index number supplied as an argument or with a message."
 				}
 
 			}
@@ -1008,105 +995,6 @@
 			}
 , 			{
 				"box" : 				{
-					"activebgcolor" : [ 0.909804, 0.909804, 0.909804, 0.0 ],
-					"activeslidercolor" : [ 0.145098, 0.592157, 1.0, 0.0 ],
-					"appearance" : 2,
-					"bordercolor" : [ 0.27451, 0.32549, 0.4, 0.0 ],
-					"fontsize" : 12.0,
-					"id" : "obj-151",
-					"maxclass" : "live.numbox",
-					"numinlets" : 1,
-					"numoutlets" : 2,
-					"outlettype" : [ "", "float" ],
-					"parameter_enable" : 1,
-					"patching_rect" : [ 432.5, 628.0, 46.0, 17.0 ],
-					"prototypename" : "gain",
-					"saved_attribute_attributes" : 					{
-						"valueof" : 						{
-							"parameter_linknames" : 1,
-							"parameter_longname" : "live.numbox",
-							"parameter_shortname" : "live.numbox",
-							"parameter_type" : 0,
-							"parameter_mmax" : 100.0,
-							"parameter_initial_enable" : 1,
-							"parameter_initial" : [ 0 ],
-							"parameter_unitstyle" : 5,
-							"parameter_speedlim" : 0.0
-						}
-
-					}
-,
-					"textcolor" : [ 0.0, 0.0, 0.0, 1.0 ],
-					"varname" : "live.numbox"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontface" : 1,
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-148",
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 478.5, 627.0, 107.0, 20.0 ],
-					"style" : "",
-					"text" : "CPU Usage"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"hidden" : 1,
-					"id" : "obj-146",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 432.5, 567.0, 75.0, 22.0 ],
-					"style" : "",
-					"text" : "loadmess 1."
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"color" : [ 1.0, 0.890196, 0.090196, 1.0 ],
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"hidden" : 1,
-					"id" : "obj-75",
-					"maxclass" : "newobj",
-					"numinlets" : 2,
-					"numoutlets" : 2,
-					"outlettype" : [ "", "int" ],
-					"patching_rect" : [ 432.5, 606.5, 79.0, 22.0 ],
-					"style" : "",
-					"text" : "adstatus cpu"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"hidden" : 1,
-					"id" : "obj-72",
-					"maxclass" : "newobj",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "bang" ],
-					"patching_rect" : [ 432.5, 587.0, 65.0, 22.0 ],
-					"style" : "",
-					"text" : "metro 100"
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-50",
@@ -1114,9 +1002,9 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 12.0, 815.0, 1004.0, 33.0 ],
+					"patching_rect" : [ 12.0, 815.0, 1077.0, 33.0 ],
 					"style" : "",
-					"text" : "Note: The graber externals do not adjust the sample rates of your samples. Make sure that the samples you load into the sample buffer match the Max sample rate in order to play back your samples at the orignal pitch when the pitch value is set to 1."
+					"text" : "Note: The petra externals do not adjust the sample rates of your samples. Make sure that the samples you load into the sample buffer match the Max sample rate in order to play back your samples at the orignal pitch when the pitch value is set to 1."
 				}
 
 			}
@@ -1142,11 +1030,11 @@
 					"fontname" : "Arial",
 					"fontsize" : 13.0,
 					"id" : "obj-53",
-					"linecount" : 5,
+					"linecount" : 3,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 664.700012, 134.5, 140.0, 83.0 ],
+					"patching_rect" : [ 88.5, 394.0, 238.375, 54.0 ],
 					"style" : "",
 					"text" : "\"set\" message followed by sample buffer name changes buffer reference"
 				}
@@ -1161,7 +1049,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "int", "", "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 588.5, 114.5, 82.75, 22.0 ],
+					"patching_rect" : [ 14.0, 353.0, 82.75, 22.0 ],
 					"style" : ""
 				}
 
@@ -1175,7 +1063,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 620.375, 164.5, 43.0, 22.0 ],
+					"patching_rect" : [ 45.875, 403.0, 43.0, 22.0 ],
 					"style" : "",
 					"text" : "set $1"
 				}
@@ -1217,11 +1105,11 @@
 					"fontname" : "Arial",
 					"fontsize" : 13.0,
 					"id" : "obj-36",
-					"linecount" : 5,
+					"linecount" : 3,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 426.0, 134.5, 158.0, 83.0 ],
+					"patching_rect" : [ 96.875, 268.0, 230.0, 54.0 ],
 					"style" : "",
 					"text" : "\"limit\" message followed by value sets value for maximum number of overlapping grains"
 				}
@@ -1236,7 +1124,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "int", "", "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 362.0, 114.5, 49.0, 22.0 ],
+					"patching_rect" : [ 14.0, 234.0, 82.75, 22.0 ],
 					"style" : ""
 				}
 
@@ -1250,39 +1138,9 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 377.0, 164.5, 49.0, 22.0 ],
+					"patching_rect" : [ 45.875, 284.0, 49.0, 22.0 ],
 					"style" : "",
 					"text" : "limit $1"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-24",
-					"linecount" : 2,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 432.5, 514.0, 535.0, 33.0 ],
-					"style" : "",
-					"text" : "With attribute @zero set to 0: New grains are triggered by means of a ramp from 0 to 1. phasor~ is best for this purpose. Every time the value resets to 0, a new grain is triggered."
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-21",
-					"linecount" : 8,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 248.0, 595.0, 70.0, 114.0 ],
-					"style" : "",
-					"text" : "1 ms\n300 ms\n0.001\n10\n128\n0\n2\n16"
 				}
 
 			}
@@ -1296,7 +1154,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 588.5, 81.0, 89.0, 22.0 ],
+					"patching_rect" : [ 588.5, 114.5, 89.0, 22.0 ],
 					"style" : "",
 					"text" : "loadmess 100."
 				}
@@ -1312,7 +1170,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 736.625, 81.0, 75.0, 22.0 ],
+					"patching_rect" : [ 736.625, 114.5, 75.0, 22.0 ],
 					"style" : "",
 					"text" : "loadmess 1."
 				}
@@ -1328,24 +1186,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 880.474976, 81.0, 75.0, 22.0 ],
+					"patching_rect" : [ 880.474976, 114.5, 75.0, 22.0 ],
 					"style" : "",
 					"text" : "loadmess 0."
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-4",
-					"linecount" : 10,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 12.0, 569.0, 306.0, 141.0 ],
-					"style" : "",
-					"text" : "The following value restrictions are hard-coded into the external:\n- Minimum grain length value:\n- Maximum grain length value:\n- Minimum pitch value:\n- Maximum pitch value:\n- Maximum simultaneously playing grains:\n- Minimum gain value:\n- Maximum gain value\n- Minimum window length value"
 				}
 
 			}
@@ -1404,7 +1247,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 12.0, 114.5, 229.0, 20.0 ],
 					"style" : "",
-					"text" : "cm.basil~ takes 4 arguments:"
+					"text" : "cm.indexcloud~ takes 4 arguments:"
 				}
 
 			}
@@ -1413,13 +1256,13 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-44",
-					"linecount" : 30,
+					"linecount" : 4,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 12.0, 134.5, 318.0, 409.0 ],
+					"patching_rect" : [ 12.0, 134.5, 483.0, 60.0 ],
 					"style" : "",
-					"text" : "1) Buffer containing the playback sample\n2) Index number of grain window (see list of windows)\n3) Number specifying the window length (minimum value 16, no maximum value)\n3) Number specifying the maximum number of overlapping grains (maximum value: 128)\n\nOptional attribute @stereo (0 or 1) for activating/deactivating stereo playback when multi-channel files are loaded into the sample buffer. Default is 0.\n\nOptional attribute @w_interp (0 or 1) for activating/deactivating window interpolation. Saves some CPU when deactivated.\nDefault is 0.\n\nOptional attribute @s_interp (0 or 1) for activating/deactivating sample interpolation. Saves some CPU when deactivated.\nDefault is 1.\n\nOptional attribute @zero (0 or 1) for activating/deactivating zero crossing trigger mode. When activated, a grain is triggered as soon as a zero crossing from < 0 to > 0 is detected (audio signals as trigger signals). When deactivated, a grain is triggered as soon as the signal generated by phasor~ wraps back from 1 to 0.\nDefault is 0."
+					"text" : "1) Buffer containing the playback sample\n2) Index number of grain window (see list of windows)\n3) Number specifying the window length (minimum value 16, no maximum value)\n3) Number specifying the maximum number of overlapping grains (maximum value: 512)"
 				}
 
 			}
@@ -1615,7 +1458,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 166.0, 12.0, 380.0, 40.0 ],
 					"style" : "",
-					"text" : "cm.basil~"
+					"text" : "cm.indexcloud~"
 				}
 
 			}
@@ -1824,7 +1667,7 @@
 					"numinlets" : 11,
 					"numoutlets" : 3,
 					"outlettype" : [ "signal", "signal", "int" ],
-					"patching_rect" : [ 377.0, 474.0, 738.25, 22.0 ],
+					"patching_rect" : [ 377.0, 474.0, 738.249878, 22.0 ],
 					"saved_object_attributes" : 					{
 						"s_interp" : 1,
 						"stereo" : 0,
@@ -1833,7 +1676,7 @@
 					}
 ,
 					"style" : "",
-					"text" : "cm.basil~ a_sample 0 256 64"
+					"text" : "cm.indexcloud~ a_sample 0 256 64"
 				}
 
 			}
@@ -1977,15 +1820,6 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-72", 0 ],
-					"disabled" : 0,
-					"hidden" : 1,
-					"source" : [ "obj-146", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-1", 7 ],
 					"disabled" : 0,
 					"hidden" : 0,
@@ -2052,6 +1886,7 @@
 					"destination" : [ "obj-1", 0 ],
 					"disabled" : 0,
 					"hidden" : 1,
+					"midpoints" : [ 55.375, 339.0, 108.0, 339.0, 108.0, 366.0, 363.0, 366.0, 363.0, 459.0, 386.5, 459.0 ],
 					"source" : [ "obj-23", 0 ]
 				}
 
@@ -2115,7 +1950,7 @@
 					"destination" : [ "obj-1", 0 ],
 					"disabled" : 0,
 					"hidden" : 1,
-					"midpoints" : [ 629.875, 213.0, 363.0, 213.0, 363.0, 468.0, 386.5, 468.0 ],
+					"midpoints" : [ 55.375, 450.0, 108.0, 450.0, 108.0, 459.0, 386.5, 459.0 ],
 					"source" : [ "obj-51", 0 ]
 				}
 
@@ -2134,7 +1969,7 @@
 					"destination" : [ "obj-54", 0 ],
 					"disabled" : 0,
 					"hidden" : 1,
-					"midpoints" : [ 629.875, 649.0, 592.0, 649.0, 592.0, 649.0, 386.5, 649.0 ],
+					"midpoints" : [ 55.375, 390.0, 30.0, 390.0, 30.0, 450.0, 108.0, 450.0, 108.0, 468.0, 363.0, 468.0, 363.0, 708.0, 386.5, 708.0 ],
 					"source" : [ "obj-52", 1 ]
 				}
 
@@ -2163,7 +1998,7 @@
 					"destination" : [ "obj-1", 0 ],
 					"disabled" : 0,
 					"hidden" : 1,
-					"midpoints" : [ 864.599976, 216.0, 864.0, 216.0, 864.0, 336.0, 429.0, 336.0, 429.0, 348.0, 363.0, 348.0, 363.0, 459.0, 386.5, 459.0 ],
+					"midpoints" : [ 55.375, 537.0, 42.0, 537.0, 42.0, 498.0, 108.0, 498.0, 108.0, 468.0, 386.5, 468.0 ],
 					"source" : [ "obj-59", 0 ]
 				}
 
@@ -2200,7 +2035,7 @@
 					"destination" : [ "obj-1", 0 ],
 					"disabled" : 0,
 					"hidden" : 1,
-					"midpoints" : [ 1087.599976, 216.0, 1053.0, 216.0, 1053.0, 225.0, 870.0, 225.0, 870.0, 336.0, 429.0, 336.0, 429.0, 348.0, 363.0, 348.0, 363.0, 459.0, 386.5, 459.0 ],
+					"midpoints" : [ 55.375, 654.0, 30.0, 654.0, 30.0, 612.0, 111.0, 612.0, 111.0, 576.0, 363.0, 576.0, 363.0, 468.0, 386.5, 468.0 ],
 					"source" : [ "obj-66", 0 ]
 				}
 
@@ -2262,24 +2097,6 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-75", 0 ],
-					"disabled" : 0,
-					"hidden" : 1,
-					"source" : [ "obj-72", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-151", 0 ],
-					"disabled" : 0,
-					"hidden" : 1,
-					"source" : [ "obj-75", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-73", 0 ],
 					"disabled" : 0,
 					"hidden" : 1,
@@ -2318,66 +2135,65 @@
 			}
  ],
 		"parameters" : 		{
-			"obj-5" : [ "live.gain~", "live.gain~", 0 ],
-			"obj-151" : [ "live.numbox", "live.numbox", 0 ]
+			"obj-5" : [ "live.gain~", "live.gain~", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{
 				"name" : "window_hanning.png",
-				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "window_hamming.png",
-				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "window_rectangular.png",
-				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "window_bartlett.png",
-				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "window_flattop.png",
-				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "window_gauss2.png",
-				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "window_gauss4.png",
-				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "window_gauss8.png",
-				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "maxOverviewIcon.png",
-				"bootpath" : "~/Documents/Max 7/Packages/graber/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
 , 			{
-				"name" : "cm.basil~.mxo",
+				"name" : "cm.indexcloud~.mxo",
 				"type" : "iLaX"
 			}
  ],

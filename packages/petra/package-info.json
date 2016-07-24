@@ -29,8 +29,8 @@
 	"versions" : null,
 	"website" : "http://www.circuitmusiclabs.com",
 	"filelist" : 	{
-		"patchers" : [ "cm.buffercloud~.maxhelp" ],
-		"help" : [ "cm.buffercloud~.maxhelp" ],
+		"patchers" : [ "" ],
+		"help" : [ "cm.buffercloud~.maxhelp", "cm.indexcloud~.maxhelp", "cm.gausscloud~.maxhelp" ],
 		"media" : [ "" ],
 		"misc" : [ "" ],
 		"code" : [ "" ],
