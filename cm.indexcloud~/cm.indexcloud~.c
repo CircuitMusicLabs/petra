@@ -1,5 +1,5 @@
 /*
- cm.basil~ - a granular synthesis external audio object for Max/MSP.
+ cm.indexcloud~ - a granular synthesis external audio object for Max/MSP.
  Copyright (C) 2014  Matthias Müller - Circuit Music Labs
  
  This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
-typedef struct _cmbasil {
+typedef struct _cmindexcloud {
 	t_pxobject obj;
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
@@ -82,7 +82,7 @@ typedef struct _cmbasil {
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
-} t_cmbasil;
+} t_cmindexcloud;
 
 
 /************************************************************************************************************************/
@@ -97,36 +97,36 @@ typedef struct cmpanner {
 /************************************************************************************************************************/
 /* STATIC DECLARATIONS                                                                                                  */
 /************************************************************************************************************************/
-static t_class *cmbasil_class; // class pointer
+static t_class *cmindexcloud_class; // class pointer
 static t_symbol *ps_buffer_modified, *ps_stereo;
 
 
 /************************************************************************************************************************/
 /* FUNCTION PROTOTYPES                                                                                                  */
 /************************************************************************************************************************/
-void *cmbasil_new(t_symbol *s, long argc, t_atom *argv);
-void cmbasil_dsp64(t_cmbasil *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
-void cmbasil_perform64(t_cmbasil *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
-void cmbasil_assist(t_cmbasil *x, void *b, long msg, long arg, char *dst);
-void cmbasil_free(t_cmbasil *x);
-void cmbasil_float(t_cmbasil *x, double f);
-void cmbasil_dblclick(t_cmbasil *x);
-t_max_err cmbasil_notify(t_cmbasil *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
-void cmbasil_set(t_cmbasil *x, t_symbol *s, long ac, t_atom *av);
-void cmbasil_limit(t_cmbasil *x, t_symbol *s, long ac, t_atom *av);
+void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv);
+void cmindexcloud_dsp64(t_cmindexcloud *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
+void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
+void cmindexcloud_assist(t_cmindexcloud *x, void *b, long msg, long arg, char *dst);
+void cmindexcloud_free(t_cmindexcloud *x);
+void cmindexcloud_float(t_cmindexcloud *x, double f);
+void cmindexcloud_dblclick(t_cmindexcloud *x);
+t_max_err cmindexcloud_notify(t_cmindexcloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
+void cmindexcloud_limit(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
 
-void cmbasil_w_type(t_cmbasil *x, t_symbol *s, long ac, t_atom *av);
-void cmbasil_w_length(t_cmbasil *x, t_symbol *s, long ac, t_atom *av);
+void cmindexcloud_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
+void cmindexcloud_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
 
-t_max_err cmbasil_stereo_set(t_cmbasil *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmbasil_winterp_set(t_cmbasil *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmbasil_sinterp_set(t_cmbasil *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmbasil_zero_set(t_cmbasil *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmindexcloud_stereo_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmindexcloud_winterp_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmindexcloud_sinterp_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmindexcloud_zero_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
 
-void cmbasil_windowwrite(t_cmbasil *x);
+void cmindexcloud_windowwrite(t_cmindexcloud *x);
 
 // PANNING FUNCTION
-void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbasil *x);
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmindexcloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTIONS
@@ -148,49 +148,49 @@ void cm_gauss8(double *window, long *length);
 /************************************************************************************************************************/
 void ext_main(void *r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
-	cmbasil_class = class_new("cm.basil~", (method)cmbasil_new, (method)cmbasil_free, sizeof(t_cmbasil), 0, A_GIMME, 0);
+	cmindexcloud_class = class_new("cm.indexcloud~", (method)cmindexcloud_new, (method)cmindexcloud_free, sizeof(t_cmindexcloud), 0, A_GIMME, 0);
 	
-	class_addmethod(cmbasil_class, (method)cmbasil_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
-	class_addmethod(cmbasil_class, (method)cmbasil_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
-	class_addmethod(cmbasil_class, (method)cmbasil_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
-	class_addmethod(cmbasil_class, (method)cmbasil_dblclick,		"dblclick",		A_CANT, 0); // Bind the double click message
-	class_addmethod(cmbasil_class, (method)cmbasil_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
-	class_addmethod(cmbasil_class, (method)cmbasil_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmbasil_class, (method)cmbasil_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
-	class_addmethod(cmbasil_class, (method)cmbasil_w_type,		"w_type", 		A_GIMME, 0); // Bind the window type message
-	class_addmethod(cmbasil_class, (method)cmbasil_w_length,		"w_length", 	A_GIMME, 0); // Bind the window length message
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_dsp64, 		"dsp64", 		A_CANT, 0);  // Bind the 64 bit dsp method
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_assist, 		"assist", 		A_CANT, 0); // Bind the assist message
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_float, 		"float", 		A_FLOAT, 0); // Bind the float message (allowing float input)
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_dblclick,		"dblclick",		A_CANT, 0); // Bind the double click message
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_w_type,		"w_type", 		A_GIMME, 0); // Bind the window type message
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_w_length,		"w_length", 	A_GIMME, 0); // Bind the window length message
 	
-	CLASS_ATTR_ATOM_LONG(cmbasil_class, "stereo", 0, t_cmbasil, attr_stereo);
-	CLASS_ATTR_ACCESSORS(cmbasil_class, "stereo", (method)NULL, (method)cmbasil_stereo_set);
-	CLASS_ATTR_BASIC(cmbasil_class, "stereo", 0);
-	CLASS_ATTR_SAVE(cmbasil_class, "stereo", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbasil_class, "stereo", 0, "onoff", "Multichannel playback");
+	CLASS_ATTR_ATOM_LONG(cmindexcloud_class, "stereo", 0, t_cmindexcloud, attr_stereo);
+	CLASS_ATTR_ACCESSORS(cmindexcloud_class, "stereo", (method)NULL, (method)cmindexcloud_stereo_set);
+	CLASS_ATTR_BASIC(cmindexcloud_class, "stereo", 0);
+	CLASS_ATTR_SAVE(cmindexcloud_class, "stereo", 0);
+	CLASS_ATTR_STYLE_LABEL(cmindexcloud_class, "stereo", 0, "onoff", "Multichannel playback");
 	
-	CLASS_ATTR_ATOM_LONG(cmbasil_class, "w_interp", 0, t_cmbasil, attr_winterp);
-	CLASS_ATTR_ACCESSORS(cmbasil_class, "w_interp", (method)NULL, (method)cmbasil_winterp_set);
-	CLASS_ATTR_BASIC(cmbasil_class, "w_interp", 0);
-	CLASS_ATTR_SAVE(cmbasil_class, "w_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbasil_class, "w_interp", 0, "onoff", "Window interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmindexcloud_class, "w_interp", 0, t_cmindexcloud, attr_winterp);
+	CLASS_ATTR_ACCESSORS(cmindexcloud_class, "w_interp", (method)NULL, (method)cmindexcloud_winterp_set);
+	CLASS_ATTR_BASIC(cmindexcloud_class, "w_interp", 0);
+	CLASS_ATTR_SAVE(cmindexcloud_class, "w_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmindexcloud_class, "w_interp", 0, "onoff", "Window interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmbasil_class, "s_interp", 0, t_cmbasil, attr_sinterp);
-	CLASS_ATTR_ACCESSORS(cmbasil_class, "s_interp", (method)NULL, (method)cmbasil_sinterp_set);
-	CLASS_ATTR_BASIC(cmbasil_class, "s_interp", 0);
-	CLASS_ATTR_SAVE(cmbasil_class, "s_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbasil_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmindexcloud_class, "s_interp", 0, t_cmindexcloud, attr_sinterp);
+	CLASS_ATTR_ACCESSORS(cmindexcloud_class, "s_interp", (method)NULL, (method)cmindexcloud_sinterp_set);
+	CLASS_ATTR_BASIC(cmindexcloud_class, "s_interp", 0);
+	CLASS_ATTR_SAVE(cmindexcloud_class, "s_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmindexcloud_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmbasil_class, "zero", 0, t_cmbasil, attr_zero);
-	CLASS_ATTR_ACCESSORS(cmbasil_class, "zero", (method)NULL, (method)cmbasil_zero_set);
-	CLASS_ATTR_BASIC(cmbasil_class, "zero", 0);
-	CLASS_ATTR_SAVE(cmbasil_class, "zero", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbasil_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
+	CLASS_ATTR_ATOM_LONG(cmindexcloud_class, "zero", 0, t_cmindexcloud, attr_zero);
+	CLASS_ATTR_ACCESSORS(cmindexcloud_class, "zero", (method)NULL, (method)cmindexcloud_zero_set);
+	CLASS_ATTR_BASIC(cmindexcloud_class, "zero", 0);
+	CLASS_ATTR_SAVE(cmindexcloud_class, "zero", 0);
+	CLASS_ATTR_STYLE_LABEL(cmindexcloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
-	CLASS_ATTR_ORDER(cmbasil_class, "stereo", 0, "1");
-	CLASS_ATTR_ORDER(cmbasil_class, "w_interp", 0, "2");
-	CLASS_ATTR_ORDER(cmbasil_class, "s_interp", 0, "3");
-	CLASS_ATTR_ORDER(cmbasil_class, "zero", 0, "4");
+	CLASS_ATTR_ORDER(cmindexcloud_class, "stereo", 0, "1");
+	CLASS_ATTR_ORDER(cmindexcloud_class, "w_interp", 0, "2");
+	CLASS_ATTR_ORDER(cmindexcloud_class, "s_interp", 0, "3");
+	CLASS_ATTR_ORDER(cmindexcloud_class, "zero", 0, "4");
 	
-	class_dspinit(cmbasil_class); // Add standard Max/MSP methods to your class
-	class_register(CLASS_BOX, cmbasil_class); // Register the class with Max
+	class_dspinit(cmindexcloud_class); // Add standard Max/MSP methods to your class
+	class_register(CLASS_BOX, cmindexcloud_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
 }
@@ -199,8 +199,8 @@ void ext_main(void *r) {
 /************************************************************************************************************************/
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
-void *cmbasil_new(t_symbol *s, long argc, t_atom *argv) {
-	t_cmbasil *x = (t_cmbasil *)object_alloc(cmbasil_class); // create the object and allocate required memory
+void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
+	t_cmindexcloud *x = (t_cmindexcloud *)object_alloc(cmindexcloud_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 11); // create 11 inlets
 	
 	if (argc < ARGUMENTS) {
@@ -377,7 +377,7 @@ void *cmbasil_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	
 	// WRITE WINDOW INTO WINDOW ARRAY
-	cmbasil_windowwrite(x);
+	cmindexcloud_windowwrite(x);
 	
 	
 	return x;
@@ -387,7 +387,7 @@ void *cmbasil_new(t_symbol *s, long argc, t_atom *argv) {
 /************************************************************************************************************************/
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmbasil_dsp64(t_cmbasil *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
+void cmindexcloud_dsp64(t_cmindexcloud *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
 	x->connect_status[0] = count[1]; // 2nd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[1] = count[2]; // 3rd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[2] = count[3]; // 4th inlet: write connection flag into object structure (1 if signal connected)
@@ -407,15 +407,15 @@ void cmbasil_dsp64(t_cmbasil *x, t_object *dsp64, short *count, double samplerat
 	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
-	object_method(dsp64, gensym("dsp_add64"), x, cmbasil_perform64, 0, NULL);
-	//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmbasil_perform64, 0, NULL);
+	object_method(dsp64, gensym("dsp_add64"), x, cmindexcloud_perform64, 0, NULL);
+	//	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cmindexcloud_perform64, 0, NULL);
 }
 
 
 /************************************************************************************************************************/
 /* THE 64 BIT PERFORM ROUTINE                                                                                           */
 /************************************************************************************************************************/
-void cmbasil_perform64(t_cmbasil *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
+void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
 	long i, limit; // for loop counterS
@@ -633,7 +633,7 @@ zero:
 /************************************************************************************************************************/
 /* ASSIST METHOD FOR INLET AND OUTLET ANNOTATION                                                                        */
 /************************************************************************************************************************/
-void cmbasil_assist(t_cmbasil *x, void *b, long msg, long arg, char *dst) {
+void cmindexcloud_assist(t_cmindexcloud *x, void *b, long msg, long arg, char *dst) {
 	if (msg == ASSIST_INLET) {
 		switch (arg) {
 			case 0:
@@ -690,7 +690,7 @@ void cmbasil_assist(t_cmbasil *x, void *b, long msg, long arg, char *dst) {
 /************************************************************************************************************************/
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
-void cmbasil_free(t_cmbasil *x) {
+void cmindexcloud_free(t_cmindexcloud *x) {
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
 	object_free(x->buffer); // free the buffer reference
 	
@@ -713,7 +713,7 @@ void cmbasil_free(t_cmbasil *x) {
 /************************************************************************************************************************/
 /* FLOAT METHOD FOR FLOAT INLET SUPPORT                                                                                 */
 /************************************************************************************************************************/
-void cmbasil_float(t_cmbasil *x, double f) {
+void cmindexcloud_float(t_cmindexcloud *x, double f) {
 	double dump;
 	int inlet = ((t_pxobject*)x)->z_in; // get info as to which inlet was addressed (stored in the z_in component of the object structure
 	switch (inlet) {
@@ -816,7 +816,7 @@ void cmbasil_float(t_cmbasil *x, double f) {
 /************************************************************************************************************************/
 /* DOUBLE CLICK METHOD FOR VIEWING BUFFER CONTENT                                                                       */
 /************************************************************************************************************************/
-void cmbasil_dblclick(t_cmbasil *x) {
+void cmindexcloud_dblclick(t_cmindexcloud *x) {
 	buffer_view(buffer_ref_getobject(x->buffer));
 }
 
@@ -824,7 +824,7 @@ void cmbasil_dblclick(t_cmbasil *x) {
 /************************************************************************************************************************/
 /* NOTIFY METHOD FOR THE BUFFER REFERENCES                                                                              */
 /************************************************************************************************************************/
-t_max_err cmbasil_notify(t_cmbasil *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
+t_max_err cmindexcloud_notify(t_cmindexcloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = 1;
 	}
@@ -835,7 +835,7 @@ t_max_err cmbasil_notify(t_cmbasil *x, t_symbol *s, t_symbol *msg, void *sender,
 /************************************************************************************************************************/
 /* THE BUFFER SET METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmbasil_set(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
 		x->buffer_modified = 1;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
@@ -857,7 +857,7 @@ void cmbasil_set(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE WINDOW TYPE SET METHOD                                                                                           */
 /************************************************************************************************************************/
-void cmbasil_w_type(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexcloud_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
 		if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
@@ -867,7 +867,7 @@ void cmbasil_w_type(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
 			}
 			else {
 				x->window_type = arg; // write window type into object structure
-				cmbasil_windowwrite(x); // write window into window array
+				cmindexcloud_windowwrite(x); // write window into window array
 			}
 		}
 	}
@@ -881,7 +881,7 @@ void cmbasil_w_type(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE WINDOW LENGTH SET METHOD                                                                                         */
 /************************************************************************************************************************/
-void cmbasil_w_length(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexcloud_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
 		// CHECK IF WINDOW LENGTH ARGUMENT IS VALID
@@ -893,7 +893,7 @@ void cmbasil_w_length(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
 			x->w_writeflag = 1;
 			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double *)); // resize and clear window array
 			x->w_writeflag = 0;
-			cmbasil_windowwrite(x); // write window into window array
+			cmindexcloud_windowwrite(x); // write window into window array
 		}
 	}
 	else {
@@ -907,7 +907,7 @@ void cmbasil_w_length(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE GRAINS LIMIT METHOD                                                                                              */
 /************************************************************************************************************************/
-void cmbasil_limit(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexcloud_limit(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
 	if (arg < 1 || arg > MAXGRAINS) {
@@ -924,7 +924,7 @@ void cmbasil_limit(t_cmbasil *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE STEREO ATTRIBUTE SET METHOD                                                                                      */
 /************************************************************************************************************************/
-t_max_err cmbasil_stereo_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmindexcloud_stereo_set(t_cmindexcloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_stereo = atom_getlong(av)? 1 : 0;
 	}
@@ -935,7 +935,7 @@ t_max_err cmbasil_stereo_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av) 
 /************************************************************************************************************************/
 /* THE WINDOW INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmbasil_winterp_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmindexcloud_winterp_set(t_cmindexcloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_winterp = atom_getlong(av)? 1 : 0;
 	}
@@ -946,7 +946,7 @@ t_max_err cmbasil_winterp_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av)
 /************************************************************************************************************************/
 /* THE SAMPLE INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmbasil_sinterp_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmindexcloud_sinterp_set(t_cmindexcloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_sinterp = atom_getlong(av)? 1 : 0;
 	}
@@ -957,7 +957,7 @@ t_max_err cmbasil_sinterp_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av)
 /************************************************************************************************************************/
 /* THE ZERO CROSSING ATTRIBUTE SET METHOD                                                                               */
 /************************************************************************************************************************/
-t_max_err cmbasil_zero_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmindexcloud_zero_set(t_cmindexcloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_zero = atom_getlong(av)? 1 : 0;
 	}
@@ -967,7 +967,7 @@ t_max_err cmbasil_zero_set(t_cmbasil *x, t_object *attr, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE WINDOW_WRITE FUNCTION                                                                                            */
 /************************************************************************************************************************/
-void cmbasil_windowwrite(t_cmbasil *x) {
+void cmindexcloud_windowwrite(t_cmindexcloud *x) {
 	//	int i;
 	long length = x->window_length;
 	x->w_writeflag = 1;
@@ -1019,7 +1019,7 @@ void cmbasil_windowwrite(t_cmbasil *x) {
 /* CUSTOM FUNCTIONS																										*/
 /************************************************************************************************************************/
 // constant power stereo function
-void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbasil *x) {
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmindexcloud *x) {
 	panstruct->left = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) - sin((*pos * x->piovr2) * 0.5));
 	panstruct->right = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) + sin((*pos * x->piovr2) * 0.5));
 	return;
