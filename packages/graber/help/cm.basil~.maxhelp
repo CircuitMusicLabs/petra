@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 2179.0, 123.0, 1328.0, 860.0 ],
+		"rect" : [ 2000.0, 112.0, 1328.0, 860.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -258,7 +258,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 354.68103, 260.563232, 110.680084, 87.432213 ],
+									"patching_rect" : [ 354.68103, 260.563232, 110.680084, 110.680084 ],
 									"pic" : "window_gauss8.png"
 								}
 
@@ -272,7 +272,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 241.787354, 260.563232, 110.680084, 87.432213 ],
+									"patching_rect" : [ 241.787354, 260.563232, 110.680084, 110.680084 ],
 									"pic" : "window_gauss4.png"
 								}
 
@@ -316,7 +316,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 128.893677, 260.563232, 110.680084, 87.432213 ],
+									"patching_rect" : [ 128.893677, 260.563232, 110.680084, 110.680084 ],
 									"pic" : "window_gauss2.png"
 								}
 
@@ -345,7 +345,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 16.0, 260.563232, 110.680084, 87.432213 ],
+									"patching_rect" : [ 16.0, 260.563232, 110.680084, 110.680084 ],
 									"pic" : "window_flattop.png"
 								}
 
@@ -374,7 +374,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 353.574249, 72.563232, 110.680084, 87.432213 ],
+									"patching_rect" : [ 353.574249, 72.563232, 110.680084, 110.680084 ],
 									"pic" : "window_bartlett.png"
 								}
 
@@ -403,7 +403,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 241.787369, 72.563232, 110.680084, 87.432213 ],
+									"patching_rect" : [ 241.787369, 72.563232, 110.680084, 110.680084 ],
 									"pic" : "window_rectangular.png"
 								}
 
@@ -432,7 +432,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 128.893692, 72.563232, 110.680084, 87.432213 ],
+									"patching_rect" : [ 128.893692, 72.563232, 110.680084, 110.680084 ],
 									"pic" : "window_hamming.png"
 								}
 
@@ -461,7 +461,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 16.0, 72.563232, 110.680084, 87.432213 ],
+									"patching_rect" : [ 16.0, 72.563232, 110.680084, 110.680084 ],
 									"pic" : "window_hanning.png"
 								}
 
