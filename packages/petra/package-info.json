@@ -6,10 +6,10 @@
 	"displayname" : "",
 	"extends" : "",
 	"extensible" : 0,
-	"homepatcher" : "graber_Overview.maxpat",
+	"homepatcher" : "petra_Overview.maxpat",
 	"max_version_max" : "none",
 	"max_version_min" : "6.1",
-	"name" : "graber",
+	"name" : "petra",
 	"os" : 	{
 		"macintosh" : 		{
 			"platform" : [ "ia32", "x64" ],
