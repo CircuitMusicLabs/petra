@@ -891,7 +891,7 @@ void cmindexcloud_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) 
 		else if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
 			x->window_length = arg; // write window length into object structure
 			x->w_writeflag = 1;
-			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double *)); // resize and clear window array
+			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double)); // resize and clear window array
 			x->w_writeflag = 0;
 			cmindexcloud_windowwrite(x); // write window into window array
 		}
