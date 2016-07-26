@@ -39,7 +39,7 @@
 #define MAX_GAIN 2.0  // max gain
 #define ARGUMENTS 2 // constant number of arguments required for the external
 #define MAXGRAINS 512 // maximum number of simultaneously playing grains
-#define INLETS 10 // number of object float inlets
+#define INLETS 9 // number of object float inlets
 #define RANDMAX 10000
 #define BUFFERMS 2000
 
@@ -59,12 +59,6 @@ typedef struct _cmlivecloud {
 	double *testvalues; // array for storing the grain parameter test values (sanity testing)
 	short *busy; // array used to store the flag if a grain is currently playing or not
 	long *grainpos; // used to store the current playback position per grain
-	long *start; // used to store the start position in the buffer for each grain
-	long *t_length; // current grain length before pitch adjustment
-	long *gr_length; // current grain length after pitch adjustment
-	double *pan_left; // pan information for left channel for each grain
-	double *pan_right; // pan information for right channel for each grain
-	double *gain; // gain information for each grain
 	double tr_prev; // trigger sample from previous signal vector (required to check if input ramp resets to zero)
 	short grains_limit; // user defined maximum number of grains
 	short grains_limit_old; // used to store the previous grains count limit when user changes the limit via the "limit" message
@@ -230,48 +224,6 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 
-	// ALLOCATE MEMORY FOR THE START ARRAY
-	x->start = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
-	if (x->start == NULL) {
-		object_error((t_object *)x, "out of memory");
-		return NULL;
-	}
-
-	// ALLOCATE MEMORY FOR THE T_LENGTH ARRAY
-	x->t_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
-	if (x->t_length == NULL) {
-		object_error((t_object *)x, "out of memory");
-		return NULL;
-	}
-
-	// ALLOCATE MEMORY FOR THE GR_LENGTH ARRAY
-	x->gr_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
-	if (x->gr_length == NULL) {
-		object_error((t_object *)x, "out of memory");
-		return NULL;
-	}
-
-	// ALLOCATE MEMORY FOR THE PAN_LEFT ARRAY
-	x->pan_left = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double));
-	if (x->pan_left == NULL) {
-		object_error((t_object *)x, "out of memory");
-		return NULL;
-	}
-
-	// ALLOCATE MEMORY FOR THE PAN_RIGHT ARRAY
-	x->pan_right = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double));
-	if (x->pan_right == NULL) {
-		object_error((t_object *)x, "out of memory");
-		return NULL;
-	}
-	
-	// ALLOCATE MEMORY FOR THE GAIN ARRAY
-	x->gain = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double));
-	if (x->gain == NULL) {
-		object_error((t_object *)x, "out of memory");
-		return NULL;
-	}
-
 	// ALLOCATE MEMORY FOR THE OBJET INLETS ARRAY
 	x->object_inlets = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
 	if (x->object_inlets == NULL) {
@@ -287,7 +239,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
-	x->randomized = (double *)sysmem_newptrclear((INLETS / 2) * sizeof(double));
+	x->randomized = (double *)sysmem_newptrclear(4 * sizeof(double)); // 4 pairs of parameters to randomize
 	if (x->randomized == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
@@ -308,30 +260,27 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
-	x->object_inlets[0] = 0.0; // initialize float inlet value for current start min value
-	x->object_inlets[1] = 0.0; // initialize float inlet value for current start max value
-	x->object_inlets[2] = 150; // initialize float inlet value for min grain length
-	x->object_inlets[3] = 150; // initialize float inlet value for max grain length
+	x->object_inlets[0] = 0.0; // initialize float inlet value for current delay
+	x->object_inlets[1] = 150; // initialize float inlet value for min grain length
+	x->object_inlets[2] = 150; // initialize float inlet value for max grain length
+	x->object_inlets[3] = 1.0; // initialize inlet value for min pitch
 	x->object_inlets[4] = 1.0; // initialize inlet value for min pitch
-	x->object_inlets[5] = 1.0; // initialize inlet value for min pitch
-	x->object_inlets[6] = 0.0; // initialize value for min pan
-	x->object_inlets[7] = 0.0; // initialize value for max pan
-	x->object_inlets[8] = 1.0; // initialize value for min gain
-	x->object_inlets[9] = 1.0; // initialize value for max gain
+	x->object_inlets[5] = 0.0; // initialize value for min pan
+	x->object_inlets[6] = 0.0; // initialize value for max pan
+	x->object_inlets[7] = 1.0; // initialize value for min gain
+	x->object_inlets[8] = 1.0; // initialize value for max gain
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
 	x->grains_limit_old = 0; // initialize value for the routine when grains limit was modified
 	x->limit_modified = 0; // initialize channel change flag
 	x->buffer_modified = 0; // initialized buffer modified flag
 	// initialize the testvalues which are not dependent on sampleRate
-	x->testvalues[0] = 0.0; // dummy MIN_START
-	x->testvalues[1] = 0.0; // dummy MAX_START
-	x->testvalues[4] = MIN_PITCH;
-	x->testvalues[5] = MAX_PITCH;
-	x->testvalues[6] = MIN_PAN;
-	x->testvalues[7] = MAX_PAN;
-	x->testvalues[8] = MIN_GAIN;
-	x->testvalues[9] = MAX_GAIN;
+	x->testvalues[3] = MIN_PITCH;
+	x->testvalues[4] = MAX_PITCH;
+	x->testvalues[5] = MIN_PAN;
+	x->testvalues[6] = MAX_PAN;
+	x->testvalues[7] = MIN_GAIN;
+	x->testvalues[8] = MAX_GAIN;
 	
 	x->writepos = 0;
 	x->bufferframes = BUFFERMS * x->m_sr;
@@ -352,23 +301,23 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
 void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
-	x->connect_status[0] = count[1]; // 2nd inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[1] = count[2]; // 3rd inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[2] = count[3]; // 4th inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[3] = count[4]; // 5th inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[4] = count[5]; // 6th inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[5] = count[6]; // 7th inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[6] = count[7]; // 8th inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[7] = count[8]; // 9th inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[8] = count[9]; // 10th inlet: write connection flag into object structure (1 if signal connected)
-	x->connect_status[9] = count[10]; // 11th inlet: write connection flag into object structure (1 if signal connected)
+	x->connect_status[0] = count[2]; // signal connect status:	delay
+	x->connect_status[1] = count[3]; // signal connect status:	length min
+	x->connect_status[2] = count[4]; // signal connect status:	length max
+	x->connect_status[3] = count[5]; // signal connect status:	pitch min
+	x->connect_status[4] = count[6]; // signal connect status:	pitch max
+	x->connect_status[5] = count[7]; // signal connect status:	pan min
+	x->connect_status[6] = count[8]; // signal connect status:	pan max
+	x->connect_status[7] = count[9]; // signal connect status:	gain min
+	x->connect_status[8] = count[10]; // signal connect status:	gain max
 	
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
 	}
 	// calcuate the sampleRate-dependant test values
-	x->testvalues[2] = MIN_GRAINLENGTH * x->m_sr;
-	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
+	x->testvalues[0] = (BUFFERMS / 2) * x->m_sr; // max delay (min delay = 0)
+	x->testvalues[1] = (MIN_GRAINLENGTH) * x->m_sr; // min grain length
+	x->testvalues[2] = (MAX_GRAINLENGTH) * x->m_sr; // max grain legnth
 	
 	x->ringbuffer = (double *)sysmem_resizeptrclear(x->ringbuffer, (BUFFERMS * x->m_sr) * sizeof(double));
 	x->bufferframes = BUFFERMS * x->m_sr;
@@ -384,9 +333,9 @@ void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double s
 void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
-	long i, limit; // for loop counterS
+	long i, r, limit; // for loop counterS
 	long n = sampleframes; // number of samples per signal vector
-	double tr_curr; // current trigger value
+	double tr_curr, sig_curr; // current trigger and signal value
 	double distance; // floating point index for reading from buffers
 	long index; // truncated index for reading from buffers
 	double w_read, b_read; // current sample read from the window buffer
@@ -394,6 +343,12 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	double outsample_right = 0.0; // temporary right output sample used for adding up all grain samples
 	int slot = 0; // variable for the current slot in the arrays to write grain info to
 	cm_panstruct panstruct; // struct for holding the calculated constant power left and right stereo values
+	
+	double start;
+	double t_length;
+	double gr_length;
+	double gain;
+	double pan_left, pan_right;
 	
 	
 	// OUTLETS
@@ -416,28 +371,30 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	w_channelcount = buffer_getchannelcount(w_buffer); // get number of channels in the sample buffer
 	
 	// GET INLET VALUES
-	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
+	t_double *tr_sigin		= (t_double *)ins[0]; // get trigger input signal from 1st inlet
+	t_double *rec_sigin	= (t_double *)ins[1]; // get trigger input signal from 1st inlet
 	
-	for (i = 0; i < INLETS; i++) {
-		if (i < 4) { // start and length values to be multiplied by the sampling rate
-			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] * x->m_sr : x->object_inlets[i] * x->m_sr;
-		}
-		else { // the rest is sampleRate independent
-			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] : x->object_inlets[i];
-		}
-	}
-	
+	x->grain_params[0] = x->connect_status[0] ? *ins[2] * x->m_sr : x->object_inlets[0] * x->m_sr;	// delay
+	x->grain_params[1] = x->connect_status[1] ? *ins[3] * x->m_sr : x->object_inlets[1] * x->m_sr;	// length min
+	x->grain_params[2] = x->connect_status[2] ? *ins[4] * x->m_sr : x->object_inlets[2] * x->m_sr;	// length max
+	x->grain_params[3] = x->connect_status[3] ? *ins[5] : x->object_inlets[3];						// pitch min
+	x->grain_params[4] = x->connect_status[4] ? *ins[6] : x->object_inlets[4];						// pitch max
+	x->grain_params[5] = x->connect_status[5] ? *ins[7] : x->object_inlets[5];						// pan min
+	x->grain_params[6] = x->connect_status[6] ? *ins[8] : x->object_inlets[6];						// pan max
+	x->grain_params[7] = x->connect_status[7] ? *ins[9] : x->object_inlets[7];						// gain min
+	x->grain_params[8] = x->connect_status[8] ? *ins[10] : x->object_inlets[8];						// gain max
 	
 	// DSP LOOP
 	while (n--) {
 		tr_curr = *tr_sigin++; // get current trigger value
+		sig_curr = *rec_sigin++; // get current signal value
 		
 		
 		
 		
 		// WRITE INTO RINGBUFFER:
 		if (x->object_inlets[0] >= 1.0) { // this must be replaced with a proper record on/off inlet
-			x->ringbuffer[x->writepos++] = tr_curr;
+			x->ringbuffer[x->writepos++] = sig_curr;
 			if (x->writepos == x->bufferframes) {
 				x->writepos = 0;
 			}
@@ -467,8 +424,10 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
 		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified) { // based on zero crossing --> when ramp from 0-1 restarts.
+			
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
+			
 			// FIND A FREE SLOT FOR THE NEW GRAIN
 			i = 0;
 			while (i < x->grains_limit) {
@@ -479,47 +438,59 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				}
 				i++;
 			}
+
 			// randomize the grain parameters and write them into the randomized array
-			for (i = 0; i < INLETS; i += 2) {
-				if (x->grain_params[i] != x->grain_params[i+1]) {
-					x->randomized[i/2] = cm_random(&x->grain_params[i], &x->grain_params[i+1]);
-				}
-				else {
-					x->randomized[i/2] = x->grain_params[i];
-				}
-				
+			x->randomized[0] = cm_random(&x->grain_params[1], &x->grain_params[2]); // length
+			x->randomized[1] = cm_random(&x->grain_params[3], &x->grain_params[4]); // pitch
+			x->randomized[2] = cm_random(&x->grain_params[5], &x->grain_params[6]); // pan
+			x->randomized[3] = cm_random(&x->grain_params[7], &x->grain_params[8]); // gain
+			
+			// check for parameter sanity for delay value
+			if (x->grain_params[0] < 0) {
+				x->grain_params[0] = 0;
 			}
-			// check for parameter sanity with testvalues array (skip start value, hence i = 1)
-			for (i = 1; i < INLETS / 2; i++) {
-				if (x->randomized[i] < x->testvalues[i*2]) {
-					x->randomized[i] = x->testvalues[i*2];
+			if (x->grain_params[0] > x->testvalues[0]) {
+				x->grain_params[0] = x->testvalues[0];
+			}
+			
+			// check for parameter sanity for remaining randomized parameters
+			for (i = 0, r = 1; i < 4; i++, r += 2) {
+				if (x->randomized[i] < x->testvalues[r]) {
+					x->randomized[i] = x->testvalues[r];
 				}
-				else if (x->randomized[i] > x->testvalues[(i*2)+1]) {
-					x->randomized[i] = x->testvalues[(i*2)+1];
+				else if (x->randomized[i] > x->testvalues[r+1]) {
+					x->randomized[i] = x->testvalues[r+1];
 				}
 			}
-			// write grain lenght slot (non-pitch)
-			x->t_length[slot] = x->randomized[1];
-			x->gr_length[slot] = x->t_length[slot] * x->randomized[2]; // length * pitch
+			
+			// write grain length slot (non-pitch)
+			t_length = x->randomized[0];
+			gr_length = t_length * x->randomized[1]; // length * pitch
 			// check that grain length is not larger than size of buffer
-			if (x->gr_length[slot] > x->bufferframes) {
-				x->gr_length[slot] = x->bufferframes;
+			if (gr_length > x->bufferframes) {
+				gr_length = x->bufferframes;
 			}
-			// write start position
-			x->start[slot] = x->randomized[0];
-			// start position sanity testing
-			if (x->start[slot] > x->bufferframes - x->gr_length[slot]) {
-				x->start[slot] = x->bufferframes - x->gr_length[slot];
-			}
-			if (x->start[slot] < 0) {
-				x->start[slot] = 0;
-			}
+			
 			// compute pan values
-			cm_panning(&panstruct, &x->randomized[3], x); // calculate pan values in panstruct
-			x->pan_left[slot] = panstruct.left;
-			x->pan_right[slot] = panstruct.right;
+			cm_panning(&panstruct, &x->randomized[2], x); // calculate pan values in panstruct
+			pan_left = panstruct.left;
+			pan_right = panstruct.right;
+			
 			// write gain value
-			x->gain[slot] = x->randomized[4];
+			gain = x->randomized[3];
+			
+			
+//			// write start position
+//			x->start[slot] = x->randomized[0];
+//			// start position sanity testing
+//			if (x->start[slot] > x->bufferframes - x->gr_length[slot]) {
+//				x->start[slot] = x->bufferframes - x->gr_length[slot];
+//			}
+//			if (x->start[slot] < 0) {
+//				x->start[slot] = 0;
+//			}
+			
+		
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
@@ -613,10 +584,10 @@ void cmlivecloud_assist(t_cmlivecloud *x, void *b, long msg, long arg, char *dst
 				snprintf_zero(dst, 256, "(signal) trigger in");
 				break;
 			case 1:
-				snprintf_zero(dst, 256, "(signal/float) start min");
+				snprintf_zero(dst, 256, "(signal) audio input");
 				break;
 			case 2:
-				snprintf_zero(dst, 256, "(signal/float) start max");
+				snprintf_zero(dst, 256, "(signal/float) delay");
 				break;
 			case 3:
 				snprintf_zero(dst, 256, "(signal/float) min grain length");
@@ -668,12 +639,6 @@ void cmlivecloud_free(t_cmlivecloud *x) {
 	object_free(x->w_buffer); // free the window buffer reference
 	sysmem_freeptr(x->busy); // free memory allocated to the busy array
 	sysmem_freeptr(x->grainpos); // free memory allocated to the grainpos array
-	sysmem_freeptr(x->start); // free memory allocated to the start array
-	sysmem_freeptr(x->t_length); // free memory allocated to the t_length array
-	sysmem_freeptr(x->gr_length); // free memory allocated to the t_length array
-	sysmem_freeptr(x->pan_left); // free memory allocated to the pan_left array
-	sysmem_freeptr(x->pan_right); // free memory allocated to the pan_right array
-	sysmem_freeptr(x->gain); // free memory allocated to the gain array
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
 	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
 	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
@@ -687,23 +652,26 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 	double dump;
 	int inlet = ((t_pxobject*)x)->z_in; // get info as to which inlet was addressed (stored in the z_in component of the object structure
 	switch (inlet) {
-		case 1: // first inlet
-			if (f < 0.0) {
+		case 2: // delay
+			if (f < 0.0 || f > BUFFERMS) {
 				dump = f;
 			}
 			else {
 				x->object_inlets[0] = f;
 			}
 			break;
-		case 2: // second inlet
-			if (f < 0.0) {
+		case 3: // length min
+			if (f < MIN_GRAINLENGTH) {
+				dump = f;
+			}
+			else if (f > MAX_GRAINLENGTH) {
 				dump = f;
 			}
 			else {
 				x->object_inlets[1] = f;
 			}
 			break;
-		case 3: // 4th inlet
+		case 4: // length max
 			if (f < MIN_GRAINLENGTH) {
 				dump = f;
 			}
@@ -713,19 +681,18 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 			else {
 				x->object_inlets[2] = f;
 			}
-			break;
-		case 4: // 5th inlet
-			if (f < MIN_GRAINLENGTH) {
+		case 5: // pitch min
+			if (f <= 0.0) {
 				dump = f;
 			}
-			else if (f > MAX_GRAINLENGTH) {
+			else if (f > MAX_PITCH) {
 				dump = f;
 			}
 			else {
 				x->object_inlets[3] = f;
 			}
 			break;
-		case 5: // 6th inlet
+		case 6: // pitch max
 			if (f <= 0.0) {
 				dump = f;
 			}
@@ -735,19 +702,15 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 			else {
 				x->object_inlets[4] = f;
 			}
-			break;
-		case 6: // 7th inlet
-			if (f <= 0.0) {
-				dump = f;
-			}
-			else if (f > MAX_PITCH) {
+		case 7: // pan min
+			if (f < -1.0 || f > 1.0) {
 				dump = f;
 			}
 			else {
 				x->object_inlets[5] = f;
 			}
 			break;
-		case 7:
+		case 8: // pan max
 			if (f < -1.0 || f > 1.0) {
 				dump = f;
 			}
@@ -755,28 +718,20 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 				x->object_inlets[6] = f;
 			}
 			break;
-		case 8:
-			if (f < -1.0 || f > 1.0) {
+		case 9: // gain min
+			if (f < 0.0 || f > MAX_GAIN) {
 				dump = f;
 			}
 			else {
 				x->object_inlets[7] = f;
 			}
 			break;
-		case 9:
+		case 10: // gain max
 			if (f < 0.0 || f > MAX_GAIN) {
 				dump = f;
 			}
 			else {
 				x->object_inlets[8] = f;
-			}
-			break;
-		case 10:
-			if (f < 0.0 || f > MAX_GAIN) {
-				dump = f;
-			}
-			else {
-				x->object_inlets[9] = f;
 			}
 			break;
 	}
