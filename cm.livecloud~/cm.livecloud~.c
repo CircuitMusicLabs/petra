@@ -1,5 +1,5 @@
 /*
- cm.buffercloud~ - a granular synthesis external audio object for Max/MSP.
+ cm.livecloud~ - a granular synthesis external audio object for Max/MSP.
  Copyright (C) 2014  Matthias Müller - Circuit Music Labs
  
  This program is free software: you can redistribute it and/or modify
@@ -37,19 +37,18 @@
 #define MAX_PAN 1.0 // max pan
 #define MIN_GAIN 0.0 // min gain
 #define MAX_GAIN 2.0  // max gain
-#define ARGUMENTS 3 // constant number of arguments required for the external
+#define ARGUMENTS 2 // constant number of arguments required for the external
 #define MAXGRAINS 512 // maximum number of simultaneously playing grains
 #define INLETS 10 // number of object float inlets
 #define RANDMAX 10000
+#define BUFFERMS 2000
 
 
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
-typedef struct _cmbuffercloud {
+typedef struct _cmlivecloud {
 	t_pxobject obj;
-	t_symbol *buffer_name; // sample buffer name
-	t_buffer_ref *buffer; // sample buffer reference
 	t_symbol *window_name; // window buffer name
 	t_buffer_ref *w_buffer; // window buffer reference
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
@@ -79,7 +78,10 @@ typedef struct _cmbuffercloud {
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
-} t_cmbuffercloud;
+	double *ringbuffer; // circular buffer for recording the audio input
+	long bufferframes; // size of buffer in samples
+	long writepos; // buffer write position
+} t_cmlivecloud;
 
 
 /************************************************************************************************************************/
@@ -94,34 +96,35 @@ typedef struct cmpanner {
 /************************************************************************************************************************/
 /* STATIC DECLARATIONS                                                                                                  */
 /************************************************************************************************************************/
-static t_class *cmbuffercloud_class; // class pointer
+static t_class *cmlivecloud_class; // class pointer
 static t_symbol *ps_buffer_modified, *ps_stereo;
 
 
 /************************************************************************************************************************/
 /* FUNCTION PROTOTYPES                                                                                                  */
 /************************************************************************************************************************/
-void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv);
-void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
-void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
-void cmbuffercloud_assist(t_cmbuffercloud *x, void *b, long msg, long arg, char *dst);
-void cmbuffercloud_free(t_cmbuffercloud *x);
-void cmbuffercloud_float(t_cmbuffercloud *x, double f);
-void cmbuffercloud_dblclick(t_cmbuffercloud *x);
-t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
-void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
-void cmbuffercloud_limit(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
-t_max_err cmbuffercloud_stereo_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmbuffercloud_winterp_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmbuffercloud_sinterp_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
-t_max_err cmbuffercloud_zero_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
+void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv);
+void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
+void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam);
+void cmlivecloud_assist(t_cmlivecloud *x, void *b, long msg, long arg, char *dst);
+void cmlivecloud_free(t_cmlivecloud *x);
+void cmlivecloud_float(t_cmlivecloud *x, double f);
+void cmlivecloud_dblclick(t_cmlivecloud *x);
+t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
+void cmlivecloud_limit(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
+t_max_err cmlivecloud_stereo_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmlivecloud_winterp_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmlivecloud_sinterp_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmlivecloud_zero_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
 
 // PANNING FUNCTION
-void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbuffercloud *x);
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmlivecloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
+double cm_lininterpring(double distance, double *b_sample, t_atom_long b_channelcount, short channel);
 
 
 /************************************************************************************************************************/
@@ -129,47 +132,47 @@ double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount
 /************************************************************************************************************************/
 void ext_main(void *r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
-	cmbuffercloud_class = class_new("cm.buffercloud~", (method)cmbuffercloud_new, (method)cmbuffercloud_free, sizeof(t_cmbuffercloud), 0, A_GIMME, 0);
+	cmlivecloud_class = class_new("cm.livecloud~", (method)cmlivecloud_new, (method)cmlivecloud_free, sizeof(t_cmlivecloud), 0, A_GIMME, 0);
 	
-	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_dsp64, 		"dsp64", 	A_CANT, 0);  // Bind the 64 bit dsp method
-	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_assist, 		"assist", 	A_CANT, 0); // Bind the assist message
-	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_float, 		"float", 	A_FLOAT, 0); // Bind the float message (allowing float input)
-	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_dblclick, 	"dblclick",	A_CANT, 0); // Bind the double click message
-	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_notify, 		"notify", 	A_CANT, 0); // Bind the notify message
-	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_dsp64, 		"dsp64", 	A_CANT, 0);  // Bind the 64 bit dsp method
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_assist, 		"assist", 	A_CANT, 0); // Bind the assist message
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_float, 		"float", 	A_FLOAT, 0); // Bind the float message (allowing float input)
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_dblclick, 	"dblclick",	A_CANT, 0); // Bind the double click message
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_notify, 		"notify", 	A_CANT, 0); // Bind the notify message
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
 	
-	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "stereo", 0, t_cmbuffercloud, attr_stereo);
-	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "stereo", (method)NULL, (method)cmbuffercloud_stereo_set);
-	CLASS_ATTR_BASIC(cmbuffercloud_class, "stereo", 0);
-	CLASS_ATTR_SAVE(cmbuffercloud_class, "stereo", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "stereo", 0, "onoff", "Multichannel playback");
+	CLASS_ATTR_ATOM_LONG(cmlivecloud_class, "stereo", 0, t_cmlivecloud, attr_stereo);
+	CLASS_ATTR_ACCESSORS(cmlivecloud_class, "stereo", (method)NULL, (method)cmlivecloud_stereo_set);
+	CLASS_ATTR_BASIC(cmlivecloud_class, "stereo", 0);
+	CLASS_ATTR_SAVE(cmlivecloud_class, "stereo", 0);
+	CLASS_ATTR_STYLE_LABEL(cmlivecloud_class, "stereo", 0, "onoff", "Multichannel playback");
 	
-	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "w_interp", 0, t_cmbuffercloud, attr_winterp);
-	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "w_interp", (method)NULL, (method)cmbuffercloud_winterp_set);
-	CLASS_ATTR_BASIC(cmbuffercloud_class, "w_interp", 0);
-	CLASS_ATTR_SAVE(cmbuffercloud_class, "w_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "w_interp", 0, "onoff", "Window interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmlivecloud_class, "w_interp", 0, t_cmlivecloud, attr_winterp);
+	CLASS_ATTR_ACCESSORS(cmlivecloud_class, "w_interp", (method)NULL, (method)cmlivecloud_winterp_set);
+	CLASS_ATTR_BASIC(cmlivecloud_class, "w_interp", 0);
+	CLASS_ATTR_SAVE(cmlivecloud_class, "w_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmlivecloud_class, "w_interp", 0, "onoff", "Window interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "s_interp", 0, t_cmbuffercloud, attr_sinterp);
-	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "s_interp", (method)NULL, (method)cmbuffercloud_sinterp_set);
-	CLASS_ATTR_BASIC(cmbuffercloud_class, "s_interp", 0);
-	CLASS_ATTR_SAVE(cmbuffercloud_class, "s_interp", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
+	CLASS_ATTR_ATOM_LONG(cmlivecloud_class, "s_interp", 0, t_cmlivecloud, attr_sinterp);
+	CLASS_ATTR_ACCESSORS(cmlivecloud_class, "s_interp", (method)NULL, (method)cmlivecloud_sinterp_set);
+	CLASS_ATTR_BASIC(cmlivecloud_class, "s_interp", 0);
+	CLASS_ATTR_SAVE(cmlivecloud_class, "s_interp", 0);
+	CLASS_ATTR_STYLE_LABEL(cmlivecloud_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
 	
-	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "zero", 0, t_cmbuffercloud, attr_zero);
-	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "zero", (method)NULL, (method)cmbuffercloud_zero_set);
-	CLASS_ATTR_BASIC(cmbuffercloud_class, "zero", 0);
-	CLASS_ATTR_SAVE(cmbuffercloud_class, "zero", 0);
-	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
+	CLASS_ATTR_ATOM_LONG(cmlivecloud_class, "zero", 0, t_cmlivecloud, attr_zero);
+	CLASS_ATTR_ACCESSORS(cmlivecloud_class, "zero", (method)NULL, (method)cmlivecloud_zero_set);
+	CLASS_ATTR_BASIC(cmlivecloud_class, "zero", 0);
+	CLASS_ATTR_SAVE(cmlivecloud_class, "zero", 0);
+	CLASS_ATTR_STYLE_LABEL(cmlivecloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
-	CLASS_ATTR_ORDER(cmbuffercloud_class, "stereo", 0, "1");
-	CLASS_ATTR_ORDER(cmbuffercloud_class, "w_interp", 0, "2");
-	CLASS_ATTR_ORDER(cmbuffercloud_class, "s_interp", 0, "3");
-	CLASS_ATTR_ORDER(cmbuffercloud_class, "zero", 0, "4");
+	CLASS_ATTR_ORDER(cmlivecloud_class, "stereo", 0, "1");
+	CLASS_ATTR_ORDER(cmlivecloud_class, "w_interp", 0, "2");
+	CLASS_ATTR_ORDER(cmlivecloud_class, "s_interp", 0, "3");
+	CLASS_ATTR_ORDER(cmlivecloud_class, "zero", 0, "4");
 	
-	class_dspinit(cmbuffercloud_class); // Add standard Max/MSP methods to your class
-	class_register(CLASS_BOX, cmbuffercloud_class); // Register the class with Max
+	class_dspinit(cmlivecloud_class); // Add standard Max/MSP methods to your class
+	class_register(CLASS_BOX, cmlivecloud_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
 	ps_stereo = gensym("stereo");
 }
@@ -178,8 +181,8 @@ void ext_main(void *r) {
 /************************************************************************************************************************/
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
-void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
-	t_cmbuffercloud *x = (t_cmbuffercloud *)object_alloc(cmbuffercloud_class); // create the object and allocate required memory
+void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
+	t_cmlivecloud *x = (t_cmlivecloud *)object_alloc(cmlivecloud_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 11); // create 11 inlets
 	
 	
@@ -188,9 +191,8 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
-	x->buffer_name = atom_getsymarg(0, argc, argv); // get user supplied argument for sample buffer
-	x->window_name = atom_getsymarg(1, argc, argv); // get user supplied argument for window buffer
-	x->grains_limit = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grains
+	x->window_name = atom_getsymarg(0, argc, argv); // get user supplied argument for window buffer
+	x->grains_limit = atom_getintarg(1, argc, argv); // get user supplied argument for maximum grains
 	
 	// HANDLE ATTRIBUTES
 	object_attr_setlong(x, gensym("stereo"), 0); // initialize stereo attribute
@@ -297,6 +299,12 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
+	
+	x->ringbuffer = (double *)sysmem_newptrclear((BUFFERMS * x->m_sr) * sizeof(double));
+	if (x->ringbuffer == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
 
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
@@ -325,13 +333,15 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->testvalues[8] = MIN_GAIN;
 	x->testvalues[9] = MAX_GAIN;
 	
+	x->writepos = 0;
+	x->bufferframes = BUFFERMS * x->m_sr;
+	
 	// calculate constants for panning function
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
 	x->root2ovr2 = sqrt(2.0) * 0.5;
 	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
-	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
 	x->w_buffer = buffer_ref_new((t_object *)x, x->window_name); // write the window buffer reference into the object structure
 	
 	return x;
@@ -341,7 +351,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 /************************************************************************************************************************/
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
+void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
 	x->connect_status[0] = count[1]; // 2nd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[1] = count[2]; // 3rd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[2] = count[3]; // 4th inlet: write connection flag into object structure (1 if signal connected)
@@ -360,15 +370,18 @@ void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, doub
 	x->testvalues[2] = MIN_GRAINLENGTH * x->m_sr;
 	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
 	
+	x->ringbuffer = (double *)sysmem_resizeptrclear(x->ringbuffer, (BUFFERMS * x->m_sr) * sizeof(double));
+	x->bufferframes = BUFFERMS * x->m_sr;
+	
 	// CALL THE PERFORM ROUTINE
-	object_method(dsp64, gensym("dsp_add64"), x, cmbuffercloud_perform64, 0, NULL);
+	object_method(dsp64, gensym("dsp_add64"), x, cmlivecloud_perform64, 0, NULL);
 }
 
 
 /************************************************************************************************************************/
 /* THE 64 BIT PERFORM ROUTINE                                                                                           */
 /************************************************************************************************************************/
-void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
+void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
 	long i, limit; // for loop counterS
@@ -382,29 +395,24 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	int slot = 0; // variable for the current slot in the arrays to write grain info to
 	cm_panstruct panstruct; // struct for holding the calculated constant power left and right stereo values
 	
+	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
 	
 	// BUFFER VARIABLE DECLARATIONS
-	t_buffer_obj *buffer = buffer_ref_getobject(x->buffer);
 	t_buffer_obj *w_buffer = buffer_ref_getobject(x->w_buffer);
-	float *b_sample = buffer_locksamples(buffer);
 	float *w_sample = buffer_locksamples(w_buffer);
-	long b_framecount; // number of frames in the sample buffer
 	long w_framecount; // number of frames in the window buffer
-	t_atom_long b_channelcount; // number of channels in the sample buffer
 	t_atom_long w_channelcount; // number of channels in the window buffer
 	
 	// BUFFER CHECKS
-	if (!b_sample || !w_sample) { // if the sample buffer does not exist
+	if (!w_sample) { // if the sample buffer does not exist
 		goto zero;
 	}
 	
 	// GET BUFFER INFORMATION
-	b_framecount = buffer_getframecount(buffer); // get number of frames in the sample buffer
 	w_framecount = buffer_getframecount(w_buffer); // get number of frames in the window buffer
-	b_channelcount = buffer_getchannelcount(buffer); // get number of channels in the sample buffer
 	w_channelcount = buffer_getchannelcount(w_buffer); // get number of channels in the sample buffer
 	
 	// GET INLET VALUES
@@ -419,9 +427,24 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		}
 	}
 	
+	
 	// DSP LOOP
 	while (n--) {
 		tr_curr = *tr_sigin++; // get current trigger value
+		
+		
+		
+		
+		// WRITE INTO RINGBUFFER:
+		if (x->object_inlets[0] >= 1.0) { // this must be replaced with a proper record on/off inlet
+			x->ringbuffer[x->writepos++] = tr_curr;
+			if (x->writepos == x->bufferframes) {
+				x->writepos = 0;
+			}
+		}
+		
+		
+		
 		
 		if (x->attr_zero) {
 			if (tr_curr > 0.0 && x->tr_prev < 0.0) { // zero crossing from negative to positive
@@ -479,14 +502,14 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			x->t_length[slot] = x->randomized[1];
 			x->gr_length[slot] = x->t_length[slot] * x->randomized[2]; // length * pitch
 			// check that grain length is not larger than size of buffer
-			if (x->gr_length[slot] > b_framecount) {
-				x->gr_length[slot] = b_framecount;
+			if (x->gr_length[slot] > x->bufferframes) {
+				x->gr_length[slot] = x->bufferframes;
 			}
 			// write start position
 			x->start[slot] = x->randomized[0];
 			// start position sanity testing
-			if (x->start[slot] > b_framecount - x->gr_length[slot]) {
-				x->start[slot] = b_framecount - x->gr_length[slot];
+			if (x->start[slot] > x->bufferframes - x->gr_length[slot]) {
+				x->start[slot] = x->bufferframes - x->gr_length[slot];
 			}
 			if (x->start[slot] < 0) {
 				x->start[slot] = 0;
@@ -500,7 +523,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->grains_count == 0 || !b_sample || !w_sample) { // if grains count is zero, there is no playback to be calculated
+		if (x->grains_count == 0 || !w_sample) { // if grains count is zero, there is no playback to be calculated
 			*out_left++ = 0.0;
 			*out_right++ = 0.0;
 		}
@@ -522,30 +545,24 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 						index = (long)(((double)x->grainpos[i] / (double)x->t_length[i]) * (double)w_framecount);
 						w_read = w_sample[index];
 					}
+					
+					
+					
 					// GET GRAIN SAMPLE FROM SAMPLE BUFFER
 					distance = x->start[i] + (((double)x->grainpos[i]++ / (double)x->t_length[i]) * (double)x->gr_length[i]);
 					
-					if (b_channelcount > 1 && x->attr_stereo) { // if more than one channel
-						if (x->attr_sinterp) {
-							outsample_left += ((cm_lininterp(distance, b_sample, b_channelcount, 0) * w_read) * x->pan_left[i]) * x->gain[i]; // get interpolated sample
-							outsample_right += ((cm_lininterp(distance, b_sample, b_channelcount, 1) * w_read) * x->pan_right[i]) * x->gain[i];
-						}
-						else {
-							outsample_left += ((b_sample[(long)distance * b_channelcount] * w_read) * x->pan_left[i]) * x->gain[i];
-							outsample_right += ((b_sample[((long)distance * b_channelcount) + 1] * w_read) * x->pan_right[i]) * x->gain[i];
-						}
+					
+					
+					if (x->attr_sinterp) {
+						b_read = cm_lininterpring(distance, x->ringbuffer, 1, 0) * w_read; // get interpolated sample
+						outsample_left += (b_read * x->pan_left[i]) * x->gain[i];
+						outsample_right += (b_read * x->pan_right[i]) * x->gain[i];
 					}
 					else {
-						if (x->attr_sinterp) {
-							b_read = cm_lininterp(distance, b_sample, b_channelcount, 0) * w_read; // get interpolated sample
-							outsample_left += (b_read * x->pan_left[i]) * x->gain[i];
-							outsample_right += (b_read * x->pan_right[i]) * x->gain[i];
-						}
-						else {
-							outsample_left += ((b_sample[(long)distance * b_channelcount] * w_read) * x->pan_left[i]) * x->gain[i];
-							outsample_right += ((b_sample[(long)distance * b_channelcount] * w_read) * x->pan_right[i]) * x->gain[i];
-						}
+						outsample_left += ((x->ringbuffer[(long)distance * 1] * w_read) * x->pan_left[i]) * x->gain[i];
+						outsample_right += ((x->ringbuffer[(long)distance * 1] * w_read) * x->pan_right[i]) * x->gain[i];
 					}
+					
 					if (x->grainpos[i] == x->t_length[i]) { // if current grain has reached the end position
 						x->grainpos[i] = 0; // reset parameters for overwrite
 						x->busy[i] = 0;
@@ -572,7 +589,6 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	
 	/************************************************************************************************************************/
 	// STORE UPDATED RUNNING VALUES INTO THE OBJECT STRUCTURE
-	buffer_unlocksamples(buffer);
 	buffer_unlocksamples(w_buffer);
 	outlet_int(x->grains_count_out, x->grains_count); // send number of currently playing grains to the outlet
 	return;
@@ -582,7 +598,6 @@ zero:
 		*out_left++ = 0.0;
 		*out_right++ = 0.0;
 	}
-	buffer_unlocksamples(buffer);
 	buffer_unlocksamples(w_buffer);
 	return; // THIS RETURN WAS MISSING FOR A LONG, LONG TIME. MAYBE THIS HELPS WITH STABILITY!?
 }
@@ -591,7 +606,7 @@ zero:
 /************************************************************************************************************************/
 /* ASSIST METHOD FOR INLET AND OUTLET ANNOTATION                                                                        */
 /************************************************************************************************************************/
-void cmbuffercloud_assist(t_cmbuffercloud *x, void *b, long msg, long arg, char *dst) {
+void cmlivecloud_assist(t_cmlivecloud *x, void *b, long msg, long arg, char *dst) {
 	if (msg == ASSIST_INLET) {
 		switch (arg) {
 			case 0:
@@ -648,11 +663,9 @@ void cmbuffercloud_assist(t_cmbuffercloud *x, void *b, long msg, long arg, char 
 /************************************************************************************************************************/
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
-void cmbuffercloud_free(t_cmbuffercloud *x) {
+void cmlivecloud_free(t_cmlivecloud *x) {
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
-	object_free(x->buffer); // free the buffer reference
 	object_free(x->w_buffer); // free the window buffer reference
-	
 	sysmem_freeptr(x->busy); // free memory allocated to the busy array
 	sysmem_freeptr(x->grainpos); // free memory allocated to the grainpos array
 	sysmem_freeptr(x->start); // free memory allocated to the start array
@@ -670,7 +683,7 @@ void cmbuffercloud_free(t_cmbuffercloud *x) {
 /************************************************************************************************************************/
 /* FLOAT METHOD FOR FLOAT INLET SUPPORT                                                                                 */
 /************************************************************************************************************************/
-void cmbuffercloud_float(t_cmbuffercloud *x, double f) {
+void cmlivecloud_float(t_cmlivecloud *x, double f) {
 	double dump;
 	int inlet = ((t_pxobject*)x)->z_in; // get info as to which inlet was addressed (stored in the z_in component of the object structure
 	switch (inlet) {
@@ -773,8 +786,7 @@ void cmbuffercloud_float(t_cmbuffercloud *x, double f) {
 /************************************************************************************************************************/
 /* DOUBLE CLICK METHOD FOR VIEWING BUFFER CONTENT                                                                       */
 /************************************************************************************************************************/
-void cmbuffercloud_dblclick(t_cmbuffercloud *x) {
-	buffer_view(buffer_ref_getobject(x->buffer));
+void cmlivecloud_dblclick(t_cmlivecloud *x) {
 	buffer_view(buffer_ref_getobject(x->w_buffer));
 }
 
@@ -782,16 +794,13 @@ void cmbuffercloud_dblclick(t_cmbuffercloud *x) {
 /************************************************************************************************************************/
 /* NOTIFY METHOD FOR THE BUFFER REFERENCES                                                                              */
 /************************************************************************************************************************/
-t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
+t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	t_symbol *buffer_name = (t_symbol *)object_method((t_object *)sender, gensym("getname"));
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = 1;
 	}
 	if (buffer_name == x->window_name) { // check if calling object was the window buffer
 		return buffer_ref_notify(x->w_buffer, s, msg, sender, data); // return with the calling buffer
-	}
-	else if (buffer_name == x->buffer_name) { // check if calling object was the sample buffer
-		return buffer_ref_notify(x->buffer, s, msg, sender, data); // return with the calling buffer
 	}
 	else { // if calling object was none of the expected buffers
 		return MAX_ERR_NONE; // return generic MAX_ERR_NONE
@@ -802,22 +811,17 @@ t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, v
 /************************************************************************************************************************/
 /* THE BUFFER SET METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
-	if (ac == 2) {
+void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
+	if (ac == 1) {
 		x->buffer_modified = 1;
-		x->buffer_name = atom_getsym(av); // write buffer name into object structure
-		x->window_name = atom_getsym(av+1); // write buffer name into object structure
-		buffer_ref_set(x->buffer, x->buffer_name);
+		x->window_name = atom_getsym(av); // write buffer name into object structure
 		buffer_ref_set(x->w_buffer, x->window_name);
-		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->buffer))) > 2) {
-			object_error((t_object *)x, "referenced sample buffer has more than 2 channels. using channels 1 and 2.");
-		}
 		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->w_buffer))) > 1) {
 			object_error((t_object *)x, "referenced window buffer has more than 1 channel. expect strange results.");
 		}
 	}
 	else {
-		object_error((t_object *)x, "%d arguments required (sample/window)", 2);
+		object_error((t_object *)x, "%d arguments required (window)", 1);
 	}
 }
 
@@ -825,7 +829,7 @@ void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE GRAINS LIMIT METHOD                                                                                              */
 /************************************************************************************************************************/
-void cmbuffercloud_limit(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmlivecloud_limit(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
 	if (arg < 1 || arg > MAXGRAINS) {
@@ -842,7 +846,7 @@ void cmbuffercloud_limit(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE STEREO ATTRIBUTE SET METHOD                                                                                      */
 /************************************************************************************************************************/
-t_max_err cmbuffercloud_stereo_set(t_cmbuffercloud *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmlivecloud_stereo_set(t_cmlivecloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_stereo = atom_getlong(av)? 1 : 0;
 	}
@@ -853,7 +857,7 @@ t_max_err cmbuffercloud_stereo_set(t_cmbuffercloud *x, t_object *attr, long ac, 
 /************************************************************************************************************************/
 /* THE WINDOW INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmbuffercloud_winterp_set(t_cmbuffercloud *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmlivecloud_winterp_set(t_cmlivecloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_winterp = atom_getlong(av)? 1 : 0;
 	}
@@ -864,7 +868,7 @@ t_max_err cmbuffercloud_winterp_set(t_cmbuffercloud *x, t_object *attr, long ac,
 /************************************************************************************************************************/
 /* THE SAMPLE INTERPOLATION ATTRIBUTE SET METHOD                                                                        */
 /************************************************************************************************************************/
-t_max_err cmbuffercloud_sinterp_set(t_cmbuffercloud *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmlivecloud_sinterp_set(t_cmlivecloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_sinterp = atom_getlong(av)? 1 : 0;
 	}
@@ -875,7 +879,7 @@ t_max_err cmbuffercloud_sinterp_set(t_cmbuffercloud *x, t_object *attr, long ac,
 /************************************************************************************************************************/
 /* THE ZERO CROSSING ATTRIBUTE SET METHOD                                                                               */
 /************************************************************************************************************************/
-t_max_err cmbuffercloud_zero_set(t_cmbuffercloud *x, t_object *attr, long ac, t_atom *av) {
+t_max_err cmlivecloud_zero_set(t_cmlivecloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_zero = atom_getlong(av)? 1 : 0;
 	}
@@ -887,7 +891,7 @@ t_max_err cmbuffercloud_zero_set(t_cmbuffercloud *x, t_object *attr, long ac, t_
 /* CUSTOM FUNCTIONS																										*/
 /************************************************************************************************************************/
 // constant power stereo function
-void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbuffercloud *x) {
+void cm_panning(cm_panstruct *panstruct, double *pos, t_cmlivecloud *x) {
 	panstruct->left = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) - sin((*pos * x->piovr2) * 0.5));
 	panstruct->right = x->root2ovr2 * (cos((*pos * x->piovr2) * 0.5) + sin((*pos * x->piovr2) * 0.5));
 	return;
@@ -903,6 +907,12 @@ double cm_random(double *min, double *max) {
 }
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
+	long index = (long)distance; // get truncated index
+	distance -= (long)distance; // calculate fraction value for interpolation
+	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+}
+
+double cm_lininterpring(double distance, double *buffer, t_atom_long b_channelcount, short channel) {
 	long index = (long)distance; // get truncated index
 	distance -= (long)distance; // calculate fraction value for interpolation
 	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
