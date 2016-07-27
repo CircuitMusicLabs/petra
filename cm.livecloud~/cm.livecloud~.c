@@ -57,8 +57,6 @@ typedef struct _cmlivecloud {
 	double *grain_params; // array to store the processed values coming from the object inlets
 	double *randomized; // array to store the randomized grain values
 	double *testvalues; // array for storing the grain parameter test values (sanity testing)
-	short *busy; // array used to store the flag if a grain is currently playing or not
-	long *grainpos; // used to store the current playback position per grain
 	double tr_prev; // trigger sample from previous signal vector (required to check if input ramp resets to zero)
 	short grains_limit; // user defined maximum number of grains
 	short grains_limit_old; // used to store the previous grains count limit when user changes the limit via the "limit" message
@@ -75,11 +73,11 @@ typedef struct _cmlivecloud {
 	long bufferframes; // size of buffer in samples
 	long writepos; // buffer write position
 	short record; // record on/off flag from "record" method
-	double *grain_left;
-	double *grain_right;
-	long grain_pos;
-	short grain_play;
-	long grain_length;
+	double **grain_left;
+	double **grain_right;
+	long *grain_pos;
+	short *busy; // array used to store the flag if a grain contains playback information
+	long *grain_length;
 } t_cmlivecloud;
 
 
@@ -176,6 +174,7 @@ void ext_main(void *r) {
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
 void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
+	int i;
 	t_cmlivecloud *x = (t_cmlivecloud *)object_alloc(cmlivecloud_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 11); // create 11 inlets
 	
@@ -216,13 +215,6 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 
-	// ALLOCATE MEMORY FOR THE GRAINPOS ARRAY
-	x->grainpos = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
-	if (x->grainpos == NULL) {
-		object_error((t_object *)x, "out of memory");
-		return NULL;
-	}
-
 	// ALLOCATE MEMORY FOR THE OBJET INLETS ARRAY
 	x->object_inlets = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
 	if (x->object_inlets == NULL) {
@@ -257,14 +249,42 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
-	x->grain_left = (double *)sysmem_newptrclear((MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
+	// left grain array
+	x->grain_left = (double **)sysmem_newptrclear(MAXGRAINS * sizeof(double *));
 	if (x->grain_left == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
+	for (i = 0; i < MAXGRAINS; i++) {
+		x->grain_left[i] = (double *)sysmem_newptrclear((MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
+		if (x->grain_left[i] == NULL) {
+			object_error((t_object *)x, "out of memory");
+			return NULL;
+		}
+	}
 	
-	x->grain_right = (double *)sysmem_newptrclear((MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
+	// right grain array
+	x->grain_right = (double **)sysmem_newptrclear(MAXGRAINS * sizeof(double *));
 	if (x->grain_right == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	for (i = 0; i < MAXGRAINS; i++) {
+		x->grain_right[i] = (double *)sysmem_newptrclear((MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
+		if (x->grain_right[i] == NULL) {
+			object_error((t_object *)x, "out of memory");
+			return NULL;
+		}
+	}
+	
+	x->grain_pos = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
+	if (x->grain_pos == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	
+	x->grain_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
+	if (x->grain_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
@@ -312,6 +332,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
 void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
+	int i;
 	x->connect_status[0] = count[2]; // signal connect status:	delay
 	x->connect_status[1] = count[3]; // signal connect status:	length min
 	x->connect_status[2] = count[4]; // signal connect status:	length max
@@ -331,6 +352,27 @@ void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double s
 	x->testvalues[2] = (MAX_GRAINLENGTH) * x->m_sr; // max grain legnth
 	
 	x->ringbuffer = (double *)sysmem_resizeptrclear(x->ringbuffer, (BUFFERMS * x->m_sr) * sizeof(double));
+	if (x->ringbuffer == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return;
+	}
+	
+	for (i = 0; i < MAXGRAINS; i++) {
+		x->grain_left[i] = (double *)sysmem_resizeptrclear(x->grain_left[i], (MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
+		if (x->grain_left[i] == NULL) {
+			object_error((t_object *)x, "out of memory");
+			return;
+		}
+	}
+	
+	for (i = 0; i < MAXGRAINS; i++) {
+		x->grain_right[i] = (double *)sysmem_resizeptrclear(x->grain_right[i], (MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
+		if (x->grain_right[i] == NULL) {
+			object_error((t_object *)x, "out of memory");
+			return;
+		}
+	}
+	
 	x->bufferframes = BUFFERMS * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
@@ -350,6 +392,8 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	double distance; // floating point index for reading from buffers
 	long index; // truncated index for reading from buffers
 	double w_read, b_read; // current sample read from the window buffer
+	double outsample_left = 0.0; // temporary left output sample used for adding up all grain samples
+	double outsample_right = 0.0; // temporary right output sample used for adding up all grain samples
 	int slot = 0; // variable for the current slot in the arrays to write grain info to
 	cm_panstruct panstruct; // struct for holding the calculated constant power left and right stereo values
 	
@@ -469,7 +513,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				}
 			}
 			
-			// write grain length slot (non-pitch)
+			// write grain length (non-pitch)
 			t_length = x->randomized[0];
 			smp_length = t_length * x->randomized[1]; // length * pitch = length in samples
 			// check that grain length is not larger than size of buffer
@@ -492,8 +536,8 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				start = x->bufferframes - (start * -1);
 			}
 			
-			x->grain_length = smp_length;
-			x->grain_play = 1;
+			x->grain_length[slot] = smp_length;
+			x->grain_pos[slot] = 0;
 			
 			for (i = 0; i < smp_length; i++) {
 				if (x->attr_winterp) {
@@ -513,12 +557,12 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				
 				if (x->attr_sinterp) {
 					b_read = cm_lininterpring(distance, x->ringbuffer, 1, 0) * w_read; // get interpolated sample
-					x->grain_left[i] = (b_read * pan_left) * gain;
-					x->grain_right[i] = (b_read * pan_right) * gain;
+					x->grain_left[slot][i] = (b_read * pan_left) * gain;
+					x->grain_right[slot][i] = (b_read * pan_right) * gain;
 				}
 				else {
-					x->grain_left[i] = ((x->ringbuffer[(long)distance * 1] * w_read) * pan_left) * gain;
-					x->grain_right[i] = ((x->ringbuffer[(long)distance * 1] * w_read) * pan_right) * gain;
+					x->grain_left[slot][i] = ((x->ringbuffer[(long)distance * 1] * w_read) * pan_left) * gain;
+					x->grain_right[slot][i] = ((x->ringbuffer[(long)distance * 1] * w_read) * pan_right) * gain;
 				}
 			}
 		}
@@ -536,22 +580,20 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				limit = x->grains_limit;
 			}
 			
-			if (x->grain_play) {
-				*out_left++ = x->grain_left[x->grain_pos];
-				*out_right++ = x->grain_right[x->grain_pos++];
-				if (x->grain_pos == x->grain_length) {
-					x->grain_pos = 0;
-					x->grain_play = 0;
-					x->grains_count--;
+			for (i = 0; i < MAXGRAINS; i++) {
+				if (x->busy[i]) {
+					r = x->grain_pos[i]++;
+					outsample_left += x->grain_left[i][r];
+					outsample_right += x->grain_right[i][r];
+					if (x->grain_pos[i] == x->grain_length[i]) {
+						x->grain_pos[i] = 0;
+						x->busy[i] = 0;
+						x->grains_count--;
+					}
 				}
 			}
-			else {
-				*out_left++ = 0.0;
-				*out_right++ = 0.0;
-			}
-			
-			
-			
+			*out_left++ = outsample_left; // write added sample values to left output vector
+			*out_right++ = outsample_right; // write added sample values to right output vector
 		}
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
@@ -639,14 +681,27 @@ void cmlivecloud_assist(t_cmlivecloud *x, void *b, long msg, long arg, char *dst
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
 void cmlivecloud_free(t_cmlivecloud *x) {
+	int i;
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
 	object_free(x->w_buffer); // free the window buffer reference
 	sysmem_freeptr(x->busy); // free memory allocated to the busy array
-	sysmem_freeptr(x->grainpos); // free memory allocated to the grainpos array
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
 	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
 	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
 	sysmem_freeptr(x->testvalues); // free memory allocated to the test values array
+	sysmem_freeptr(x->grain_pos);
+	sysmem_freeptr(x->grain_length);
+	
+	for (i = 0; i < MAXGRAINS; i++) {
+		sysmem_freeptr(x->grain_left[i]);
+	}
+	sysmem_freeptr(x->grain_left);
+	
+	for (i = 0; i < MAXGRAINS; i++) {
+		sysmem_freeptr(x->grain_right[i]);
+	}
+	sysmem_freeptr(x->grain_right);
+	
 }
 
 /************************************************************************************************************************/
