@@ -45,6 +45,17 @@
 
 
 /************************************************************************************************************************/
+/* GRAIN STRUCTURE                                                                                                      */
+/************************************************************************************************************************/
+typedef struct _cmstereograin {
+	double grain_left;
+	double grain_right;
+	long readpos;
+	short playing;
+} cm_stereograin;
+
+
+/************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
 typedef struct _cmlivecloud {
@@ -66,7 +77,6 @@ typedef struct _cmlivecloud {
 	short buffer_modified; // checkflag to see if buffer has been modified
 	short grains_count; // currently playing grains
 	void *grains_count_out; // outlet for number of currently playing grains (for debugging)
-	t_atom_long attr_stereo; // attribute: number of channels to be played
 	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
@@ -75,6 +85,7 @@ typedef struct _cmlivecloud {
 	double *ringbuffer; // circular buffer for recording the audio input
 	long bufferframes; // size of buffer in samples
 	long writepos; // buffer write position
+	short record;
 } t_cmlivecloud;
 
 
@@ -107,6 +118,7 @@ void cmlivecloud_dblclick(t_cmlivecloud *x);
 t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
 void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_limit(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
+void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 t_max_err cmlivecloud_stereo_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmlivecloud_winterp_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmlivecloud_sinterp_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
@@ -135,12 +147,7 @@ void ext_main(void *r) {
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_notify, 		"notify", 	A_CANT, 0); // Bind the notify message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
-	
-	CLASS_ATTR_ATOM_LONG(cmlivecloud_class, "stereo", 0, t_cmlivecloud, attr_stereo);
-	CLASS_ATTR_ACCESSORS(cmlivecloud_class, "stereo", (method)NULL, (method)cmlivecloud_stereo_set);
-	CLASS_ATTR_BASIC(cmlivecloud_class, "stereo", 0);
-	CLASS_ATTR_SAVE(cmlivecloud_class, "stereo", 0);
-	CLASS_ATTR_STYLE_LABEL(cmlivecloud_class, "stereo", 0, "onoff", "Multichannel playback");
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_record, 		"record", 	A_GIMME, 0); // Bind the limit message
 	
 	CLASS_ATTR_ATOM_LONG(cmlivecloud_class, "w_interp", 0, t_cmlivecloud, attr_winterp);
 	CLASS_ATTR_ACCESSORS(cmlivecloud_class, "w_interp", (method)NULL, (method)cmlivecloud_winterp_set);
@@ -160,10 +167,9 @@ void ext_main(void *r) {
 	CLASS_ATTR_SAVE(cmlivecloud_class, "zero", 0);
 	CLASS_ATTR_STYLE_LABEL(cmlivecloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
-	CLASS_ATTR_ORDER(cmlivecloud_class, "stereo", 0, "1");
-	CLASS_ATTR_ORDER(cmlivecloud_class, "w_interp", 0, "2");
-	CLASS_ATTR_ORDER(cmlivecloud_class, "s_interp", 0, "3");
-	CLASS_ATTR_ORDER(cmlivecloud_class, "zero", 0, "4");
+	CLASS_ATTR_ORDER(cmlivecloud_class, "w_interp", 0, "1");
+	CLASS_ATTR_ORDER(cmlivecloud_class, "s_interp", 0, "2");
+	CLASS_ATTR_ORDER(cmlivecloud_class, "zero", 0, "3");
 	
 	class_dspinit(cmlivecloud_class); // Add standard Max/MSP methods to your class
 	class_register(CLASS_BOX, cmlivecloud_class); // Register the class with Max
@@ -189,7 +195,6 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->grains_limit = atom_getintarg(1, argc, argv); // get user supplied argument for maximum grains
 	
 	// HANDLE ATTRIBUTES
-	object_attr_setlong(x, gensym("stereo"), 0); // initialize stereo attribute
 	object_attr_setlong(x, gensym("w_interp"), 0); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("s_interp"), 1); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("zero"), 0); // initialize zero crossing attribute
@@ -389,31 +394,27 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		tr_curr = *tr_sigin++; // get current trigger value
 		sig_curr = *rec_sigin++; // get current signal value
 		
-		
-		
-		
 		// WRITE INTO RINGBUFFER:
-		if (x->object_inlets[0] >= 1.0) { // this must be replaced with a proper record on/off inlet
+		if (x->record) {
 			x->ringbuffer[x->writepos++] = sig_curr;
 			if (x->writepos == x->bufferframes) {
 				x->writepos = 0;
 			}
 		}
 		
-		
-		
-		
-		if (x->attr_zero) {
+		// process trigger value
+		if (x->attr_zero) { // if zero crossing attr is set
 			if (tr_curr > 0.0 && x->tr_prev < 0.0) { // zero crossing from negative to positive
 				trigger = 1;
 			}
 		}
-		else {
+		else { // if zero crossing attr is not set
 			if ((x->tr_prev - tr_curr) > 0.9) {
 				trigger = 1;
 			}
 		}
 		
+		// check if buffer was modified (sample replaced, etc.)
 		if (x->buffer_modified) { // reset all playback information when any of the buffers was modified
 			for (i = 0; i < MAXGRAINS; i++) {
 				x->busy[i] = 0;
@@ -421,6 +422,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			x->grains_count = 0;
 			x->buffer_modified = 0;
 		}
+		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
 		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified) { // based on zero crossing --> when ramp from 0-1 restarts.
@@ -797,15 +799,18 @@ void cmlivecloud_limit(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 	}
 }
 
-
 /************************************************************************************************************************/
-/* THE STEREO ATTRIBUTE SET METHOD                                                                                      */
+/* THE RECORD METHOD                                                                                                    */
 /************************************************************************************************************************/
-t_max_err cmlivecloud_stereo_set(t_cmlivecloud *x, t_object *attr, long ac, t_atom *av) {
-	if (ac && av) {
-		x->attr_stereo = atom_getlong(av)? 1 : 0;
+void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
+	long arg;
+	arg = atom_getlong(av);
+	if (arg <= 0) { // smaller or equal to zero
+		x->record = 0;
 	}
-	return MAX_ERR_NONE;
+	else { // any non-zero value sets x->record to true
+		x->record = 1;
+	}
 }
 
 
