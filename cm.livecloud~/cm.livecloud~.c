@@ -45,17 +45,6 @@
 
 
 /************************************************************************************************************************/
-/* GRAIN STRUCTURE                                                                                                      */
-/************************************************************************************************************************/
-typedef struct _cmstereograin {
-	double grain_left;
-	double grain_right;
-	long readpos;
-	short playing;
-} cm_stereograin;
-
-
-/************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
 typedef struct _cmlivecloud {
@@ -85,7 +74,12 @@ typedef struct _cmlivecloud {
 	double *ringbuffer; // circular buffer for recording the audio input
 	long bufferframes; // size of buffer in samples
 	long writepos; // buffer write position
-	short record;
+	short record; // record on/off flag from "record" method
+	double *grain_left;
+	double *grain_right;
+	long grain_pos;
+	short grain_play;
+	long grain_length;
 } t_cmlivecloud;
 
 
@@ -262,6 +256,18 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
+	
+	x->grain_left = (double *)sysmem_newptrclear((MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
+	if (x->grain_left == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
+	
+	x->grain_right = (double *)sysmem_newptrclear((MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
+	if (x->grain_right == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return NULL;
+	}
 
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
@@ -344,14 +350,12 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	double distance; // floating point index for reading from buffers
 	long index; // truncated index for reading from buffers
 	double w_read, b_read; // current sample read from the window buffer
-	double outsample_left = 0.0; // temporary left output sample used for adding up all grain samples
-	double outsample_right = 0.0; // temporary right output sample used for adding up all grain samples
 	int slot = 0; // variable for the current slot in the arrays to write grain info to
 	cm_panstruct panstruct; // struct for holding the calculated constant power left and right stereo values
 	
 	double start;
 	double t_length;
-	double gr_length;
+	double smp_length;
 	double gain;
 	double pan_left, pan_right;
 	
@@ -467,10 +471,10 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			
 			// write grain length slot (non-pitch)
 			t_length = x->randomized[0];
-			gr_length = t_length * x->randomized[1]; // length * pitch
+			smp_length = t_length * x->randomized[1]; // length * pitch = length in samples
 			// check that grain length is not larger than size of buffer
-			if (gr_length > x->bufferframes) {
-				gr_length = x->bufferframes;
+			if (smp_length > x->bufferframes) {
+				smp_length = x->bufferframes;
 			}
 			
 			// compute pan values
@@ -481,18 +485,42 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			// write gain value
 			gain = x->randomized[3];
 			
+			start = (x->writepos - smp_length) - x->grain_params[0];
+			// if start value goes beyond the start of the ringbuffer,
+			// wrap around to end of buffer and count backwards
+			if (start < 0) {
+				start = x->bufferframes - (start * -1);
+			}
 			
-//			// write start position
-//			x->start[slot] = x->randomized[0];
-//			// start position sanity testing
-//			if (x->start[slot] > x->bufferframes - x->gr_length[slot]) {
-//				x->start[slot] = x->bufferframes - x->gr_length[slot];
-//			}
-//			if (x->start[slot] < 0) {
-//				x->start[slot] = 0;
-//			}
+			x->grain_length = smp_length;
+			x->grain_play = 1;
 			
-		
+			for (i = 0; i < smp_length; i++) {
+				if (x->attr_winterp) {
+					distance = ((double)i / (double)t_length) * (double)w_framecount;
+					w_read = cm_lininterp(distance, w_sample, w_channelcount, 0);
+				}
+				else {
+					index = (long)(((double)i / (double)t_length) * (double)w_framecount);
+					w_read = w_sample[index];
+				}
+				
+				distance = start + (((double)i / (double)t_length) * (double)smp_length);
+				// wrap-around in the ring buffer:
+				if (distance > x->bufferframes - 1) {
+					distance = distance - x->bufferframes;
+				}
+				
+				if (x->attr_sinterp) {
+					b_read = cm_lininterpring(distance, x->ringbuffer, 1, 0) * w_read; // get interpolated sample
+					x->grain_left[i] = (b_read * pan_left) * gain;
+					x->grain_right[i] = (b_read * pan_right) * gain;
+				}
+				else {
+					x->grain_left[i] = ((x->ringbuffer[(long)distance * 1] * w_read) * pan_left) * gain;
+					x->grain_right[i] = ((x->ringbuffer[(long)distance * 1] * w_read) * pan_right) * gain;
+				}
+			}
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
@@ -507,47 +535,23 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			else {
 				limit = x->grains_limit;
 			}
-			for (i = 0; i < limit; i++) {
-				if (x->busy[i]) { // if the current slot contains grain playback information
-					// GET WINDOW SAMPLE FROM WINDOW BUFFER
-					if (x->attr_winterp) {
-						distance = ((double)x->grainpos[i] / (double)x->t_length[i]) * (double)w_framecount;
-						w_read = cm_lininterp(distance, w_sample, w_channelcount, 0);
-					}
-					else {
-						index = (long)(((double)x->grainpos[i] / (double)x->t_length[i]) * (double)w_framecount);
-						w_read = w_sample[index];
-					}
-					
-					
-					
-					// GET GRAIN SAMPLE FROM SAMPLE BUFFER
-					distance = x->start[i] + (((double)x->grainpos[i]++ / (double)x->t_length[i]) * (double)x->gr_length[i]);
-					
-					
-					
-					if (x->attr_sinterp) {
-						b_read = cm_lininterpring(distance, x->ringbuffer, 1, 0) * w_read; // get interpolated sample
-						outsample_left += (b_read * x->pan_left[i]) * x->gain[i];
-						outsample_right += (b_read * x->pan_right[i]) * x->gain[i];
-					}
-					else {
-						outsample_left += ((x->ringbuffer[(long)distance * 1] * w_read) * x->pan_left[i]) * x->gain[i];
-						outsample_right += ((x->ringbuffer[(long)distance * 1] * w_read) * x->pan_right[i]) * x->gain[i];
-					}
-					
-					if (x->grainpos[i] == x->t_length[i]) { // if current grain has reached the end position
-						x->grainpos[i] = 0; // reset parameters for overwrite
-						x->busy[i] = 0;
-						x->grains_count--;
-						if (x->grains_count < 0) {
-							x->grains_count = 0;
-						}
-					}
+			
+			if (x->grain_play) {
+				*out_left++ = x->grain_left[x->grain_pos];
+				*out_right++ = x->grain_right[x->grain_pos++];
+				if (x->grain_pos == x->grain_length) {
+					x->grain_pos = 0;
+					x->grain_play = 0;
+					x->grains_count--;
 				}
 			}
-			*out_left++ = outsample_left; // write added sample values to left output vector
-			*out_right++ = outsample_right; // write added sample values to right output vector
+			else {
+				*out_left++ = 0.0;
+				*out_right++ = 0.0;
+			}
+			
+			
+			
 		}
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
@@ -556,8 +560,6 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		
 		/************************************************************************************************************************/
 		x->tr_prev = tr_curr; // store current trigger value in object structure
-		outsample_left = 0.0;
-		outsample_right = 0.0;
 	}
 	
 	/************************************************************************************************************************/
@@ -807,9 +809,11 @@ void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 	arg = atom_getlong(av);
 	if (arg <= 0) { // smaller or equal to zero
 		x->record = 0;
+		object_post((t_object*)x, "record off");
 	}
 	else { // any non-zero value sets x->record to true
 		x->record = 1;
+		object_post((t_object*)x, "record on");
 	}
 }
 
