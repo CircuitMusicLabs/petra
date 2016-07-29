@@ -78,6 +78,7 @@ typedef struct _cmlivecloud {
 	long *grain_pos;
 	short *busy; // array used to store the flag if a grain contains playback information
 	long *grain_length;
+	long readpos;
 } t_cmlivecloud;
 
 
@@ -122,7 +123,7 @@ void cm_panning(cm_panstruct *panstruct, double *pos, t_cmlivecloud *x);
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
-double cm_lininterpring(double distance, double *b_sample, t_atom_long b_channelcount, short channel);
+double cm_lininterpring(double distance, long index, long next, double *ringbuffer);
 
 
 /************************************************************************************************************************/
@@ -314,6 +315,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->testvalues[8] = MAX_GAIN;
 	
 	x->writepos = 0;
+	x->readpos = 0;
 	x->bufferframes = BUFFERMS * x->m_sr;
 	
 	// calculate constants for panning function
@@ -390,6 +392,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr, sig_curr; // current trigger and signal value
 	double distance; // floating point index for reading from buffers
+	long next;
 	long index; // truncated index for reading from buffers
 	double w_read, b_read; // current sample read from the window buffer
 	double outsample_left = 0.0; // temporary left output sample used for adding up all grain samples
@@ -402,7 +405,6 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	double smp_length;
 	double gain;
 	double pan_left, pan_right;
-	
 	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
@@ -450,6 +452,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			}
 		}
 		
+		
 		// process trigger value
 		if (x->attr_zero) { // if zero crossing attr is set
 			if (tr_curr > 0.0 && x->tr_prev < 0.0) { // zero crossing from negative to positive
@@ -477,6 +480,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
+			x->readpos = 0;
 			
 			// FIND A FREE SLOT FOR THE NEW GRAIN
 			i = 0;
@@ -513,9 +517,15 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				}
 			}
 			
+			object_post((t_object*)x, "length (ms): %f", x->randomized[0]);
+			
 			// write grain length (non-pitch)
 			t_length = x->randomized[0];
 			smp_length = t_length * x->randomized[1]; // length * pitch = length in samples
+			
+			object_post((t_object*)x, "length (smp): %f", smp_length);
+			object_post((t_object*)x, "pitch: %f", x->randomized[1]);
+			
 			// check that grain length is not larger than size of buffer
 			if (smp_length > x->bufferframes) {
 				smp_length = x->bufferframes;
@@ -533,44 +543,61 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			// if start value goes beyond the start of the ringbuffer,
 			// wrap around to end of buffer and count backwards
 			if (start < 0) {
-				start = x->bufferframes - (start * -1);
+				start -= start;
+				start = x->bufferframes - start;
+			}
+			
+			start -= x->grain_params[0];
+			if (start < 0) {
+				start -= start;
+				start = x->bufferframes - start;
 			}
 			
 			x->grain_length[slot] = smp_length;
 			x->grain_pos[slot] = 0;
 			
-			for (i = 0; i < smp_length; i++) {
+			while (i < smp_length) {
 				if (x->attr_winterp) {
-					distance = ((double)i / (double)t_length) * (double)w_framecount;
+					distance = ((double)x->readpos / (double)t_length) * (double)w_framecount;
 					w_read = cm_lininterp(distance, w_sample, w_channelcount, 0);
 				}
 				else {
-					index = (long)(((double)i / (double)t_length) * (double)w_framecount);
+					index = (long)(((double)x->readpos / (double)t_length) * (double)w_framecount);
 					w_read = w_sample[index];
 				}
 				
-				distance = start + (((double)i / (double)t_length) * (double)smp_length);
-				// wrap-around in the ring buffer:
-				if (distance > x->bufferframes - 1) {
-					distance = distance - x->bufferframes;
-				}
-				
 				if (x->attr_sinterp) {
-					b_read = cm_lininterpring(distance, x->ringbuffer, 1, 0) * w_read; // get interpolated sample
-					x->grain_left[slot][i] = (b_read * pan_left) * gain;
-					x->grain_right[slot][i] = (b_read * pan_right) * gain;
+					distance = (double)start + (((double)x->readpos / (double)t_length) * (double)smp_length);
+					index = (long)distance; // get truncated index
+					next = index + 1;
+					distance -= (long)distance; // calculate fraction value for interpolation
+					if (index >= x->bufferframes) {
+						index -= x->bufferframes;
+					}
+					if (next >= x->bufferframes) {
+						next -= x->bufferframes;
+					}
+					b_read = cm_lininterpring(distance, index, next, x->ringbuffer) * w_read; // get interpolated sample
+					x->grain_left[slot][x->readpos] = (b_read * pan_left) * gain;
+					x->grain_right[slot][x->readpos] = (b_read * pan_right) * gain;
 				}
 				else {
-					x->grain_left[slot][i] = ((x->ringbuffer[(long)distance * 1] * w_read) * pan_left) * gain;
-					x->grain_right[slot][i] = ((x->ringbuffer[(long)distance * 1] * w_read) * pan_right) * gain;
+					index = (long)((double)start + (((double)x->readpos / (double)t_length) * (double)smp_length));
+					if (index >= x->bufferframes) {
+						index -= x->bufferframes;
+					}
+					x->grain_left[slot][x->readpos] = ((x->ringbuffer[index] * w_read) * pan_left) * gain;
+					x->grain_right[slot][x->readpos] = ((x->ringbuffer[index] * w_read) * pan_right) * gain;
 				}
+				x->readpos++;
+				i++;
 			}
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
 		if (x->grains_count == 0 || !w_sample) { // if grains count is zero, there is no playback to be calculated
-			*out_left++ = 0.0;
-			*out_right++ = 0.0;
+			outsample_left = 0.0;
+			outsample_right = 0.0;
 		}
 		else {
 			if (x->limit_modified) {
@@ -580,7 +607,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				limit = x->grains_limit;
 			}
 			
-			for (i = 0; i < MAXGRAINS; i++) {
+			for (i = 0; i < limit; i++) {
 				if (x->busy[i]) {
 					r = x->grain_pos[i]++;
 					outsample_left += x->grain_left[i][r];
@@ -592,8 +619,6 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 					}
 				}
 			}
-			*out_left++ = outsample_left; // write added sample values to left output vector
-			*out_right++ = outsample_right; // write added sample values to right output vector
 		}
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
@@ -602,11 +627,19 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		
 		/************************************************************************************************************************/
 		x->tr_prev = tr_curr; // store current trigger value in object structure
+		
+		*out_left++ = outsample_left; // write added sample values to left output vector
+		*out_right++ = outsample_right; // write added sample values to right output vector
+		outsample_left = 0.0;
+		outsample_right = 0.0;
 	}
 	
 	/************************************************************************************************************************/
 	// STORE UPDATED RUNNING VALUES INTO THE OBJECT STRUCTURE
 	buffer_unlocksamples(w_buffer);
+	if (x->randomized[0] == x->bufferframes) {
+		x->randomized[0] = 0;
+	}
 	outlet_int(x->grains_count_out, x->grains_count); // send number of currently playing grains to the outlet
 	return;
 	
@@ -719,48 +752,43 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 				x->object_inlets[0] = f;
 			}
 			break;
+			
 		case 3: // length min
-			if (f < MIN_GRAINLENGTH) {
-				dump = f;
-			}
-			else if (f > MAX_GRAINLENGTH) {
+			if (f < MIN_GRAINLENGTH || f > MAX_GRAINLENGTH) {
 				dump = f;
 			}
 			else {
 				x->object_inlets[1] = f;
 			}
 			break;
+			
 		case 4: // length max
-			if (f < MIN_GRAINLENGTH) {
-				dump = f;
-			}
-			else if (f > MAX_GRAINLENGTH) {
+			if (f < MIN_GRAINLENGTH || f > MAX_GRAINLENGTH) {
 				dump = f;
 			}
 			else {
 				x->object_inlets[2] = f;
 			}
+			break;
+			
 		case 5: // pitch min
-			if (f <= 0.0) {
-				dump = f;
-			}
-			else if (f > MAX_PITCH) {
+			if (f <= 0.0 || f > MAX_PITCH) {
 				dump = f;
 			}
 			else {
 				x->object_inlets[3] = f;
 			}
 			break;
+			
 		case 6: // pitch max
-			if (f <= 0.0) {
-				dump = f;
-			}
-			else if (f > MAX_PITCH) {
+			if (f <= 0.0 || f > MAX_PITCH) {
 				dump = f;
 			}
 			else {
 				x->object_inlets[4] = f;
 			}
+			break;
+			
 		case 7: // pan min
 			if (f < -1.0 || f > 1.0) {
 				dump = f;
@@ -769,6 +797,7 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 				x->object_inlets[5] = f;
 			}
 			break;
+			
 		case 8: // pan max
 			if (f < -1.0 || f > 1.0) {
 				dump = f;
@@ -777,6 +806,7 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 				x->object_inlets[6] = f;
 			}
 			break;
+			
 		case 9: // gain min
 			if (f < 0.0 || f > MAX_GAIN) {
 				dump = f;
@@ -785,6 +815,7 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 				x->object_inlets[7] = f;
 			}
 			break;
+			
 		case 10: // gain max
 			if (f < 0.0 || f > MAX_GAIN) {
 				dump = f;
@@ -931,11 +962,22 @@ double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, 
 	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
 }
 
-double cm_lininterpring(double distance, double *buffer, t_atom_long b_channelcount, short channel) {
-	long index = (long)distance; // get truncated index
-	distance -= (long)distance; // calculate fraction value for interpolation
-	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+double cm_lininterpring(double distance, long index, long next, double *ringbuffer) {
+	
+	return ringbuffer[index] + distance * (ringbuffer[next] - ringbuffer[index]);
+	
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
