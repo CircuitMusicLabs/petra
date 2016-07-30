@@ -75,10 +75,11 @@ typedef struct _cmlivecloud {
 	short record; // record on/off flag from "record" method
 	double **grain_left;
 	double **grain_right;
-	long *grain_pos;
+	long *grain_pos; // playback position of the current grain
 	short *busy; // array used to store the flag if a grain contains playback information
-	long *grain_length;
-	long readpos;
+	long *grain_length; // array used to store the length of individual grains
+	long readpos; // variable used for reading samples from ringbuffer and writing them into the grain arrays
+	short recordflag; // boolean to indicate that recording has been started (disables recording until all currently playing grains have finished
 } t_cmlivecloud;
 
 
@@ -317,6 +318,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->writepos = 0;
 	x->readpos = 0;
 	x->bufferframes = BUFFERMS * x->m_sr;
+	x->recordflag = 0;
 	
 	// calculate constants for panning function
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
@@ -473,7 +475,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified) { // based on zero crossing --> when ramp from 0-1 restarts.
+		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->recordflag) {
 			
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
@@ -543,7 +545,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				start = x->bufferframes - start;
 			}
 			
-			x->grain_length[slot] = pitch_length;
+			x->grain_length[slot] = smp_length;
 			x->grain_pos[slot] = 0;
 			
 			while (x->readpos < smp_length) {
@@ -584,34 +586,29 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->grains_count == 0 || !w_sample) { // if grains count is zero, there is no playback to be calculated
-			outsample_left = 0.0;
-			outsample_right = 0.0;
+		if (x->limit_modified) {
+			limit = x->grains_limit_old;
 		}
 		else {
-			if (x->limit_modified) {
-				limit = x->grains_limit_old;
-			}
-			else {
-				limit = x->grains_limit;
-			}
-			
-			for (i = 0; i < limit; i++) {
-				if (x->busy[i]) {
-					r = x->grain_pos[i]++;
-					outsample_left += x->grain_left[i][r];
-					outsample_right += x->grain_right[i][r];
-					if (x->grain_pos[i] == x->grain_length[i]) {
-						x->grain_pos[i] = 0;
-						x->busy[i] = 0;
-						x->grains_count--;
-					}
+			limit = x->grains_limit;
+		}
+		
+		for (i = 0; i < limit; i++) {
+			if (x->busy[i]) {
+				r = x->grain_pos[i]++;
+				outsample_left += x->grain_left[i][r];
+				outsample_right += x->grain_right[i][r];
+				if (x->grain_pos[i] == x->grain_length[i]) {
+					x->grain_pos[i] = 0;
+					x->busy[i] = 0;
+					x->grains_count--;
 				}
 			}
 		}
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
 			x->limit_modified = 0; // reset limit modified checkflag
+			x->recordflag = 0;
 		}
 		
 		/************************************************************************************************************************/
@@ -626,9 +623,9 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	/************************************************************************************************************************/
 	// STORE UPDATED RUNNING VALUES INTO THE OBJECT STRUCTURE
 	buffer_unlocksamples(w_buffer);
-	if (x->randomized[0] == x->bufferframes) {
-		x->randomized[0] = 0;
-	}
+//	if (x->randomized[0] == x->bufferframes) {
+//		x->randomized[0] = 0;
+//	}
 	outlet_int(x->grains_count_out, x->grains_count); // send number of currently playing grains to the outlet
 	return;
 	
@@ -884,11 +881,12 @@ void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 	arg = atom_getlong(av);
 	if (arg <= 0) { // smaller or equal to zero
 		x->record = 0;
-		object_post((t_object*)x, "record off");
+//		object_post((t_object*)x, "record off");
 	}
 	else { // any non-zero value sets x->record to true
 		x->record = 1;
-		object_post((t_object*)x, "record on");
+		x->recordflag = 1;
+//		object_post((t_object*)x, "record on");
 	}
 }
 
