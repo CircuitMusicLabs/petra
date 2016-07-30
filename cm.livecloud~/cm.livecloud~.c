@@ -257,7 +257,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	for (i = 0; i < MAXGRAINS; i++) {
-		x->grain_left[i] = (double *)sysmem_newptrclear((MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
+		x->grain_left[i] = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 		if (x->grain_left[i] == NULL) {
 			object_error((t_object *)x, "out of memory");
 			return NULL;
@@ -271,7 +271,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	for (i = 0; i < MAXGRAINS; i++) {
-		x->grain_right[i] = (double *)sysmem_newptrclear((MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
+		x->grain_right[i] = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 		if (x->grain_right[i] == NULL) {
 			object_error((t_object *)x, "out of memory");
 			return NULL;
@@ -347,33 +347,30 @@ void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double s
 	
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
+		for (i = 0; i < MAXGRAINS; i++) {
+			x->grain_left[i] = (double *)sysmem_resizeptrclear(x->grain_left[i], ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+			if (x->grain_left[i] == NULL) {
+				object_error((t_object *)x, "out of memory");
+				return;
+			}
+		}
+		for (i = 0; i < MAXGRAINS; i++) {
+			x->grain_right[i] = (double *)sysmem_resizeptrclear(x->grain_right[i], ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+			if (x->grain_right[i] == NULL) {
+				object_error((t_object *)x, "out of memory");
+				return;
+			}
+		}
+		x->ringbuffer = (double *)sysmem_resizeptrclear(x->ringbuffer, (BUFFERMS * x->m_sr) * sizeof(double));
+		if (x->ringbuffer == NULL) {
+			object_error((t_object *)x, "out of memory");
+			return;
+		}
 	}
 	// calcuate the sampleRate-dependant test values
 	x->testvalues[0] = (BUFFERMS / 2) * x->m_sr; // max delay (min delay = 0)
 	x->testvalues[1] = (MIN_GRAINLENGTH) * x->m_sr; // min grain length
 	x->testvalues[2] = (MAX_GRAINLENGTH) * x->m_sr; // max grain legnth
-	
-	x->ringbuffer = (double *)sysmem_resizeptrclear(x->ringbuffer, (BUFFERMS * x->m_sr) * sizeof(double));
-	if (x->ringbuffer == NULL) {
-		object_error((t_object *)x, "out of memory");
-		return;
-	}
-	
-	for (i = 0; i < MAXGRAINS; i++) {
-		x->grain_left[i] = (double *)sysmem_resizeptrclear(x->grain_left[i], (MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
-		if (x->grain_left[i] == NULL) {
-			object_error((t_object *)x, "out of memory");
-			return;
-		}
-	}
-	
-	for (i = 0; i < MAXGRAINS; i++) {
-		x->grain_right[i] = (double *)sysmem_resizeptrclear(x->grain_right[i], (MAX_GRAINLENGTH * x->m_sr) * sizeof(double));
-		if (x->grain_right[i] == NULL) {
-			object_error((t_object *)x, "out of memory");
-			return;
-		}
-	}
 	
 	x->bufferframes = BUFFERMS * x->m_sr;
 	
@@ -401,8 +398,8 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	cm_panstruct panstruct; // struct for holding the calculated constant power left and right stereo values
 	
 	double start;
-	double t_length;
 	double smp_length;
+	double pitch_length;
 	double gain;
 	double pan_left, pan_right;
 	
@@ -517,18 +514,13 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				}
 			}
 			
-			object_post((t_object*)x, "length (ms): %f", x->randomized[0]);
-			
 			// write grain length (non-pitch)
-			t_length = x->randomized[0];
-			smp_length = t_length * x->randomized[1]; // length * pitch = length in samples
-			
-			object_post((t_object*)x, "length (smp): %f", smp_length);
-			object_post((t_object*)x, "pitch: %f", x->randomized[1]);
+			smp_length = x->randomized[0];
+			pitch_length = smp_length * x->randomized[1]; // length * pitch = length in samples
 			
 			// check that grain length is not larger than size of buffer
-			if (smp_length > x->bufferframes) {
-				smp_length = x->bufferframes;
+			if (pitch_length > x->bufferframes) {
+				pitch_length = x->bufferframes;
 			}
 			
 			// compute pan values
@@ -539,35 +531,33 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			// write gain value
 			gain = x->randomized[3];
 			
-			start = (x->writepos - smp_length) - x->grain_params[0];
-			// if start value goes beyond the start of the ringbuffer,
-			// wrap around to end of buffer and count backwards
+			start = x->writepos - pitch_length;
 			if (start < 0) {
-				start -= start;
+				start = start * -1;
 				start = x->bufferframes - start;
 			}
 			
 			start -= x->grain_params[0];
 			if (start < 0) {
-				start -= start;
+				start = start * -1;
 				start = x->bufferframes - start;
 			}
 			
-			x->grain_length[slot] = smp_length;
+			x->grain_length[slot] = pitch_length;
 			x->grain_pos[slot] = 0;
 			
-			while (i < smp_length) {
+			while (x->readpos < smp_length) {
 				if (x->attr_winterp) {
-					distance = ((double)x->readpos / (double)t_length) * (double)w_framecount;
+					distance = ((double)x->readpos / (double)smp_length) * (double)w_framecount;
 					w_read = cm_lininterp(distance, w_sample, w_channelcount, 0);
 				}
 				else {
-					index = (long)(((double)x->readpos / (double)t_length) * (double)w_framecount);
+					index = (long)(((double)x->readpos / (double)smp_length) * (double)w_framecount);
 					w_read = w_sample[index];
 				}
 				
 				if (x->attr_sinterp) {
-					distance = (double)start + (((double)x->readpos / (double)t_length) * (double)smp_length);
+					distance = (double)start + (((double)x->readpos / (double)smp_length) * (double)pitch_length);
 					index = (long)distance; // get truncated index
 					next = index + 1;
 					distance -= (long)distance; // calculate fraction value for interpolation
@@ -582,7 +572,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 					x->grain_right[slot][x->readpos] = (b_read * pan_right) * gain;
 				}
 				else {
-					index = (long)((double)start + (((double)x->readpos / (double)t_length) * (double)smp_length));
+					index = (long)((double)start + (((double)x->readpos / (double)smp_length) * (double)pitch_length));
 					if (index >= x->bufferframes) {
 						index -= x->bufferframes;
 					}
@@ -590,7 +580,6 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 					x->grain_right[slot][x->readpos] = ((x->ringbuffer[index] * w_read) * pan_right) * gain;
 				}
 				x->readpos++;
-				i++;
 			}
 		}
 		/************************************************************************************************************************/
