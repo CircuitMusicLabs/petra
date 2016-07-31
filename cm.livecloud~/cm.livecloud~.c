@@ -370,7 +370,7 @@ void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double s
 		}
 	}
 	// calcuate the sampleRate-dependant test values
-	x->testvalues[0] = (BUFFERMS / 2) * x->m_sr; // max delay (min delay = 0)
+	x->testvalues[0] = BUFFERMS * x->m_sr; // max delay (min delay = 0)
 	x->testvalues[1] = (MIN_GRAINLENGTH) * x->m_sr; // min grain length
 	x->testvalues[2] = (MAX_GRAINLENGTH) * x->m_sr; // max grain legnth
 	
@@ -404,6 +404,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	double pitch_length;
 	double gain;
 	double pan_left, pan_right;
+	long max_delay; // calculated maximum delay length according to grain length and pitch
 	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
@@ -516,13 +517,21 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				}
 			}
 			
-			// write grain length (non-pitch)
+			// write grain length in samples (non-pitch)
 			smp_length = x->randomized[0];
-			pitch_length = smp_length * x->randomized[1]; // length * pitch = length in samples
+			pitch_length = smp_length * x->randomized[1]; // length * pitch
 			
 			// check that grain length is not larger than size of buffer
 			if (pitch_length > x->bufferframes) {
 				pitch_length = x->bufferframes;
+			}
+			
+			// calculate the maximum delay value according to the actual grain length
+			// in order to avoid running over the record position
+			max_delay = x->bufferframes - pitch_length;
+			// adjust delay according to the above calculation
+			if (x->grain_params[0] > max_delay) {
+				x->grain_params[0] = max_delay;
 			}
 			
 			// compute pan values
