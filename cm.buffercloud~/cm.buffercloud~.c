@@ -184,7 +184,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	
 	if (argc < ARGUMENTS) {
-		object_error((t_object *)x, "%d arguments required (sample/window/voices)", ARGUMENTS);
+		object_error((t_object *)x, "%d arguments required (sample buffer / window type / max. voices)", ARGUMENTS);
 		return NULL;
 	}
 	

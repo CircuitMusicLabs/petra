@@ -182,7 +182,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	
 	if (argc < ARGUMENTS) {
-		object_error((t_object *)x, "%d arguments required (sample/window/voices)", ARGUMENTS);
+		object_error((t_object *)x, "%d arguments required (window buffer / max. voices)", ARGUMENTS);
 		return NULL;
 	}
 	

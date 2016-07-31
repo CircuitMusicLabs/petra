@@ -179,7 +179,7 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	dsp_setup((t_pxobject *)x, 13); // create 13 inlets
 	
 	if (argc < ARGUMENTS) {
-		object_error((t_object *)x, "%d arguments required (sample buffer / voices)", ARGUMENTS);
+		object_error((t_object *)x, "%d arguments required (sample buffer / max. voices)", ARGUMENTS);
 		return NULL;
 	}
 	
