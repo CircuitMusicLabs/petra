@@ -60,8 +60,8 @@ typedef struct _cmgausscloud {
 	short *busy; // array used to store the flag if a grain is currently playing or not
 	long *grainpos; // used to store the current playback position per grain
 	long *start; // used to store the start position in the buffer for each grain
-	long *t_length; // current grain length before pitch adjustment
-	long *gr_length; // current grain length after pitch adjustment
+	long *smp_length; // current grain length before pitch adjustment
+	long *pitch_length; // current grain length after pitch adjustment
 	double *pan_left; // pan information for left channel for each grain
 	double *pan_right; // pan information for right channel for each grain
 	double *gain; // gain information for each grain
@@ -231,16 +231,16 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
-	// ALLOCATE MEMORY FOR THE T_LENGTH ARRAY
-	x->t_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
-	if (x->t_length == NULL) {
+	// ALLOCATE MEMORY FOR THE smp_length ARRAY
+	x->smp_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
+	if (x->smp_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
-	// ALLOCATE MEMORY FOR THE GR_LENGTH ARRAY
-	x->gr_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
-	if (x->gr_length == NULL) {
+	// ALLOCATE MEMORY FOR THE pitch_length ARRAY
+	x->pitch_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
+	if (x->pitch_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
@@ -495,17 +495,17 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 				}
 			}
 			// write grain lenght slot (non-pitch)
-			x->t_length[slot] = x->randomized[1];
-			x->gr_length[slot] = x->t_length[slot] * x->randomized[2]; // length * pitch
+			x->smp_length[slot] = x->randomized[1];
+			x->pitch_length[slot] = x->smp_length[slot] * x->randomized[2]; // length * pitch
 			// check that grain length is not larger than size of buffer
-			if (x->gr_length[slot] > b_framecount) {
-				x->gr_length[slot] = b_framecount;
+			if (x->pitch_length[slot] > b_framecount) {
+				x->pitch_length[slot] = b_framecount;
 			}
 			// write start position
 			x->start[slot] = x->randomized[0];
 			// start position sanity testing
-			if (x->start[slot] > b_framecount - x->gr_length[slot]) {
-				x->start[slot] = b_framecount - x->gr_length[slot];
+			if (x->start[slot] > b_framecount - x->pitch_length[slot]) {
+				x->start[slot] = b_framecount - x->pitch_length[slot];
 			}
 			if (x->start[slot] < 0) {
 				x->start[slot] = 0;
@@ -537,10 +537,10 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			for (i = 0; i < limit; i++) {
 				if (x->busy[i]) { // if the current slot contains grain playback information
 					// GET WINDOW SAMPLE FROM WINDOW BUFFER
-					w_read = cm_gauss(&x->grainpos[i], &x->t_length[i], &x->alpha[i]);
+					w_read = cm_gauss(&x->grainpos[i], &x->smp_length[i], &x->alpha[i]);
 					
 					// GET GRAIN SAMPLE FROM SAMPLE BUFFER
-					distance = x->start[i] + (((double)x->grainpos[i]++ / (double)x->t_length[i]) * (double)x->gr_length[i]);
+					distance = x->start[i] + (((double)x->grainpos[i]++ / (double)x->smp_length[i]) * (double)x->pitch_length[i]);
 					
 					if (b_channelcount > 1 && x->attr_stereo) { // if more than one channel
 						if (x->attr_sinterp) {
@@ -563,7 +563,7 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 							outsample_right += ((b_sample[(long)distance * b_channelcount] * w_read) * x->pan_right[i]) * x->gain[i];
 						}
 					}
-					if (x->grainpos[i] == x->t_length[i]) { // if current grain has reached the end position
+					if (x->grainpos[i] == x->smp_length[i]) { // if current grain has reached the end position
 						x->grainpos[i] = 0; // reset parameters for overwrite
 						x->busy[i] = 0;
 						x->grains_count--;
@@ -676,8 +676,8 @@ void cmgausscloud_free(t_cmgausscloud *x) {
 	sysmem_freeptr(x->busy); // free memory allocated to the busy array
 	sysmem_freeptr(x->grainpos); // free memory allocated to the grainpos array
 	sysmem_freeptr(x->start); // free memory allocated to the start array
-	sysmem_freeptr(x->t_length); // free memory allocated to the t_length array
-	sysmem_freeptr(x->gr_length); // free memory allocated to the t_length array
+	sysmem_freeptr(x->smp_length); // free memory allocated to the smp_length array
+	sysmem_freeptr(x->pitch_length); // free memory allocated to the smp_length array
 	sysmem_freeptr(x->pan_left); // free memory allocated to the pan_left array
 	sysmem_freeptr(x->pan_right); // free memory allocated to the pan_right array
 	sysmem_freeptr(x->gain); // free memory allocated to the gain array
