@@ -61,8 +61,8 @@ typedef struct _cmbuffercloud {
 	short *busy; // array used to store the flag if a grain is currently playing or not
 	long *grainpos; // used to store the current playback position per grain
 	long *start; // used to store the start position in the buffer for each grain
-	long *t_length; // current grain length before pitch adjustment
-	long *gr_length; // current grain length after pitch adjustment
+	long *smp_length; // current grain length before pitch adjustment
+	long *pitch_length; // current grain length after pitch adjustment
 	double *pan_left; // pan information for left channel for each grain
 	double *pan_right; // pan information for right channel for each grain
 	double *gain; // gain information for each grain
@@ -238,16 +238,16 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 
-	// ALLOCATE MEMORY FOR THE T_LENGTH ARRAY
-	x->t_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
-	if (x->t_length == NULL) {
+	// ALLOCATE MEMORY FOR THE smp_length ARRAY
+	x->smp_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
+	if (x->smp_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 
-	// ALLOCATE MEMORY FOR THE GR_LENGTH ARRAY
-	x->gr_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
-	if (x->gr_length == NULL) {
+	// ALLOCATE MEMORY FOR THE pitch_length ARRAY
+	x->pitch_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
+	if (x->pitch_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
@@ -415,14 +415,17 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	// GET INLET VALUES
 	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
 	
-	for (i = 0; i < INLETS; i++) {
-		if (i < 4) { // start and length values to be multiplied by the sampling rate
-			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] * x->m_sr : x->object_inlets[i] * x->m_sr;
-		}
-		else { // the rest is sampleRate independent
-			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] : x->object_inlets[i];
-		}
-	}
+	x->grain_params[0] = x->connect_status[0] ? *ins[1] * x->m_sr : x->object_inlets[0] * x->m_sr;	// start min
+	x->grain_params[1] = x->connect_status[1] ? *ins[2] * x->m_sr : x->object_inlets[1] * x->m_sr;	// start max
+	x->grain_params[2] = x->connect_status[2] ? *ins[3] * x->m_sr : x->object_inlets[2] * x->m_sr;	// length min
+	x->grain_params[3] = x->connect_status[3] ? *ins[4] * x->m_sr : x->object_inlets[3] * x->m_sr;	// length max
+	x->grain_params[4] = x->connect_status[4] ? *ins[5] : x->object_inlets[4];						// pitch min
+	x->grain_params[5] = x->connect_status[5] ? *ins[6] : x->object_inlets[5];						// pitch max
+	x->grain_params[6] = x->connect_status[6] ? *ins[7] : x->object_inlets[6];						// pan min
+	x->grain_params[7] = x->connect_status[7] ? *ins[8] : x->object_inlets[7];						// pan max
+	x->grain_params[8] = x->connect_status[8] ? *ins[9] : x->object_inlets[8];						// gain min
+	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
+
 	
 	// DSP LOOP
 	while (n--) {
@@ -469,16 +472,15 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				}
 				i++;
 			}
+			
 			// randomize the grain parameters and write them into the randomized array
-			for (i = 0; i < INLETS; i += 2) {
-				if (x->grain_params[i] != x->grain_params[i+1]) {
-					x->randomized[i/2] = cm_random(&x->grain_params[i], &x->grain_params[i+1]);
-				}
-				else {
-					x->randomized[i/2] = x->grain_params[i];
-				}
-				
-			}
+			x->randomized[0] = cm_random(&x->grain_params[0], &x->grain_params[1]); // start
+			x->randomized[1] = cm_random(&x->grain_params[2], &x->grain_params[3]); // length
+			x->randomized[2] = cm_random(&x->grain_params[4], &x->grain_params[5]); // pitch
+			x->randomized[3] = cm_random(&x->grain_params[6], &x->grain_params[7]); // pan
+			x->randomized[4] = cm_random(&x->grain_params[8], &x->grain_params[9]); // gain
+			
+			
 			// check for parameter sanity with testvalues array (skip start value, hence i = 1)
 			for (i = 1; i < INLETS / 2; i++) {
 				if (x->randomized[i] < x->testvalues[i*2]) {
@@ -488,18 +490,20 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 					x->randomized[i] = x->testvalues[(i*2)+1];
 				}
 			}
+			
+			
 			// write grain lenght slot (non-pitch)
-			x->t_length[slot] = x->randomized[1];
-			x->gr_length[slot] = x->t_length[slot] * x->randomized[2]; // length * pitch
+			x->smp_length[slot] = x->randomized[1];
+			x->pitch_length[slot] = x->smp_length[slot] * x->randomized[2]; // length * pitch
 			// check that grain length is not larger than size of buffer
-			if (x->gr_length[slot] > b_framecount) {
-				x->gr_length[slot] = b_framecount;
+			if (x->pitch_length[slot] > b_framecount) {
+				x->pitch_length[slot] = b_framecount;
 			}
 			// write start position
 			x->start[slot] = x->randomized[0];
 			// start position sanity testing
-			if (x->start[slot] > b_framecount - x->gr_length[slot]) {
-				x->start[slot] = b_framecount - x->gr_length[slot];
+			if (x->start[slot] > b_framecount - x->pitch_length[slot]) {
+				x->start[slot] = b_framecount - x->pitch_length[slot];
 			}
 			if (x->start[slot] < 0) {
 				x->start[slot] = 0;
@@ -528,15 +532,15 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				if (x->busy[i]) { // if the current slot contains grain playback information
 					// GET WINDOW SAMPLE FROM WINDOW BUFFER
 					if (x->attr_winterp) {
-						distance = ((double)x->grainpos[i] / (double)x->t_length[i]) * (double)w_framecount;
+						distance = ((double)x->grainpos[i] / (double)x->smp_length[i]) * (double)w_framecount;
 						w_read = cm_lininterp(distance, w_sample, w_channelcount, 0);
 					}
 					else {
-						index = (long)(((double)x->grainpos[i] / (double)x->t_length[i]) * (double)w_framecount);
+						index = (long)(((double)x->grainpos[i] / (double)x->smp_length[i]) * (double)w_framecount);
 						w_read = w_sample[index];
 					}
 					// GET GRAIN SAMPLE FROM SAMPLE BUFFER
-					distance = x->start[i] + (((double)x->grainpos[i]++ / (double)x->t_length[i]) * (double)x->gr_length[i]);
+					distance = x->start[i] + (((double)x->grainpos[i]++ / (double)x->smp_length[i]) * (double)x->pitch_length[i]);
 					
 					if (b_channelcount > 1 && x->attr_stereo) { // if more than one channel
 						if (x->attr_sinterp) {
@@ -559,7 +563,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 							outsample_right += ((b_sample[(long)distance * b_channelcount] * w_read) * x->pan_right[i]) * x->gain[i];
 						}
 					}
-					if (x->grainpos[i] == x->t_length[i]) { // if current grain has reached the end position
+					if (x->grainpos[i] == x->smp_length[i]) { // if current grain has reached the end position
 						x->grainpos[i] = 0; // reset parameters for overwrite
 						x->busy[i] = 0;
 						x->grains_count--;
@@ -669,8 +673,8 @@ void cmbuffercloud_free(t_cmbuffercloud *x) {
 	sysmem_freeptr(x->busy); // free memory allocated to the busy array
 	sysmem_freeptr(x->grainpos); // free memory allocated to the grainpos array
 	sysmem_freeptr(x->start); // free memory allocated to the start array
-	sysmem_freeptr(x->t_length); // free memory allocated to the t_length array
-	sysmem_freeptr(x->gr_length); // free memory allocated to the t_length array
+	sysmem_freeptr(x->smp_length); // free memory allocated to the smp_length array
+	sysmem_freeptr(x->pitch_length); // free memory allocated to the smp_length array
 	sysmem_freeptr(x->pan_left); // free memory allocated to the pan_left array
 	sysmem_freeptr(x->pan_right); // free memory allocated to the pan_right array
 	sysmem_freeptr(x->gain); // free memory allocated to the gain array
