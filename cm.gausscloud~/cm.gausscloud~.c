@@ -417,15 +417,18 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	// GET INLET VALUES
 	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
 	
-	for (i = 0; i < INLETS; i++) {
-		if (i < 4) { // start and length values to be multiplied by the sampling rate
-			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] * x->m_sr : x->object_inlets[i] * x->m_sr;
-		}
-		else { // the rest is sampleRate independent
-			x->grain_params[i] = x->connect_status[i] ? *ins[i+1] : x->object_inlets[i];
-		}
-	}
-	
+	x->grain_params[0] = x->connect_status[0] ? *ins[1] * x->m_sr : x->object_inlets[0] * x->m_sr;	// start min
+	x->grain_params[1] = x->connect_status[1] ? *ins[2] * x->m_sr : x->object_inlets[1] * x->m_sr;	// start max
+	x->grain_params[2] = x->connect_status[2] ? *ins[3] * x->m_sr : x->object_inlets[2] * x->m_sr;	// length min
+	x->grain_params[3] = x->connect_status[3] ? *ins[4] * x->m_sr : x->object_inlets[3] * x->m_sr;	// length max
+	x->grain_params[4] = x->connect_status[4] ? *ins[5] : x->object_inlets[4];						// pitch min
+	x->grain_params[5] = x->connect_status[5] ? *ins[6] : x->object_inlets[5];						// pitch max
+	x->grain_params[6] = x->connect_status[6] ? *ins[7] : x->object_inlets[6];						// pan min
+	x->grain_params[7] = x->connect_status[7] ? *ins[8] : x->object_inlets[7];						// pan max
+	x->grain_params[8] = x->connect_status[8] ? *ins[9] : x->object_inlets[8];						// gain min
+	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
+	x->grain_params[10] = x->connect_status[10] ? *ins[11] : x->object_inlets[10];					// alpha min
+	x->grain_params[11] = x->connect_status[11] ? *ins[12] : x->object_inlets[11];					// alpha max
 	
 	
 	// DSP LOOP
@@ -473,16 +476,15 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 				}
 				i++;
 			}
+			
 			// randomize the grain parameters and write them into the randomized array
-			for (i = 0; i < INLETS; i += 2) {
-				if (x->grain_params[i] != x->grain_params[i+1]) {
-					x->randomized[i/2] = cm_random(&x->grain_params[i], &x->grain_params[i+1]);
-				}
-				else {
-					x->randomized[i/2] = x->grain_params[i];
-				}
-				
-			}
+			x->randomized[0] = cm_random(&x->grain_params[0], &x->grain_params[1]);		// start
+			x->randomized[1] = cm_random(&x->grain_params[2], &x->grain_params[3]);		// length
+			x->randomized[2] = cm_random(&x->grain_params[4], &x->grain_params[5]);		// pitch
+			x->randomized[3] = cm_random(&x->grain_params[6], &x->grain_params[7]);		// pan
+			x->randomized[4] = cm_random(&x->grain_params[8], &x->grain_params[9]);		// gain
+			x->randomized[5] = cm_random(&x->grain_params[10], &x->grain_params[11]);	// alpha
+			
 			// check for parameter sanity with testvalues array (skip start value, hence i = 1)
 			for (i = 1; i < INLETS / 2; i++) {
 				if (x->randomized[i] < x->testvalues[i*2]) {
