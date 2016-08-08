@@ -80,6 +80,7 @@ typedef struct _cmlivecloud {
 	long *grain_length; // array used to store the length of individual grains
 	long readpos; // variable used for reading samples from ringbuffer and writing them into the grain arrays
 	short recordflag; // boolean to indicate that recording has been started (disables recording until all currently playing grains have finished
+	short bang_trigger; // trigger received from bang method
 } t_cmlivecloud;
 
 
@@ -113,6 +114,7 @@ t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void 
 void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_limit(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
+void cmlivecloud_bang(t_cmlivecloud *x);
 t_max_err cmlivecloud_stereo_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmlivecloud_winterp_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmlivecloud_sinterp_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
@@ -142,6 +144,7 @@ void ext_main(void *r) {
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_record, 		"record", 	A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_bang,		"bang",		0);
 	
 	CLASS_ATTR_ATOM_LONG(cmlivecloud_class, "w_interp", 0, t_cmlivecloud, attr_winterp);
 	CLASS_ATTR_ACCESSORS(cmlivecloud_class, "w_interp", (method)NULL, (method)cmlivecloud_winterp_set);
@@ -324,6 +327,8 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
 	x->root2ovr2 = sqrt(2.0) * 0.5;
 	
+	x->bang_trigger = 0;
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->w_buffer = buffer_ref_new((t_object *)x, x->window_name); // write the window buffer reference into the object structure
@@ -458,10 +463,18 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			if (tr_curr > 0.0 && x->tr_prev < 0.0) { // zero crossing from negative to positive
 				trigger = 1;
 			}
+			else if (x->bang_trigger) {
+				trigger = 1;
+				x->bang_trigger = 0;
+			}
 		}
 		else { // if zero crossing attr is not set
 			if ((x->tr_prev - tr_curr) > 0.9) {
 				trigger = 1;
+			}
+			else if (x->bang_trigger) {
+				trigger = 1;
+				x->bang_trigger = 0;
 			}
 		}
 		
@@ -897,6 +910,14 @@ void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 		x->recordflag = 1;
 //		object_post((t_object*)x, "record on");
 	}
+}
+
+
+/************************************************************************************************************************/
+/* THE BANG METHOD                                                                                                      */
+/************************************************************************************************************************/
+void cmlivecloud_bang(t_cmlivecloud *x) {
+	x->bang_trigger = 1;
 }
 
 

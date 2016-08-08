@@ -79,6 +79,7 @@ typedef struct _cmbuffercloud {
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
+	short bang_trigger; // trigger received from bang method
 } t_cmbuffercloud;
 
 
@@ -111,6 +112,7 @@ void cmbuffercloud_dblclick(t_cmbuffercloud *x);
 t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
 void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
 void cmbuffercloud_limit(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
+void cmbuffercloud_bang(t_cmbuffercloud *x);
 t_max_err cmbuffercloud_stereo_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmbuffercloud_winterp_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmbuffercloud_sinterp_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
@@ -138,6 +140,7 @@ void ext_main(void *r) {
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_notify, 		"notify", 	A_CANT, 0); // Bind the notify message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_bang,		"bang",		0);
 	
 	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "stereo", 0, t_cmbuffercloud, attr_stereo);
 	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "stereo", (method)NULL, (method)cmbuffercloud_stereo_set);
@@ -329,6 +332,8 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
 	x->root2ovr2 = sqrt(2.0) * 0.5;
 	
+	x->bang_trigger = 0;
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -427,10 +432,18 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			if (tr_curr > 0.0 && x->tr_prev < 0.0) { // zero crossing from negative to positive
 				trigger = 1;
 			}
+			else if (x->bang_trigger) {
+				trigger = 1;
+				x->bang_trigger = 0;
+			}
 		}
 		else {
 			if ((x->tr_prev - tr_curr) > 0.9) {
 				trigger = 1;
+			}
+			else if (x->bang_trigger) {
+				trigger = 1;
+				x->bang_trigger = 0;
 			}
 		}
 		
@@ -836,6 +849,14 @@ void cmbuffercloud_limit(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 		x->grains_limit = arg;
 		x->limit_modified = 1;
 	}
+}
+
+
+/************************************************************************************************************************/
+/* THE BANG METHOD                                                                                                      */
+/************************************************************************************************************************/
+void cmbuffercloud_bang(t_cmbuffercloud *x) {
+	x->bang_trigger = 1;
 }
 
 

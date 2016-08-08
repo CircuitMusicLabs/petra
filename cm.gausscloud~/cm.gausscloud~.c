@@ -78,6 +78,7 @@ typedef struct _cmgausscloud {
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
+	short bang_trigger;
 } t_cmgausscloud;
 
 
@@ -110,7 +111,7 @@ void cmgausscloud_dblclick(t_cmgausscloud *x);
 t_max_err cmgausscloud_notify(t_cmgausscloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
 void cmgausscloud_set(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av);
 void cmgausscloud_limit(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av);
-
+void cmgausscloud_bang(t_cmgausscloud *x);
 
 t_max_err cmgausscloud_stereo_set(t_cmgausscloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgausscloud_sinterp_set(t_cmgausscloud *x, t_object *attr, long argc, t_atom *argv);
@@ -140,6 +141,7 @@ void ext_main(void *r) {
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmgausscloud_class, (method)cmgausscloud_bang,			"bang",			0);
 	
 	CLASS_ATTR_ATOM_LONG(cmgausscloud_class, "stereo", 0, t_cmgausscloud, attr_stereo);
 	CLASS_ATTR_ACCESSORS(cmgausscloud_class, "stereo", (method)NULL, (method)cmgausscloud_stereo_set);
@@ -336,6 +338,8 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
 	x->root2ovr2 = sqrt(2.0) * 0.5;
 	
+	x->bang_trigger = 0;
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -432,10 +436,18 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			if (tr_curr > 0.0 && x->tr_prev < 0.0) { // zero crossing from negative to positive
 				trigger = 1;
 			}
+			else if (x->bang_trigger) {
+				trigger = 1;
+				x->bang_trigger = 0;
+			}
 		}
 		else {
 			if ((x->tr_prev - tr_curr) > 0.9) {
 				trigger = 1;
+			}
+			else if (x->bang_trigger) {
+				trigger = 1;
+				x->bang_trigger = 0;
 			}
 		}
 		
@@ -846,6 +858,14 @@ void cmgausscloud_limit(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
 		x->grains_limit = arg;
 		x->limit_modified = 1;
 	}
+}
+
+
+/************************************************************************************************************************/
+/* THE BANG METHOD                                                                                                      */
+/************************************************************************************************************************/
+void cmgausscloud_bang(t_cmgausscloud *x) {
+	x->bang_trigger = 1;
 }
 
 

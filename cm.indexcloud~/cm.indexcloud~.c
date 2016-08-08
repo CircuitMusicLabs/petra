@@ -82,6 +82,7 @@ typedef struct _cmindexcloud {
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
+	short bang_trigger; // trigger received from bang method
 } t_cmindexcloud;
 
 
@@ -114,6 +115,7 @@ void cmindexcloud_dblclick(t_cmindexcloud *x);
 t_max_err cmindexcloud_notify(t_cmindexcloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
 void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
 void cmindexcloud_limit(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
+void cmindexcloud_bang(t_cmindexcloud *x);
 
 void cmindexcloud_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
 void cmindexcloud_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
@@ -159,6 +161,8 @@ void ext_main(void *r) {
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_limit, 		"limit", 		A_GIMME, 0); // Bind the limit message
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_w_type,		"w_type", 		A_GIMME, 0); // Bind the window type message
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_w_length,		"w_length", 	A_GIMME, 0); // Bind the window length message
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_bang,			"bang",			0);
+	
 	
 	CLASS_ATTR_ATOM_LONG(cmindexcloud_class, "stereo", 0, t_cmindexcloud, attr_stereo);
 	CLASS_ATTR_ACCESSORS(cmindexcloud_class, "stereo", (method)NULL, (method)cmindexcloud_stereo_set);
@@ -371,6 +375,8 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
 	x->root2ovr2 = sqrt(2.0) * 0.5;
 	
+	x->bang_trigger = 0;
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -471,10 +477,18 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			if (tr_curr > 0.0 && x->tr_prev < 0.0) { // zero crossing from negative to positive
 				trigger = 1;
 			}
+			else if (x->bang_trigger) {
+				trigger = 1;
+				x->bang_trigger = 0;
+			}
 		}
 		else {
 			if ((x->tr_prev - tr_curr) > 0.9) {
 				trigger = 1;
+			}
+			else if (x->bang_trigger) {
+				trigger = 1;
+				x->bang_trigger = 0;
 			}
 		}
 		
@@ -918,6 +932,14 @@ void cmindexcloud_limit(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 		x->grains_limit = arg;
 		x->limit_modified = 1;
 	}
+}
+
+
+/************************************************************************************************************************/
+/* THE BANG METHOD                                                                                                      */
+/************************************************************************************************************************/
+void cmindexcloud_bang(t_cmindexcloud *x) {
+	x->bang_trigger = 1;
 }
 
 
