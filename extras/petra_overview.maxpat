@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 2362.0, 162.0, 997.0, 634.0 ],
+		"rect" : [ 2251.0, 137.0, 977.0, 609.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,6 +39,85 @@
 		"boxes" : [ 			{
 				"box" : 				{
 					"bgcolor" : [ 0.145098, 0.352941, 0.670588, 1.0 ],
+					"fontsize" : 14.0,
+					"id" : "obj-14",
+					"maxclass" : "textbutton",
+					"numinlets" : 1,
+					"numoutlets" : 3,
+					"outlettype" : [ "", "", "int" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 513.0, 436.576721, 219.0, 31.0 ],
+					"rounded" : 8.0,
+					"style" : "",
+					"text" : "open the cm.livecloud~ helpfile",
+					"texton" : "open the cm.livecloud~ helpfile",
+					"textoncolor" : [ 1.0, 1.0, 1.0, 1.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"hidden" : 1,
+					"id" : "obj-18",
+					"ignoreclick" : 1,
+					"maxclass" : "newobj",
+					"numinlets" : 2,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "" ],
+					"patching_rect" : [ 513.0, 469.576721, 142.0, 22.0 ],
+					"style" : "",
+					"text" : "zl.reg help cm.livecloud~"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"hidden" : 1,
+					"id" : "obj-19",
+					"ignoreclick" : 1,
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 513.0, 493.576721, 52.0, 22.0 ],
+					"style" : "",
+					"text" : "pcontrol"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontface" : 0,
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-20",
+					"linecount" : 3,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 513.0, 372.576721, 430.0, 47.0 ],
+					"style" : "",
+					"text" : "Polyphonic granulator object that records incoming audio into an internal circular buffer. Any signal can be granulated in real time with adjustable delay. The object uses a windowing function loaded into a buffer~ object."
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontface" : 1,
+					"fontsize" : 20.0,
+					"id" : "obj-21",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 513.0, 341.576721, 430.0, 29.0 ],
+					"style" : "",
+					"text" : "cm.livecloud~"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"bgcolor" : [ 0.145098, 0.352941, 0.670588, 1.0 ],
 					"fontface" : 1,
 					"fontsize" : 18.0,
 					"id" : "obj-68",
@@ -47,7 +126,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 758.0, 570.076721, 224.0, 53.0 ],
+					"patching_rect" : [ 732.0, 520.576721, 219.0, 68.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "common object properties",
@@ -65,7 +144,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 758.0, 638.576721, 35.0, 22.0 ],
+					"patching_rect" : [ 732.0, 599.076721, 35.0, 22.0 ],
 					"style" : "",
 					"text" : "front"
 				}
@@ -88,7 +167,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 2329.0, 221.0, 702.0, 449.0 ],
+						"rect" : [ 2393.0, 217.0, 702.0, 449.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -185,7 +264,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 15.0, 39.0, 527.0, 127.0 ],
 									"style" : "",
-									"text" : "- Minimum grain length value:\n- Maximum grain length value:\n- Minimum pitch value:\n- Maximum pitch value:\n- Maximum simultaneously playing grains:\n- Minimum gain value:\n- Maximum gain value:\n- Minimum alpha value (cm.gausscloud~ only):\n- Maximum alpha value (cm.gausscloud~ only):"
+									"text" : "- Minimum grain length value:\n- Maximum grain length value:\n- Minimum pitch value:\n- Maximum pitch value (all except cm.livecloud~):\n- Maximum simultaneously playing grains:\n- Minimum gain value:\n- Maximum gain value:\n- Minimum alpha value (cm.gausscloud~ only):\n- Maximum alpha value (cm.gausscloud~ only):"
 								}
 
 							}
@@ -229,7 +308,7 @@
  ]
 					}
 ,
-					"patching_rect" : [ 758.0, 665.076721, 160.0, 22.0 ],
+					"patching_rect" : [ 732.0, 625.576721, 160.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -253,7 +332,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 30.0, 528.576721, 219.0, 31.0 ],
+					"patching_rect" : [ 513.0, 264.576721, 219.0, 31.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "open the cm.gausscloud~ helpfile",
@@ -271,7 +350,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 30.0, 561.576721, 156.0, 22.0 ],
+					"patching_rect" : [ 513.0, 297.576721, 156.0, 22.0 ],
 					"style" : "",
 					"text" : "zl.reg help cm.gausscloud~"
 				}
@@ -286,7 +365,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 585.576721, 52.0, 22.0 ],
+					"patching_rect" : [ 513.0, 321.576721, 52.0, 22.0 ],
 					"style" : "",
 					"text" : "pcontrol"
 				}
@@ -298,11 +377,11 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-27",
-					"linecount" : 2,
+					"linecount" : 3,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 488.576721, 634.0, 33.0 ],
+					"patching_rect" : [ 513.0, 200.576721, 430.0, 47.0 ],
 					"style" : "",
 					"text" : "Polyphonic granulator object using a gaussian windowing function calculated inside the external itself. The shape of the guassian window can be freely manipulated in real time with the min/max alpha value object inlets."
 				}
@@ -316,7 +395,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 457.576721, 634.0, 29.0 ],
+					"patching_rect" : [ 513.0, 169.576721, 430.0, 29.0 ],
 					"style" : "",
 					"text" : "cm.gausscloud~"
 				}
@@ -332,7 +411,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 30.0, 376.576721, 219.0, 31.0 ],
+					"patching_rect" : [ 30.0, 436.576721, 219.0, 31.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "open the cm.indexcloud~ helpfile",
@@ -350,7 +429,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 30.0, 409.576721, 153.0, 22.0 ],
+					"patching_rect" : [ 30.0, 469.576721, 153.0, 22.0 ],
 					"style" : "",
 					"text" : "zl.reg help cm.indexcloud~"
 				}
@@ -365,7 +444,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 433.576721, 52.0, 22.0 ],
+					"patching_rect" : [ 30.0, 467.576721, 52.0, 22.0 ],
 					"style" : "",
 					"text" : "pcontrol"
 				}
@@ -377,11 +456,11 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-16",
-					"linecount" : 2,
+					"linecount" : 3,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 336.576721, 627.0, 33.0 ],
+					"patching_rect" : [ 30.0, 372.576721, 423.0, 47.0 ],
 					"style" : "",
 					"text" : "Polyphonic granulator object using a windowing function calculated inside the external itself. The windowing functions can be accessed with and index number supplied as an argument or with a message."
 				}
@@ -395,7 +474,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 305.576721, 627.0, 29.0 ],
+					"patching_rect" : [ 30.0, 341.576721, 423.0, 29.0 ],
 					"style" : "",
 					"text" : "cm.indexcloud~"
 				}
@@ -407,10 +486,11 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-15",
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 200.576721, 627.0, 20.0 ],
+					"patching_rect" : [ 30.0, 200.576721, 423.0, 33.0 ],
 					"style" : "",
 					"text" : "Polyphonic granulator object using a windowing function loaded into a buffer~ object."
 				}
@@ -424,7 +504,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 169.576721, 627.0, 29.0 ],
+					"patching_rect" : [ 30.0, 169.576721, 423.0, 29.0 ],
 					"style" : "",
 					"text" : "cm.buffercloud~"
 				}
@@ -435,13 +515,13 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-25",
-					"linecount" : 5,
+					"linecount" : 4,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 231.0, 66.0, 551.0, 74.0 ],
+					"patching_rect" : [ 231.0, 66.0, 712.0, 60.0 ],
 					"style" : "",
-					"text" : "2012 - 2016 by Circuit Music Labs. A set of polyphonic granular objects based on Curtis Roads' asynchronous granular synthesis.\n\nThe external objects contained in the package can load and play back both mono and stereo audio files loaded into a sample buffer."
+					"text" : "2012 - 2016 by Circuit Music Labs. A set of polyphonic granular objects based on Curtis Roads' asynchronous granular synthesis.\n\nAll external objects contained in the package (except for cm.livecloud~) can load and play back both mono and stereo audio files loaded into a sample buffer."
 				}
 
 			}
@@ -455,7 +535,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 30.0, 227.576721, 219.0, 31.0 ],
+					"patching_rect" : [ 30.0, 264.576721, 219.0, 31.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "open the cm.buffercloud~ helpfile",
@@ -473,7 +553,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 30.0, 260.576721, 155.0, 22.0 ],
+					"patching_rect" : [ 30.0, 297.576721, 155.0, 22.0 ],
 					"style" : "",
 					"text" : "zl.reg help cm.buffercloud~"
 				}
@@ -488,7 +568,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 284.576721, 52.0, 22.0 ],
+					"patching_rect" : [ 30.0, 321.576721, 52.0, 22.0 ],
 					"style" : "",
 					"text" : "pcontrol"
 				}
@@ -524,6 +604,24 @@
 			}
  ],
 		"lines" : [ 			{
+				"patchline" : 				{
+					"destination" : [ "obj-18", 0 ],
+					"disabled" : 0,
+					"hidden" : 1,
+					"source" : [ "obj-14", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-19", 0 ],
+					"disabled" : 0,
+					"hidden" : 1,
+					"source" : [ "obj-18", 0 ]
+				}
+
+			}
+, 			{
 				"patchline" : 				{
 					"destination" : [ "obj-5", 0 ],
 					"disabled" : 0,

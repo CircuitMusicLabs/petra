@@ -198,7 +198,7 @@
 				Sets the maximum grains value
 			</digest>
 			<description>
-				Specifies the maximum number of simultaneously playing grains (max value 128).
+				Specifies the maximum number of simultaneously playing grains (max value 512).
 			</description>
 		</method>
 		<method name="w_type">
@@ -270,7 +270,7 @@
 				Signal outlet for right channel.
 			</description>
 		</entry>
-		<entry name="int">
+		<entry name="current grain count">
 			<description>
 				Number of currently playing grains.
 			</description>
