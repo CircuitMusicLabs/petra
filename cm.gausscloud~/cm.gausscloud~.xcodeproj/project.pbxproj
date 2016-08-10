@@ -154,7 +154,7 @@
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = "$(SRCROOT)/../_build";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INFOPLIST_FILE = "$(SRCROOT)/../max-sdk-7.1.0/source/Info.plist";
+				INFOPLIST_FILE = "$(C74SUPPORT)/../Info.plist";
 				PRODUCT_NAME = "cm.gausscloud~";
 			};
 			name = Development;
@@ -165,7 +165,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DSTROOT = "$(SRCROOT)/../_build";
-				INFOPLIST_FILE = "$(SRCROOT)/../max-sdk-7.1.0/source/Info.plist";
+				INFOPLIST_FILE = "$(C74SUPPORT)/../Info.plist";
 				PRODUCT_NAME = "cm.gausscloud~";
 			};
 			name = Deployment;
