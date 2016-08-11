@@ -432,7 +432,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		tr_curr = *tr_sigin++; // get current trigger value
 		
 		if (x->attr_zero) {
-			if (tr_curr > 0.0 && x->tr_prev < 0.0) { // zero crossing from negative to positive
+			if (signbit(tr_curr) != signbit(x->tr_prev)) { // zero crossing from negative to positive
 				trigger = 1;
 			}
 			else if (x->bang_trigger) {

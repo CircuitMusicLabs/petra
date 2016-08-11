@@ -460,7 +460,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		
 		// process trigger value
 		if (x->attr_zero) { // if zero crossing attr is set
-			if (tr_curr > 0.0 && x->tr_prev < 0.0) { // zero crossing from negative to positive
+			if (signbit(tr_curr) != signbit(x->tr_prev)) { // zero crossing from negative to positive
 				trigger = 1;
 			}
 			else if (x->bang_trigger) {
