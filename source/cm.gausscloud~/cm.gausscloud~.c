@@ -41,7 +41,7 @@
 #define MAX_ALPHA 10.0 // max alpha value
 #define ARGUMENTS 2 // constant number of arguments required for the external
 #define MAXGRAINS 512 // maximum number of simultaneously playing grains
-#define INLETS 12 // number of object float inlets
+#define FLOAT_INLETS 12 // number of object float inlets
 #define RANDMAX 10000
 
 /************************************************************************************************************************/
@@ -52,7 +52,7 @@ typedef struct _cmgausscloud {
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer; // sample buffer reference
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
-	short connect_status[INLETS]; // array for signal inlet connection statuses
+	short connect_status[FLOAT_INLETS]; // array for signal inlet connection statuses
 	double *object_inlets; // array to store the incoming values coming from the object inlets
 	double *grain_params; // array to store the processed values coming from the object inlets
 	double *randomized; // array to store the randomized grain values
@@ -273,29 +273,29 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
-	// ALLOCATE MEMORY FOR THE OBJET INLETS ARRAY
-	x->object_inlets = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
+	// ALLOCATE MEMORY FOR THE OBJET FLOAT_INLETS ARRAY
+	x->object_inlets = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
 	if (x->object_inlets == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
-	x->grain_params = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
+	x->grain_params = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
 	if (x->grain_params == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
-	x->randomized = (double *)sysmem_newptrclear((INLETS / 2) * sizeof(double));
+	x->randomized = (double *)sysmem_newptrclear((FLOAT_INLETS / 2) * sizeof(double));
 	if (x->randomized == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE TEST VALUES ARRAY
-	x->testvalues = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
+	x->testvalues = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
 	if (x->testvalues == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
@@ -485,15 +485,46 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			x->randomized[4] = cm_random(&x->grain_params[8], &x->grain_params[9]);		// gain
 			x->randomized[5] = cm_random(&x->grain_params[10], &x->grain_params[11]);	// alpha
 			
-			// check for parameter sanity with testvalues array (skip start value, hence i = 1)
-			for (i = 1; i < INLETS / 2; i++) {
-				if (x->randomized[i] < x->testvalues[i*2]) {
-					x->randomized[i] = x->testvalues[i*2];
-				}
-				else if (x->randomized[i] > x->testvalues[(i*2)+1]) {
-					x->randomized[i] = x->testvalues[(i*2)+1];
-				}
+			// check for parameter sanity of the length value
+			if (x->randomized[1] < x->testvalues[2]) {
+				x->randomized[1] = x->testvalues[2];
 			}
+			else if (x->randomized[1] > x->testvalues[3]) {
+				x->randomized[1] = x->testvalues[3];
+			}
+			
+			// check for parameter sanity of the pitch value
+			if (x->randomized[2] < x->testvalues[4]) {
+				x->randomized[2] = x->testvalues[4];
+			}
+			else if (x->randomized[2] > x->testvalues[5]) {
+				x->randomized[2] = x->testvalues[5];
+			}
+			
+			// check for parameter sanity of the pan value
+			if (x->randomized[3] < x->testvalues[6]) {
+				x->randomized[3] = x->testvalues[6];
+			}
+			else if (x->randomized[3] > x->testvalues[7]) {
+				x->randomized[3] = x->testvalues[7];
+			}
+			
+			// check for parameter sanity of the gain value
+			if (x->randomized[4] < x->testvalues[8]) {
+				x->randomized[4] = x->testvalues[8];
+			}
+			else if (x->randomized[4] > x->testvalues[9]) {
+				x->randomized[4] = x->testvalues[9];
+			}
+			
+			// check for parameter sanity of the alpha value
+			if (x->randomized[5] < x->testvalues[10]) {
+				x->randomized[5] = x->testvalues[10];
+			}
+			else if (x->randomized[5] > x->testvalues[11]) {
+				x->randomized[5] = x->testvalues[11];
+			}
+			
 			// write grain lenght slot (non-pitch)
 			x->smp_length[slot] = x->randomized[1];
 			x->pitch_length[slot] = x->smp_length[slot] * x->randomized[2]; // length * pitch

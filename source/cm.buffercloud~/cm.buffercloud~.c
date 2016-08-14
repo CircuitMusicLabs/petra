@@ -39,7 +39,7 @@
 #define MAX_GAIN 2.0  // max gain
 #define ARGUMENTS 3 // constant number of arguments required for the external
 #define MAXGRAINS 512 // maximum number of simultaneously playing grains
-#define INLETS 10 // number of object float inlets
+#define FLOAT_INLETS 10 // number of object float inlets
 #define RANDMAX 10000
 
 
@@ -53,7 +53,7 @@ typedef struct _cmbuffercloud {
 	t_symbol *window_name; // window buffer name
 	t_buffer_ref *w_buffer; // window buffer reference
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
-	short connect_status[INLETS]; // array for signal inlet connection statuses
+	short connect_status[FLOAT_INLETS]; // array for signal inlet connection statuses
 	double *object_inlets; // array to store the incoming values coming from the object inlets
 	double *grain_params; // array to store the processed values coming from the object inlets
 	double *randomized; // array to store the randomized grain values
@@ -273,29 +273,29 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 
-	// ALLOCATE MEMORY FOR THE OBJET INLETS ARRAY
-	x->object_inlets = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
+	// ALLOCATE MEMORY FOR THE OBJET FLOAT_INLETS ARRAY
+	x->object_inlets = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
 	if (x->object_inlets == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
-	x->grain_params = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
+	x->grain_params = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
 	if (x->grain_params == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
-	x->randomized = (double *)sysmem_newptrclear((INLETS / 2) * sizeof(double));
+	x->randomized = (double *)sysmem_newptrclear((FLOAT_INLETS / 2) * sizeof(double));
 	if (x->randomized == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE TEST VALUES ARRAY
-	x->testvalues = (double *)sysmem_newptrclear((INLETS) * sizeof(double));
+	x->testvalues = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
 	if (x->testvalues == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
