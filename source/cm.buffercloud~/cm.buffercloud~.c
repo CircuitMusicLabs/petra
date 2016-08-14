@@ -480,17 +480,37 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			x->randomized[3] = cm_random(&x->grain_params[6], &x->grain_params[7]); // pan
 			x->randomized[4] = cm_random(&x->grain_params[8], &x->grain_params[9]); // gain
 			
-			
-			// check for parameter sanity with testvalues array (skip start value, hence i = 1)
-			for (i = 1; i < INLETS / 2; i++) {
-				if (x->randomized[i] < x->testvalues[i*2]) {
-					x->randomized[i] = x->testvalues[i*2];
-				}
-				else if (x->randomized[i] > x->testvalues[(i*2)+1]) {
-					x->randomized[i] = x->testvalues[(i*2)+1];
-				}
+			// check for parameter sanity of the length value
+			if (x->randomized[1] < x->testvalues[2]) {
+				x->randomized[1] = x->testvalues[2];
+			}
+			else if (x->randomized[1] > x->testvalues[3]) {
+				x->randomized[1] = x->testvalues[3];
 			}
 			
+			// check for parameter sanity of the pitch value
+			if (x->randomized[2] < x->testvalues[4]) {
+				x->randomized[2] = x->testvalues[4];
+			}
+			else if (x->randomized[2] > x->testvalues[5]) {
+				x->randomized[2] = x->testvalues[5];
+			}
+			
+			// check for parameter sanity of the pan value
+			if (x->randomized[3] < x->testvalues[6]) {
+				x->randomized[3] = x->testvalues[6];
+			}
+			else if (x->randomized[3] > x->testvalues[7]) {
+				x->randomized[3] = x->testvalues[7];
+			}
+			
+			// check for parameter sanity of the gain value
+			if (x->randomized[4] < x->testvalues[8]) {
+				x->randomized[4] = x->testvalues[8];
+			}
+			else if (x->randomized[4] > x->testvalues[9]) {
+				x->randomized[4] = x->testvalues[9];
+			}
 			
 			// write grain lenght slot (non-pitch)
 			x->smp_length[slot] = x->randomized[1];
