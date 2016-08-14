@@ -296,15 +296,16 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
-	x->object_inlets[0] = 0.0; // initialize float inlet value for current delay
-	x->object_inlets[1] = 150; // initialize float inlet value for min grain length
-	x->object_inlets[2] = 150; // initialize float inlet value for max grain length
-	x->object_inlets[3] = 1.0; // initialize inlet value for min pitch
+	x->object_inlets[0] = 0.0; // initialize float inlet value for min delay
+	x->object_inlets[1] = 0.0; // initialize float inlet value for max delay
+	x->object_inlets[2] = 150; // initialize float inlet value for min grain length
+	x->object_inlets[3] = 150; // initialize float inlet value for max grain length
 	x->object_inlets[4] = 1.0; // initialize inlet value for min pitch
-	x->object_inlets[5] = 0.0; // initialize value for min pan
-	x->object_inlets[6] = 0.0; // initialize value for max pan
-	x->object_inlets[7] = 1.0; // initialize value for min gain
-	x->object_inlets[8] = 1.0; // initialize value for max gain
+	x->object_inlets[5] = 1.0; // initialize inlet value for min pitch
+	x->object_inlets[6] = 0.0; // initialize value for min pan
+	x->object_inlets[7] = 0.0; // initialize value for max pan
+	x->object_inlets[8] = 1.0; // initialize value for min gain
+	x->object_inlets[9] = 1.0; // initialize value for max gain
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
 	x->grains_limit_old = 0; // initialize value for the routine when grains limit was modified
@@ -513,7 +514,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			x->randomized[1] = cm_random(&x->grain_params[2], &x->grain_params[3]); // length
 			x->randomized[2] = cm_random(&x->grain_params[4], &x->grain_params[5]); // pitch
 			x->randomized[3] = cm_random(&x->grain_params[6], &x->grain_params[7]); // pan
-			x->randomized[4] = cm_random(&x->grain_params[8], &x->grain_params[8]); // gain
+			x->randomized[4] = cm_random(&x->grain_params[8], &x->grain_params[9]); // gain
 			
 			// check for parameter sanity for delay value
 			if (x->randomized[0] < 0) {
