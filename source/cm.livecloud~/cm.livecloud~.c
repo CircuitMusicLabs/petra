@@ -64,6 +64,7 @@ typedef struct _cmlivecloud {
 	short buffer_modified; // checkflag to see if buffer has been modified
 	short grains_count; // currently playing grains
 	void *grains_count_out; // outlet for number of currently playing grains (for debugging)
+	void *rec_position_out; // outlet for current record position in buffer
 	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
@@ -206,6 +207,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	// CREATE OUTLETS (OUTLETS ARE CREATED FROM RIGHT TO LEFT)
 	x->grains_count_out = intout((t_object *)x); // create outlet for number of currently playing grains
+	x->rec_position_out = intout((t_object *)x); // create outlet for current record position in buffer
 	outlet_new((t_object *)x, "signal"); // right signal outlet
 	outlet_new((t_object *)x, "signal"); // left signal outlet
 	
@@ -675,6 +677,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 //		x->randomized[0] = 0;
 //	}
 	outlet_int(x->grains_count_out, x->grains_count); // send number of currently playing grains to the outlet
+	outlet_int(x->rec_position_out, x->writepos / x->m_sr); // send current record position to the outlet
 	return;
 	
 zero:
@@ -740,6 +743,9 @@ void cmlivecloud_assist(t_cmlivecloud *x, void *b, long msg, long arg, char *dst
 				snprintf_zero(dst, 256, "(signal) output ch2");
 				break;
 			case 2:
+				snprintf_zero(dst, 256, "(int) current record position");
+				break;
+			case 3:
 				snprintf_zero(dst, 256, "(int) current grain count");
 				break;
 		}
