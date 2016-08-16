@@ -152,9 +152,7 @@
 			baseConfigurationReference = 395B42491D5AF9E2009A13F7 /* maxmspsdk.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DSTROOT = "$(SRCROOT)/../../externals";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INFOPLIST_FILE = "$(C74SUPPORT)/../Info.plist";
 				PRODUCT_NAME = "cm.livecloud~";
 			};
 			name = Development;
@@ -164,8 +162,6 @@
 			baseConfigurationReference = 395B42491D5AF9E2009A13F7 /* maxmspsdk.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
-				DSTROOT = "$(SRCROOT)/../../externals";
-				INFOPLIST_FILE = "$(C74SUPPORT)/../Info.plist";
 				PRODUCT_NAME = "cm.livecloud~";
 			};
 			name = Deployment;

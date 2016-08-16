@@ -152,9 +152,7 @@
 			baseConfigurationReference = 3988008A1D5AF951006CD2F8 /* maxmspsdk.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DSTROOT = "$(SRCROOT)/../../externals";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INFOPLIST_FILE = "$(C74SUPPORT)/../Info.plist";
 				PRODUCT_NAME = "cm.indexcloud~";
 			};
 			name = Development;
@@ -164,8 +162,6 @@
 			baseConfigurationReference = 3988008A1D5AF951006CD2F8 /* maxmspsdk.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
-				DSTROOT = "$(SRCROOT)/../../externals";
-				INFOPLIST_FILE = "$(C74SUPPORT)/../Info.plist";
 				PRODUCT_NAME = "cm.indexcloud~";
 			};
 			name = Deployment;

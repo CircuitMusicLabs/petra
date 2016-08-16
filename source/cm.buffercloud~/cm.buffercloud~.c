@@ -223,42 +223,42 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	// ALLOCATE MEMORY FOR THE GRAINPOS ARRAY
 	x->grainpos = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
 	if (x->grainpos == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	// ALLOCATE MEMORY FOR THE START ARRAY
 	x->start = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
 	if (x->start == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	// ALLOCATE MEMORY FOR THE smp_length ARRAY
 	x->smp_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
 	if (x->smp_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	// ALLOCATE MEMORY FOR THE pitch_length ARRAY
 	x->pitch_length = (long *)sysmem_newptrclear((MAXGRAINS) * sizeof(long));
 	if (x->pitch_length == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	// ALLOCATE MEMORY FOR THE PAN_LEFT ARRAY
 	x->pan_left = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double));
 	if (x->pan_left == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	// ALLOCATE MEMORY FOR THE PAN_RIGHT ARRAY
 	x->pan_right = (double *)sysmem_newptrclear((MAXGRAINS) * sizeof(double));
 	if (x->pan_right == NULL) {
@@ -272,7 +272,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	// ALLOCATE MEMORY FOR THE OBJET FLOAT_INLETS ARRAY
 	x->object_inlets = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
 	if (x->object_inlets == NULL) {
@@ -300,7 +300,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
 	x->object_inlets[0] = 0.0; // initialize float inlet value for current start min value
@@ -425,7 +425,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	x->grain_params[7] = x->connect_status[7] ? *ins[8] : x->object_inlets[7];						// pan max
 	x->grain_params[8] = x->connect_status[8] ? *ins[9] : x->object_inlets[8];						// gain min
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
-
+	
 	
 	// DSP LOOP
 	while (n--) {

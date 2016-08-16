@@ -8,13 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		22CF115E0EE9A6F40054F513 /* cm.buffercloud~.c in Sources */ = {isa = PBXBuildFile; fileRef = 22CF115D0EE9A6F40054F513 /* cm.buffercloud~.c */; };
-		39F19A311D5A189700031CD5 /* maxmspsdk.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 39F19A301D5A189700031CD5 /* maxmspsdk.xcconfig */; };
+		394EDF621D5A193D001A666E /* maxmspsdk.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 394EDF611D5A193D001A666E /* maxmspsdk.xcconfig */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		22CF115D0EE9A6F40054F513 /* cm.buffercloud~.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "cm.buffercloud~.c"; sourceTree = "<group>"; };
 		2FBBEAE508F335360078DB84 /* cm.buffercloud~.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "cm.buffercloud~.mxo"; sourceTree = BUILT_PRODUCTS_DIR; };
-		39F19A301D5A189700031CD5 /* maxmspsdk.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = maxmspsdk.xcconfig; path = ../maxmspsdk.xcconfig; sourceTree = "<group>"; };
+		394EDF611D5A193D001A666E /* maxmspsdk.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = maxmspsdk.xcconfig; path = ../maxmspsdk.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,7 +31,7 @@
 		089C166AFE841209C02AAC07 /* iterator */ = {
 			isa = PBXGroup;
 			children = (
-				39F19A301D5A189700031CD5 /* maxmspsdk.xcconfig */,
+				394EDF611D5A193D001A666E /* maxmspsdk.xcconfig */,
 				22CF115D0EE9A6F40054F513 /* cm.buffercloud~.c */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
 			);
@@ -107,7 +107,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				39F19A311D5A189700031CD5 /* maxmspsdk.xcconfig in Resources */,
+				394EDF621D5A193D001A666E /* maxmspsdk.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -149,23 +149,19 @@
 		};
 		2FBBEAE108F335360078DB84 /* Development */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 39F19A301D5A189700031CD5 /* maxmspsdk.xcconfig */;
+			baseConfigurationReference = 394EDF611D5A193D001A666E /* maxmspsdk.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DSTROOT = "$(SRCROOT)/../../externals";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INFOPLIST_FILE = "$(C74SUPPORT)/../Info.plist";
 				PRODUCT_NAME = "cm.buffercloud~";
 			};
 			name = Development;
 		};
 		2FBBEAE208F335360078DB84 /* Deployment */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 39F19A301D5A189700031CD5 /* maxmspsdk.xcconfig */;
+			baseConfigurationReference = 394EDF611D5A193D001A666E /* maxmspsdk.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
-				DSTROOT = "$(SRCROOT)/../../externals";
-				INFOPLIST_FILE = "$(C74SUPPORT)/../Info.plist";
 				PRODUCT_NAME = "cm.buffercloud~";
 			};
 			name = Deployment;

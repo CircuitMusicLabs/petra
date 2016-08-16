@@ -152,9 +152,7 @@
 			baseConfigurationReference = 394EDF611D5A193D001A666E /* maxmspsdk.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DSTROOT = "$(SRCROOT)/../../externals";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INFOPLIST_FILE = "$(C74SUPPORT)/../Info.plist";
 				PRODUCT_NAME = "cm.gausscloud~";
 			};
 			name = Development;
@@ -164,8 +162,6 @@
 			baseConfigurationReference = 394EDF611D5A193D001A666E /* maxmspsdk.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
-				DSTROOT = "$(SRCROOT)/../../externals";
-				INFOPLIST_FILE = "$(C74SUPPORT)/../Info.plist";
 				PRODUCT_NAME = "cm.gausscloud~";
 			};
 			name = Deployment;

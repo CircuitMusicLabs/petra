@@ -19,14 +19,14 @@ ARCHS = i386 x86_64
 C74SUPPORT = $(SRCROOT)/../../max-sdk/source/c74support
 HEADER_SEARCH_PATHS = "$(C74SUPPORT)/max-includes" "$(C74SUPPORT)/msp-includes" "$(C74SUPPORT)/jit-includes"
 FRAMEWORK_SEARCH_PATHS = "$(C74SUPPORT)/max-includes" "$(C74SUPPORT)/msp-includes" "$(C74SUPPORT)/jit-includes"
-DSTROOT = $(SRCROOT)/../../_build
+DSTROOT = $(C74SUPPORT)/../../../externals
 // (This next path is relative to DSTROOT)
 INSTALL_PATH = /
 
 
 // Special Files
 GCC_PREFIX_HEADER = $(C74SUPPORT)/max-includes/macho-prefix.pch
-INFOPLIST_FILE = $(SRCROOT)/../../Info.plist
+INFOPLIST_FILE = $(C74SUPPORT)/../Info.plist
 
 
 // Architecture and Deployment
