@@ -486,7 +486,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			}
 		}
 		else {
-			if ((x->tr_prev - tr_curr) > 0.9) {
+			if (x->tr_prev > tr_curr) {
 				trigger = 1;
 			}
 			else if (x->bang_trigger) {
