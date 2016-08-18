@@ -23,7 +23,7 @@ If you have [Git](http://git-scm.com/) installed, you can install via the Termin
 After you downloaded the entire repository, open the included Xcode projects and compile the externals with via Product > Build (Command-B).
 
 ##Installation
-The petra repository is structured as a Max package.
+The petra repository is structured as a Max package, which contains the compiled external objects.
 
 ###Installing the Max Package (Max 6 - Mac OS X)
 Copy the entire petra repository either into the "packages" folder in your Max installation or into "Max/Packages" in your ~/Documents folder.
