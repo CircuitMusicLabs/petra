@@ -7,12 +7,12 @@ petra is still in active development, but I'm applying the last touches since al
 
 You're welcome to come back here to check for updates. I will try to submit the project as an official Max package for the new [Max Package Manager](https://cycling74.com/2015/12/14/introducing-the-max-package-manager/#.V6BINKJ1Z_B) as soon as all is done and tested.
 
-###System Requirements for Compiled Externals
+##System Requirements for Compiled Externals
 * Mac OS 10.9.5 or above
 * Max 6.1.8 or above (compatible with Max 7)
 * Max 32 bit and 64 bit
 
-###Installing the Source (Mac OS X)
+##Installing the Source (Mac OS X)
 If you have [Git](http://git-scm.com/) installed, you can install via the Terminal using the following commands:
 
 	cd ~/yourdirectory
