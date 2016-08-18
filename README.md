@@ -10,15 +10,15 @@ You're welcome to come back here to check for updates. I will try to submit the 
 ###System Requirements for Compiled Externals
 * Mac OS 10.9.5 or above
 * Max 6.1.8 or above (compatible with Max 7)
-* Max running in 64 bit mode
+* Max 32 bit and 64 bit
 
 ###Installing the Source (Mac OS X)
 If you have [Git](http://git-scm.com/) installed, you can install via the Terminal using the following commands:
 
 	cd ~/yourdirectory
-	mkdir cm.grainlabs~
-	cd cm.grainlabs~
-	git clone https://github.com/CircuitMusicLabs/cm.grainlabs
+	mkdir petra
+	cd petra
+	git clone https://github.com/CircuitMusicLabs/petra
 
 After you downloaded the entire repository, open the included Xcode projects and compile the externals with via Product > Build (Command-B).
 
@@ -30,3 +30,6 @@ Copy the entire petra repository either into the "packages" folder in your Max i
 
 ###Installing the Max Package (Max 7 - Mac OS X)
 Copy the entire cm.grainlabs~ folder inside the "max-package" directory into “Max 7/Packages" in your ~/Documents folder.
+
+##How to use petra
+After installing the Max package, open the [petra_overview.maxpat](https://github.com/CircuitMusicLabs/petra/blob/master/extras/petra_overview.maxpat) file. I contains the entire documentation and links to all object helpfiles.
