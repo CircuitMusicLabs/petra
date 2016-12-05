@@ -943,6 +943,7 @@ double cm_random(double *min, double *max) {
 	return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
 #endif
 #ifdef WIN_VERSION
+	srand((unsigned int)clock());
 	return *min + ((*max - *min) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
 #endif
 }
