@@ -474,7 +474,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			}
 		}
 		else { // if zero crossing attr is not set
-			if (x->tr_prev > tr_curr) {
+			if ((x->tr_prev - tr_curr) > 0.9) {
 				trigger = 1;
 			}
 			else if (x->bang_trigger) {

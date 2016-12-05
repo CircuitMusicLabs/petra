@@ -445,7 +445,7 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			}
 		}
 		else {
-			if (x->tr_prev > tr_curr) {
+			if ((x->tr_prev - tr_curr) > 0.9) {
 				trigger = 1;
 			}
 			else if (x->bang_trigger) {
