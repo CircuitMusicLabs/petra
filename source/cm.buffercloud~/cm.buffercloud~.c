@@ -339,6 +339,10 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
 	x->w_buffer = buffer_ref_new((t_object *)x, x->window_name); // write the window buffer reference into the object structure
 	
+	#ifdef WIN_VERSION
+		srand((unsigned int)clock());
+	#endif
+	
 	return x;
 }
 
@@ -425,7 +429,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	x->grain_params[7] = x->connect_status[7] ? *ins[8] : x->object_inlets[7];						// pan max
 	x->grain_params[8] = x->connect_status[8] ? *ins[9] : x->object_inlets[8];						// gain min
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
-	
+
 	
 	// DSP LOOP
 	while (n--) {
@@ -943,7 +947,6 @@ double cm_random(double *min, double *max) {
 	return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
 #endif
 #ifdef WIN_VERSION
-	srand((unsigned int)clock());
 	return *min + ((*max - *min) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
 #endif
 }
