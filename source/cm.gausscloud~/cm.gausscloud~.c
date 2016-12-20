@@ -344,6 +344,10 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
 	
+	#ifdef WIN_VERSION
+		srand((unsigned int)clock());
+	#endif
+	
 	return x;
 }
 
@@ -950,7 +954,6 @@ double cm_random(double *min, double *max) {
 	return *min + ((*max - *min) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
 #endif
 #ifdef WIN_VERSION
-	srand((unsigned int)clock());
 	return *min + ((*max - *min) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
 #endif
 }
