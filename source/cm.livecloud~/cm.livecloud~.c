@@ -747,7 +747,7 @@ void cmlivecloud_assist(t_cmlivecloud *x, void *b, long msg, long arg, char *dst
 				snprintf_zero(dst, 256, "(signal) output ch2");
 				break;
 			case 2:
-				snprintf_zero(dst, 256, "(int) current record position");
+				snprintf_zero(dst, 256, "(int) current recording position");
 				break;
 			case 3:
 				snprintf_zero(dst, 256, "(int) current grain count");

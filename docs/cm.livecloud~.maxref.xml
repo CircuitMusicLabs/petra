@@ -136,6 +136,13 @@
 		</outlet>
 		<outlet id="2" type="OUTLET_TYPE">
 			<digest>
+				Current record position (ms)
+			</digest>
+			<description>
+			</description>
+		</outlet>
+		<outlet id="3" type="OUTLET_TYPE">
+			<digest>
 				Number of currently playing grains
 			</digest>
 			<description>
@@ -233,6 +240,11 @@
 		<entry name="signal outlet 2">
 			<description>
 				Signal outlet for right channel.
+			</description>
+		</entry>
+		<entry name="current recording position">
+			<description>
+				Current recording position in the circular buffer.
 			</description>
 		</entry>
 		<entry name="current grain count">
