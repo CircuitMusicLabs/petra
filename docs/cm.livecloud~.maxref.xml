@@ -185,6 +185,17 @@
 				Specifies the maximum number of simultaneously playing grains (max value 512).
 			</description>
 		</method>
+		<method name="record">
+			<arglist>
+				<arg name="record on/off" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Start/stop circular buffer recording
+			</digest>
+			<description>
+				Value > 0 starts recording into the circular buffer. Value < 1 stops recording into the circular buffer.
+			</description>
+		</method>
 	</methodlist>
 	<!--ATTRIBUTES-->
 	<attributelist>
