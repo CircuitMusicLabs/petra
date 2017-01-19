@@ -3,12 +3,12 @@
 
 A Max Package for experiments in granular synthesis. The petra package will replace the [cm.grainlabs~](https://github.com/CircuitMusicLabs/cm.grainlabs) object, which is no longer in development and likely to cause crashes with all current versions of Max.
 
-petra is still in active development, but I'm applying the last touches since all contained objects seem to be stable.
+petra is now open for beta-testing. Feel free to download an to report back any feedback you may have.
 
-You're welcome to come back here to check for updates. I will try to submit the project as an official Max package for the new [Max Package Manager](https://cycling74.com/2015/12/14/introducing-the-max-package-manager/#.V6BINKJ1Z_B) as soon as all is done and tested.
+Once beta testing is done, I will try to submit the project as an official Max package for the new [Max Package Manager](https://cycling74.com/2015/12/14/introducing-the-max-package-manager/#.V6BINKJ1Z_B).
 
 ##System Requirements for Compiled Externals
-* Mac OS 10.9.5 or above
+* Mac OS 10.9.5 or above or Microsoft Windows 7 or later
 * Max 6.1.8 or above (compatible with Max 7)
 * Max 32 bit and 64 bit
 
@@ -20,7 +20,11 @@ If you have [Git](http://git-scm.com/) installed, you can install via the Termin
 	cd petra
 	git clone https://github.com/CircuitMusicLabs/petra
 
-After you downloaded the entire repository, open the included Xcode projects and compile the externals with via Product > Build (Command-B).
+After you cloned the repository, you have to pull the contents of the Max SDK submodule with the following commands:
+
+	git submodule update --remote
+
+Once installed, open the included Xcode projects and compile the externals with via Product > Build (Command-B).
 
 ##Installation
 The petra repository is structured as a Max package, which contains the compiled external objects.
