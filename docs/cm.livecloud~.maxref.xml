@@ -197,7 +197,7 @@
 				<arg name="record on/off" optional="0" type="int" />
 			</arglist>
 			<digest>
-				Start/stop circular buffer recording
+				Start/stop recording into circular buffer
 			</digest>
 			<description>
 				Value > 0 starts recording into the circular buffer. Value < 1 stops recording into the circular buffer.
