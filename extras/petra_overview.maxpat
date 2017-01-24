@@ -3,13 +3,13 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 7,
-			"minor" : 2,
-			"revision" : 3,
+			"minor" : 3,
+			"revision" : 1,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 2182.0, 144.0, 976.0, 609.0 ],
+		"rect" : [ 285.0, 203.0, 976.0, 609.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -161,13 +161,13 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 2,
-							"revision" : 3,
+							"minor" : 3,
+							"revision" : 1,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 2405.0, 225.0, 702.0, 456.0 ],
+						"rect" : [ 978.0, 225.0, 702.0, 456.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -194,7 +194,6 @@
 						"tags" : "",
 						"style" : "",
 						"subpatcher_template" : "",
-						"visible" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
 									"hidden" : 1,
@@ -520,9 +519,9 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 231.0, 66.0, 712.0, 60.0 ],
+					"patching_rect" : [ 231.0, 66.0, 718.0, 60.0 ],
 					"style" : "",
-					"text" : "2012 - 2016 by Circuit Music Labs. A set of polyphonic granular objects based on Curtis Roads' asynchronous granular synthesis.\n\nAll external objects contained in the package (except for cm.livecloud~) can load and play back both mono and stereo audio files loaded into a sample buffer."
+					"text" : "2012 - 2017 by Circuit Music Labs. A set of polyphonic granular synthesis objects.\n\nAll external objects contained in the package (except for cm.livecloud~) can load and granulate both mono and stereo audio files loaded into a sample buffer. All objects make use of sample accurate grain trigger methods."
 				}
 
 			}
@@ -697,7 +696,7 @@
  ],
 		"dependency_cache" : [ 			{
 				"name" : "maxOverviewIcon.png",
-				"bootpath" : "~/Documents/MaxDeveloper/petra-dev/petra/media/images",
+				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}

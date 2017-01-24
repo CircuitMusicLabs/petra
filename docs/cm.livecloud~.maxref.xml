@@ -200,7 +200,7 @@
 				Start/stop recording into circular buffer
 			</digest>
 			<description>
-				Value > 0 starts recording into the circular buffer. Value < 1 stops recording into the circular buffer.
+				Value &gt; 0 starts recording into the circular buffer. Value &lt; 1 stops recording into the circular buffer.
 			</description>
 		</method>
 	</methodlist>

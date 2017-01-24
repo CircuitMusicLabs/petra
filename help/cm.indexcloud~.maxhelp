@@ -3,13 +3,13 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 7,
-			"minor" : 2,
-			"revision" : 3,
+			"minor" : 3,
+			"revision" : 1,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 2095.0, 130.0, 1328.0, 860.0 ],
+		"rect" : [ 100.0, 100.0, 947.0, 860.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -123,8 +123,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 2,
-							"revision" : 3,
+							"minor" : 3,
+							"revision" : 1,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -756,8 +756,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 2,
-							"revision" : 3,
+							"minor" : 3,
+							"revision" : 1,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -1289,7 +1289,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 12.0, 134.5, 483.0, 60.0 ],
 					"style" : "",
-					"text" : "1) Buffer containing the playback sample\n2) Index number of grain window (see list of windows)\n3) Number specifying the window length (minimum value 16, no maximum value)\n3) Number specifying the maximum number of overlapping grains (maximum value: 512)"
+					"text" : "1) Buffer containing the playback sample\n2) Index number of grain window (see list of windows)\n3) Number specifying the window length (minimum value 16, no maximum value)\n4) Number specifying the maximum number of overlapping grains (maximum value: 512)"
 				}
 
 			}

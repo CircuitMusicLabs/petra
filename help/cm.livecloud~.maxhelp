@@ -3,13 +3,13 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 7,
-			"minor" : 2,
-			"revision" : 3,
+			"minor" : 3,
+			"revision" : 1,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 2083.0, 142.0, 1300.0, 764.0 ],
+		"rect" : [ 34.0, 79.0, 1212.0, 933.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -37,6 +37,40 @@
 		"style" : "",
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
+				"box" : 				{
+					"bubble" : 1,
+					"bubbleside" : 3,
+					"fontname" : "Arial",
+					"fontsize" : 13.0,
+					"id" : "obj-51",
+					"linecount" : 3,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 752.863586, 497.0, 144.0, 54.0 ],
+					"presentation_rect" : [ 752.29541, 505.0, 0.0, 0.0 ],
+					"style" : "",
+					"text" : "current recording position in circular buffer (ms)"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-48",
+					"maxclass" : "number",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 1177.249878, 513.0, 50.0, 22.0 ],
+					"presentation_rect" : [ 1120.5, 515.0, 0.0, 0.0 ],
+					"style" : ""
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"bubble" : 1,
 					"fontname" : "Arial",
@@ -375,8 +409,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 2,
-							"revision" : 3,
+							"minor" : 3,
+							"revision" : 1,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -795,6 +829,7 @@
 , 			{
 				"box" : 				{
 					"bubble" : 1,
+					"bubbleside" : 3,
 					"fontname" : "Arial",
 					"fontsize" : 13.0,
 					"id" : "obj-38",
@@ -802,7 +837,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 1139.249878, 500.0, 144.0, 40.0 ],
+					"patching_rect" : [ 1026.29541, 504.0, 144.0, 40.0 ],
 					"style" : "",
 					"text" : "number of currently playing grains"
 				}
@@ -818,7 +853,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 1087.249878, 509.0, 50.0, 22.0 ],
+					"patching_rect" : [ 900.499939, 513.0, 50.0, 22.0 ],
 					"style" : ""
 				}
 
@@ -1130,8 +1165,8 @@
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 12,
-					"numoutlets" : 3,
-					"outlettype" : [ "signal", "signal", "int" ],
+					"numoutlets" : 4,
+					"outlettype" : [ "signal", "signal", "int", "int" ],
 					"patching_rect" : [ 347.0, 444.0, 849.249878, 22.0 ],
 					"saved_object_attributes" : 					{
 						"s_interp" : 1,
@@ -1177,6 +1212,15 @@
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-1", 2 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-48", 0 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-1", 3 ]
 				}
 
 			}
@@ -1504,8 +1548,8 @@
 			}
  ],
 		"parameters" : 		{
-			"obj-47::obj-35" : [ "[5]", "Level", 0 ],
 			"obj-47::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
+			"obj-47::obj-35" : [ "[5]", "Level", 0 ],
 			"obj-5" : [ "live.gain~", "live.gain~", 0 ]
 		}
 ,

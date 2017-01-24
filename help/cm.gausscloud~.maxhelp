@@ -3,13 +3,13 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 7,
-			"minor" : 2,
-			"revision" : 3,
+			"minor" : 3,
+			"revision" : 1,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 2059.0, 125.0, 1300.0, 860.0 ],
+		"rect" : [ 100.0, 100.0, 919.0, 860.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -310,8 +310,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 2,
-							"revision" : 3,
+							"minor" : 3,
+							"revision" : 1,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -797,7 +797,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 1135.25, 502.0, 144.0, 40.0 ],
+					"patching_rect" : [ 1262.099854, 498.0, 144.0, 40.0 ],
 					"style" : "",
 					"text" : "number of currently playing grains"
 				}
@@ -813,7 +813,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 1083.25, 511.0, 50.0, 22.0 ],
+					"patching_rect" : [ 1210.099854, 507.0, 50.0, 22.0 ],
 					"style" : ""
 				}
 
