@@ -1,5 +1,5 @@
 {
-	"author" : "CircuitMusicLabs",
+	"author" : "circuit.music.labs",
 	"authors" : [  ],
 	"categories" : [  ],
 	"description" : "Granular Synthesis Environment for Max",
@@ -9,7 +9,7 @@
 	"homepatcher" : "petra_overview.maxpat",
 	"max_version_max" : "none",
 	"max_version_min" : "6.1",
-	"name" : "petra",
+	"name" : "petra for Max",
 	"os" : 	{
 		"macintosh" : 		{
 			"platform" : [ "ia32", "x64" ],
@@ -17,20 +17,20 @@
 		}
 ,
 		"windows" : 		{
-			"platform" : [ "x64" ],
-			"min_version" : "7"
+			"platform" : [ "ia32", "x64" ],
+			"min_version" : "6.1"
 		}
 
 	}
 ,
 	"readme" : "",
 	"tags" : [ "granular", "audio" ],
-	"version" : "0.0.2",
+	"version" : "0.1.1",
 	"versions" : null,
 	"website" : "http://www.circuitmusiclabs.com",
 	"filelist" : 	{
 		"patchers" : [ "" ],
-		"help" : [ "cm.buffercloud~.maxhelp", "cm.indexcloud~.maxhelp", "cm.gausscloud~.maxhelp" ],
+		"help" : [ "cm.buffercloud~.maxhelp", "cm.indexcloud~.maxhelp", "cm.gausscloud~.maxhelp", "cm.livecloud~.maxhelp" ],
 		"media" : [ "" ],
 		"misc" : [ "" ],
 		"code" : [ "" ],

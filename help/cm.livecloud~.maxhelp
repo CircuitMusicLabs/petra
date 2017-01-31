@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 34.0, 79.0, 1212.0, 933.0 ],
+		"rect" : [ 34.0, 79.0, 1612.0, 933.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -48,7 +48,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 752.863586, 497.0, 144.0, 54.0 ],
-					"presentation_rect" : [ 752.29541, 505.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "current recording position in circular buffer (ms)"
 				}
@@ -65,7 +64,6 @@
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 1177.249878, 513.0, 50.0, 22.0 ],
-					"presentation_rect" : [ 1120.5, 515.0, 0.0, 0.0 ],
 					"style" : ""
 				}
 
@@ -1548,8 +1546,8 @@
 			}
  ],
 		"parameters" : 		{
-			"obj-47::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
 			"obj-47::obj-35" : [ "[5]", "Level", 0 ],
+			"obj-47::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
 			"obj-5" : [ "live.gain~", "live.gain~", 0 ]
 		}
 ,

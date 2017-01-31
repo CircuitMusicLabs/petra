@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 100.0, 100.0, 947.0, 860.0 ],
+		"rect" : [ 34.0, 79.0, 1612.0, 933.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -663,12 +663,13 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-41",
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 166.0, 54.0, 1042.0, 20.0 ],
+					"patching_rect" : [ 166.0, 54.0, 1042.0, 33.0 ],
 					"style" : "",
-					"text" : "Granulator object using a windowing function stored inside the external itself. The windowing functions can be accessed with and index number supplied as an argument or with a message."
+					"text" : "Polyphonic granulator object for granulation of mono and stereo audio files loaded into a buffer~ object. It uses a windowing function calculated inside the external itself. The windowing functions can be accessed with and index number supplied as an argument or with a message."
 				}
 
 			}

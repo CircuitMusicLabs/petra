@@ -3,13 +3,13 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 7,
-			"minor" : 2,
-			"revision" : 3,
+			"minor" : 3,
+			"revision" : 1,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 2072.0, 108.0, 1300.0, 860.0 ],
+		"rect" : [ 346.0, 108.0, 1300.0, 860.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -46,7 +46,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 478.5, 325.0, 144.0, 25.0 ],
-					"presentation_rect" : [ 187.0, 337.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "bang triggers grain"
 				}
@@ -84,12 +83,13 @@
 					"fontname" : "Arial",
 					"fontsize" : 12.0,
 					"id" : "obj-25",
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 166.0, 56.0, 768.0, 20.0 ],
+					"patching_rect" : [ 166.0, 56.0, 768.0, 33.0 ],
 					"style" : "",
-					"text" : "Granulator object using a windowing function loaded into a buffer~ object."
+					"text" : "Polyphonic granulator object for granulation of mono and stereo audio files loaded into a buffer~ object. It uses a windowing function loaded into a buffer~ object."
 				}
 
 			}
@@ -177,8 +177,8 @@
 						"fileversion" : 1,
 						"appversion" : 						{
 							"major" : 7,
-							"minor" : 2,
-							"revision" : 3,
+							"minor" : 3,
+							"revision" : 1,
 							"architecture" : "x64",
 							"modernui" : 1
 						}

@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 100.0, 100.0, 919.0, 860.0 ],
+		"rect" : [ 34.0, 79.0, 1612.0, 933.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -207,22 +207,6 @@
 					"outlettype" : [ "jit_matrix" ],
 					"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
 					"pic" : "maxOverviewIcon.png"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontface" : 0,
-					"fontname" : "Arial",
-					"fontsize" : 12.0,
-					"id" : "obj-25",
-					"linecount" : 2,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 166.0, 56.0, 774.0, 33.0 ],
-					"style" : "",
-					"text" : "Polyphonic granulator object using a gaussian windowing function calculated inside the external itself. The shape of the guassian window can be freely manipulated in real time with the min/max alpha value object inlets."
 				}
 
 			}
@@ -645,7 +629,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 558.5, 81.0, 89.0, 22.0 ],
+					"patching_rect" : [ 558.5, 134.5, 89.0, 22.0 ],
 					"style" : "",
 					"text" : "loadmess 100."
 				}
@@ -661,7 +645,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 706.625, 81.0, 75.0, 22.0 ],
+					"patching_rect" : [ 706.625, 134.5, 75.0, 22.0 ],
 					"style" : "",
 					"text" : "loadmess 1."
 				}
@@ -677,7 +661,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 840.5, 81.0, 75.0, 22.0 ],
+					"patching_rect" : [ 840.5, 134.5, 75.0, 22.0 ],
 					"style" : "",
 					"text" : "loadmess 0."
 				}
@@ -1209,6 +1193,22 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 347.0, 199.0, 150.0, 22.0 ],
 					"style" : ""
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontface" : 0,
+					"fontname" : "Arial",
+					"fontsize" : 12.0,
+					"id" : "obj-25",
+					"linecount" : 3,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 166.0, 56.0, 774.0, 47.0 ],
+					"style" : "",
+					"text" : "Polyphonic granulator object for granulation of mono and stereo audio files loaded into a buffer~ object. It uses a gaussian windowing function calculated inside the external itself. The shape of the gaussian window can be freely manipulated in real time and per grain with the min/max alpha value object inlets."
 				}
 
 			}
