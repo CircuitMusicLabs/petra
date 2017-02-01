@@ -16,13 +16,12 @@ Once beta testing is done, I will try to submit the project as an official Max p
 If you have [Git](http://git-scm.com/) installed, you can install via the Terminal using the following commands:
 
 	cd ~/yourdirectory
-	mkdir petra
-	cd petra
 	git clone https://github.com/CircuitMusicLabs/petra
 
 After you cloned the repository, you have to pull the contents of the Max SDK submodule with the following commands:
 
-	git submodule update --remote
+	cd petra
+	git submodule update --init --recursive
 
 Once installed, open the included Xcode projects and compile the externals with via Product > Build (Command-B).
 
