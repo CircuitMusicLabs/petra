@@ -1,4 +1,4 @@
-![petra logo](http://circuitmusiclabs.com/img/projects/petra/petra-logo_preview.svg)
+![petra logo](http://circuitmusiclabs.com/img/projects/petra/petra-logo_preview.png)
 
 **Matthias W. Müller - [@mwmueller](https://twitter.com/mwmueller) - [www.circuitmusiclabs.com](http://www.circuitmusiclabs.com/)**
 
@@ -23,7 +23,7 @@ Once beta testing is done, I will try to submit the project as an official Max p
 * Max 6.1.8 or above (compatible with Max 7)
 * Max 32 bit and 64 bit
 
-## Installing the Source
+## Installing the Source Code
 ### Cloning the Repository
 If you have [Git](http://git-scm.com/) installed, you can install via the Terminal using the following commands:
 
