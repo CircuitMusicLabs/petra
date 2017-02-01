@@ -7,12 +7,12 @@
 		Indexed window polyphonic granular synthesizer
 	</digest>
 	<description>
-		<o>cm.indexcloud~</o> by Circuit Music Labs is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and utilizes an internal window buffer for windowing the individual grains. A number of windows can be selected with the window index and window length arguments. The window type and window length parameters can also be customized with the "w_type" and "w_size" messages.
+		<o>cm.indexcloud~</o> by circuit.music.labs is a polyphonic granulator object for granulation of mono and stereo audio files loaded into a buffer~ object. It uses a windowing function calculated inside the external itself. The windowing functions can be accessed with and index number supplied as an argument or with a message.
 	</description>
 	<!--METADATA-->
 	<metadatalist>
 		<metadata name="author">
-			Circuit Music Labs
+			circuit.music.labs
 		</metadata>
 		<metadata name="tag">
 			Max

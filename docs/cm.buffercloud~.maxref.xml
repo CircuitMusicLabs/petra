@@ -7,12 +7,12 @@
 		Buffer based window polyphonic granular synthesizer
 	</digest>
 	<description>
-		<o>cm.buffercloud~</o> by Circuit Music Labs is a polyphonic granular synthesizer used to granulate prerecorded sounds. It accesses a sample buffer for playback and a window buffer for windowing the individual grains.
+		<o>cm.buffercloud~</o> by circuit.music.labs is a polyphonic granulator object for granulation of mono and stereo audio files loaded into a buffer~ object. It uses a windowing function loaded into a buffer~ object.
 	</description>
 	<!--METADATA-->
 	<metadatalist>
 		<metadata name="author">
-			Circuit Music Labs
+			circuit.music.labs
 		</metadata>
 		<metadata name="tag">
 			Max
