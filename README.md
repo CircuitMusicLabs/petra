@@ -1,6 +1,8 @@
 # petra by Circuit Music Labs
 **Matthias W. Müller - [@mwmueller](https://twitter.com/mwmueller) - [www.circuitmusiclabs.com](http://www.circuitmusiclabs.com/)**
 
+[logo]: http://circuitmusiclabs.com/img/projects/petra/petra-logo.svg
+
 A Max Package for experiments in granular synthesis. The petra package will replace the [cm.grainlabs~](https://github.com/CircuitMusicLabs/cm.grainlabs) object, which is no longer in development and likely to cause crashes with all current versions of Max.
 
 petra is now open for beta-testing. Feel free to download and to report back any feedback you may have.
