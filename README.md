@@ -33,7 +33,7 @@ The petra repository is structured as a Max package, which contains the compiled
 Copy the entire petra repository either into the "packages" folder in your Max installation or into "Max/Packages" in your ~/Documents folder.
 
 ###Installing the Max Package (Max 7 - Mac OS X)
-Copy the entire cm.grainlabs~ folder inside the "max-package" directory into “Max 7/Packages" in your ~/Documents folder.
+Copy the entire petra repository into “Max 7/Packages" in your ~/Documents folder.
 
 ##How to use petra
 After installing the Max package, open the [petra_overview.maxpat](https://github.com/CircuitMusicLabs/petra/blob/master/extras/petra_overview.maxpat) file. I contains the entire documentation and links to all object helpfiles.
