@@ -1,4 +1,4 @@
-![petra logo](http://circuitmusiclabs.com/img/projects/petra/petra-logo_preview.png)
+![petra logo](http://circuitmusiclabs.com/img/projects/petra/petra-logo-preview.png)
 
 **Matthias W. Müller - [@mwmueller](https://twitter.com/mwmueller) - [www.circuitmusiclabs.com](http://www.circuitmusiclabs.com/)**
 
@@ -13,6 +13,8 @@ All objects share the following controls, which consist of an upper and lower ra
 * grain pitch
 * panorama position per grain
 * gain per grain
+
+![petra example](http://circuitmusiclabs.com/img/projects/petra/buffercloud-patcher-preview.png)
 
 petra is now open for beta-testing. Feel free to download and to report back any feedback you may have.
 
