@@ -26,8 +26,13 @@ Once beta testing is done, I will try to submit the project as an official Max p
 * Max 32 bit and 64 bit
 
 ## Installing the Source Code
+### Prerequisites
+* [Git](http://git-scm.com/)
+* XCode (Mac Os)
+* Visual Studio (Windows)
+
 ### Cloning the Repository
-If you have [Git](http://git-scm.com/) installed, you can install via the Terminal using the following commands:
+Clone the petra repository via the Terminal using the following commands:
 
 	cd ~/yourdirectory
 	git clone https://github.com/CircuitMusicLabs/petra
