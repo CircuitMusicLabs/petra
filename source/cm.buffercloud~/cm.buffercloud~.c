@@ -419,6 +419,12 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			}
 			x->grains_count = 0;
 			x->buffer_modified = 0;
+			
+			// update buffer information to avoid buffer overflow when new buffer buffer is shorter than the old buffer
+			b_framecount = buffer_getframecount(buffer); // get number of frames in the sample buffer
+			w_framecount = buffer_getframecount(w_buffer); // get number of frames in the window buffer
+			b_channelcount = buffer_getchannelcount(buffer); // get number of channels in the sample buffer
+			w_channelcount = buffer_getchannelcount(w_buffer); // get number of channels in the sample buffer
 		}
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
@@ -500,7 +506,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->grains_count == 0 || !b_sample || !w_sample) { // if grains count is zero, there is no playback to be calculated
+		if (x->grains_count == 0 || !b_sample || !w_sample) { // if grains count zero or either of the buffers not present
 			*out_left++ = 0.0;
 			*out_right++ = 0.0;
 		}
@@ -793,10 +799,11 @@ t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, v
 
 
 /************************************************************************************************************************/
-/* THE BUFFER SET METHOD                                                                                                */
+/* THE ACTUAL BUFFER SET METHOD                                                                                         */
 /************************************************************************************************************************/
-void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmbuffercloud_doset(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 2) {
+		//object_post((t_object *)x, "buffer ref changed");
 		x->buffer_modified = 1;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
 		x->window_name = atom_getsym(av+1); // write buffer name into object structure
@@ -812,6 +819,13 @@ void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 	else {
 		object_error((t_object *)x, "%d arguments required (sample/window)", 2);
 	}
+}
+
+/************************************************************************************************************************/
+/* THE BUFFER SET METHOD                                                                                         */
+/************************************************************************************************************************/
+void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
+	defer(x, (method)cmbuffercloud_doset, s, ac, av);
 }
 
 
