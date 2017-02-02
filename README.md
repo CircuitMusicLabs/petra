@@ -54,7 +54,7 @@ The easiest way to compile the petra external objects on Windows is the followin
 2. Duplicate any one of the project folders (e.g. simplemsp~) and rename this folder into cm.buffercloud~ (do not move)
 3. Enter the cm.buffercloud~ folder and rename the ~.vcxproj file and the ~.c source file into cm.buffercloud~
 4. Open the ~.vcxproj file with Visual Studio
-5. Replace the contents of the ~.c source file with the contents of the cm.buffercloud~ source file contained in ~/yourdirectory/petra/source/cm.buffercloud~
+5. Replace the contents of the ~.c source file with the contents of the cm.buffercloud~.c source file contained in ~/yourdirectory/petra/source/cm.buffercloud~
 6. Build both Release|Win32 and Release|x64 build configurations
 
 After building, the compiled externals can be found in ~/yourdirectory/petra/max-sdk/externals
