@@ -830,9 +830,9 @@ t_max_err cmindexcloud_notify(t_cmindexcloud *x, t_symbol *s, t_symbol *msg, voi
 
 
 /************************************************************************************************************************/
-/* THE BUFFER SET METHOD                                                                                                */
+/* THE ACTUAL BUFFER SET METHOD                                                                                         */
 /************************************************************************************************************************/
-void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexcloud_doset(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
 		x->buffer_modified = 1;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
@@ -847,8 +847,12 @@ void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 }
 
 
-
-
+/************************************************************************************************************************/
+/* THE BUFFER SET METHOD                                                                                                */
+/************************************************************************************************************************/
+void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+	defer(x, (method)cmindexcloud_doset, s, ac, av);
+}
 
 
 /************************************************************************************************************************/

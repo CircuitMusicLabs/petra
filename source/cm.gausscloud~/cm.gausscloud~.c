@@ -806,9 +806,9 @@ t_max_err cmgausscloud_notify(t_cmgausscloud *x, t_symbol *s, t_symbol *msg, voi
 
 
 /************************************************************************************************************************/
-/* THE BUFFER SET METHOD                                                                                                */
+/* THE ACTUAL BUFFER SET METHOD                                                                                         */
 /************************************************************************************************************************/
-void cmgausscloud_set(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmgausscloud_doset(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
 		x->buffer_modified = 1;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
@@ -823,6 +823,12 @@ void cmgausscloud_set(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
 }
 
 
+/************************************************************************************************************************/
+/* THE BUFFER SET METHOD                                                                                                */
+/************************************************************************************************************************/
+void cmgausscloud_set(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
+	defer(x, (method)cmgausscloud_doset, s, ac, av);
+}
 
 
 /************************************************************************************************************************/
