@@ -419,12 +419,6 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			}
 			x->grains_count = 0;
 			x->buffer_modified = 0;
-			
-			// update buffer information to avoid buffer overflow when new buffer buffer is shorter than the old buffer
-			b_framecount = buffer_getframecount(buffer); // get number of frames in the sample buffer
-			w_framecount = buffer_getframecount(w_buffer); // get number of frames in the window buffer
-			b_channelcount = buffer_getchannelcount(buffer); // get number of channels in the sample buffer
-			w_channelcount = buffer_getchannelcount(w_buffer); // get number of channels in the sample buffer
 		}
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
@@ -822,8 +816,9 @@ void cmbuffercloud_doset(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 }
 
 /************************************************************************************************************************/
-/* THE BUFFER SET METHOD                                                                                         */
+/* THE BUFFER SET METHOD																								*/
 /************************************************************************************************************************/
+// original quote from simpwave~ example: "calls set the buffer ref should happen on the main thread only" (typo?)
 void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 	defer(x, (method)cmbuffercloud_doset, s, ac, av);
 }
