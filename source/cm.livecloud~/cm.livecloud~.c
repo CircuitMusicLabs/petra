@@ -912,7 +912,7 @@ t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void 
 /************************************************************************************************************************/
 /* THE BUFFER SET METHOD                                                                                                */
 /************************************************************************************************************************/
-void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmlivecloud_doset(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
 		x->buffer_modified = 1;
 		x->window_name = atom_getsym(av); // write buffer name into object structure
@@ -924,6 +924,14 @@ void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 	else {
 		object_error((t_object *)x, "%d arguments required (window)", 1);
 	}
+}
+
+
+/************************************************************************************************************************/
+/* THE BUFFER SET METHOD                                                                                                */
+/************************************************************************************************************************/
+void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
+	defer(x, (method)cmlivecloud_doset, s, ac, av);
 }
 
 
