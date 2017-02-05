@@ -74,6 +74,7 @@ typedef struct _cmindexcloud {
 	long window_type; // window typedef
 	long window_length; // window length
 	short w_writeflag; // checkflag to see if window array is currently re-witten
+	short w_window_modified; // checkflag to mark window changed
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
 	short connect_status[FLOAT_INLETS]; // array for signal inlet connection statuses
 	double *object_inlets; // array to store the incoming values coming from the object inlets
@@ -415,7 +416,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 
 
 	// BUFFER CHECKS
-	if (!b_sample || x->w_writeflag) { // if the sample buffer does not exist
+	if (!b_sample) { // if the sample buffer does not exist
 		goto zero;
 	}
 
@@ -461,16 +462,21 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			}
 		}
 
-		if (x->buffer_modified) { // reset all playback information when any of the buffers was modified
+		if (x->buffer_modified || x->w_window_modified) { // reset all playback information when any of the buffers was modified
 			for (i = 0; i < MAXGRAINS; i++) {
 				x->graininfo[i].busy = 0;
 			}
+			if (x->buffer_modified) {
+				x->buffer_modified = 0;
+			}
+			if (x->w_window_modified) {
+				x->w_window_modified = 0;
+			}
 			x->grains_count = 0;
-			x->buffer_modified = 0;
 		}
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->w_writeflag && !x->buffer_modified) {
+		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->w_writeflag && !x->buffer_modified && !x->w_window_modified) {
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -548,7 +554,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->grains_count == 0 || !b_sample || x->w_writeflag || x->buffer_modified) { // if grains count is zero, there is no playback to be calculated
+		if (x->grains_count == 0 || !b_sample || x->w_writeflag || x->buffer_modified || x->w_window_modified) { // if grains count is zero, there is no playback to be calculated
 			*out_left++ = 0.0;
 			*out_right++ = 0.0;
 		}
@@ -861,13 +867,14 @@ void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 void cmindexcloud_do_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
-		if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
+		if (!x->w_writeflag) { // only if the window array is not currently being rewritten
 			// CHECK IF WINDOW TYPE ARGUMENT IS VALID
 			if (arg < 0 || arg > MAX_WININDEX) {
 				object_error((t_object *)x, "invalid window type");
 			}
 			else {
 				x->w_writeflag = 1;
+				x->w_window_modified = 1;
 				x->window_type = arg; // write window type into object structure
 				cmindexcloud_windowwrite(x); // write window into window array
 				x->w_writeflag = 0;
@@ -899,8 +906,9 @@ void cmindexcloud_do_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *a
 		if (arg < MIN_WINDOWLENGTH) {
 			object_error((t_object *)x, "window length must be greater than %d", MIN_WINDOWLENGTH);
 		}
-		else if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
+		else if (!x->w_writeflag) { // only if the window array is not currently being rewritten
 			x->w_writeflag = 1;
+			x->w_window_modified = 1;
 			x->window_length = arg; // write window length into object structure
 			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double)); // resize and clear window array
 			cmindexcloud_windowwrite(x); // write window into window array
