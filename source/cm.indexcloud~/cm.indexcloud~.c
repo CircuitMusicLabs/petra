@@ -470,7 +470,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		}
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified) { // based on zero crossing --> when ramp from 0-1 restarts.
+		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->w_writeflag && !x->buffer_modified) {
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -548,7 +548,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->grains_count == 0 || !b_sample || x->w_writeflag) { // if grains count is zero, there is no playback to be calculated
+		if (x->grains_count == 0 || !b_sample || x->w_writeflag || x->buffer_modified) { // if grains count is zero, there is no playback to be calculated
 			*out_left++ = 0.0;
 			*out_right++ = 0.0;
 		}
@@ -856,9 +856,9 @@ void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 
 
 /************************************************************************************************************************/
-/* THE WINDOW TYPE SET METHOD                                                                                           */
+/* THE ACTUAL WINDOW TYPE SET METHOD                                                                                    */
 /************************************************************************************************************************/
-void cmindexcloud_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexcloud_do_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
 		if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
@@ -867,8 +867,10 @@ void cmindexcloud_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 				object_error((t_object *)x, "invalid window type");
 			}
 			else {
+				x->w_writeflag = 1;
 				x->window_type = arg; // write window type into object structure
 				cmindexcloud_windowwrite(x); // write window into window array
+				x->w_writeflag = 0;
 			}
 		}
 	}
@@ -878,11 +880,19 @@ void cmindexcloud_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 }
 
 
+/************************************************************************************************************************/
+/* THE WINDOW TYPE SET METHOD                                                                                           */
+/************************************************************************************************************************/
+void cmindexcloud_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+	defer(x, (method)cmindexcloud_do_w_type, s, ac, av);
+}
+
+
 
 /************************************************************************************************************************/
-/* THE WINDOW LENGTH SET METHOD                                                                                         */
+/* THE ACTUAL WINDOW LENGTH SET METHOD                                                                                  */
 /************************************************************************************************************************/
-void cmindexcloud_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexcloud_do_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
 		// CHECK IF WINDOW LENGTH ARGUMENT IS VALID
@@ -890,16 +900,24 @@ void cmindexcloud_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) 
 			object_error((t_object *)x, "window length must be greater than %d", MIN_WINDOWLENGTH);
 		}
 		else if (x->w_writeflag == 0) { // only if the window array is not currently being rewritten
-			x->window_length = arg; // write window length into object structure
 			x->w_writeflag = 1;
+			x->window_length = arg; // write window length into object structure
 			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double)); // resize and clear window array
-			x->w_writeflag = 0;
 			cmindexcloud_windowwrite(x); // write window into window array
+			x->w_writeflag = 0;
 		}
 	}
 	else {
 		object_error((t_object *)x, "argument required (window length)");
 	}
+}
+
+
+/************************************************************************************************************************/
+/* THE WINDOW LENGTH SET METHOD                                                                                         */
+/************************************************************************************************************************/
+void cmindexcloud_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+	defer(x, (method)cmindexcloud_do_w_length, s, ac, av);
 }
 
 
@@ -979,14 +997,10 @@ t_max_err cmindexcloud_zero_set(t_cmindexcloud *x, t_object *attr, long ac, t_at
 void cmindexcloud_windowwrite(t_cmindexcloud *x) {
 	//	int i;
 	long length = x->window_length;
-	x->w_writeflag = 1;
 	switch (x->window_type) {
 		case 0:
 			object_post((t_object*)x, "hann - %d", length);
 			cm_hann(x->window, &length);
-			//			for (i = 0; i < length; i++) {
-			//				object_post((t_object*)x, "%d : %f", i, x->window[i]);
-			//			}
 			break;
 		case 1:
 			object_post((t_object*)x, "hamming - %d", length);
@@ -1019,7 +1033,6 @@ void cmindexcloud_windowwrite(t_cmindexcloud *x) {
 		default:
 			cm_hann(x->window, &length);
 	}
-	x->w_writeflag = 0;
 	return;
 }
 
