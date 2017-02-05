@@ -498,7 +498,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->recordflag) {
+		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->recordflag && !x->buffer_modified) {
 
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count

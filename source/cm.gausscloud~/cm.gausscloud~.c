@@ -419,7 +419,7 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 		}
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified) { // based on zero crossing --> when ramp from 0-1 restarts.
+		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->buffer_modified) { // based on zero crossing --> when ramp from 0-1 restarts.
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -510,7 +510,7 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->grains_count == 0 || !b_sample) { // if grains count is zero, there is no playback to be calculated
+		if (x->grains_count == 0 || !b_sample || x->buffer_modified) { // if grains count is zero, there is no playback to be calculated
 			*out_left++ = 0.0;
 			*out_right++ = 0.0;
 		}
