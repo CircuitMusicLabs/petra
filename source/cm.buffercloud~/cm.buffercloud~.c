@@ -290,6 +290,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->grains_limit_old = 0; // initialize value for the routine when grains limit was modified
 	x->limit_modified = 0; // initialize channel change flag
 	x->buffer_modified = 0; // initialized buffer modified flag
+	
 	// initialize the testvalues which are not dependent on sampleRate
 	x->testvalues[0] = 0.0; // dummy MIN_START
 	x->testvalues[1] = 0.0; // dummy MAX_START
@@ -303,8 +304,16 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	// calculate constants for panning function
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
 	x->root2ovr2 = sqrt(2.0) * 0.5;
-
+	
+	// bang trigger flag
 	x->bang_trigger = 0;
+	
+	// grainmem structure members
+	for (i = 0; i < MAXGRAINS; i++) {
+		x->grainmem[i].length = 0;
+		x->grainmem[i].pos = 0;
+		x->grainmem[i].busy = 0;
+	}
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -450,14 +459,9 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			}
 		}
 
-		if (x->buffer_modified) { // reset all playback information when any of the buffers was modified
-//			for (i = 0; i < MAXGRAINS; i++) {
-//				x->grainmem[i].busy = 0;
-//			}
-//			x->grains_count = 0;
+		if (x->buffer_modified) {
 			x->buffer_modified = 0;
 		}
-		
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
