@@ -44,7 +44,7 @@
 
 
 /************************************************************************************************************************/
-/* GRAIN STORAGE                                                                                                        */
+/* GRAIN MEMORY STORAGE                                                                                                 */
 /************************************************************************************************************************/
 typedef struct cmgrainmem {
 	double *left;
@@ -258,7 +258,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
-	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH grainmem MEMBER
+	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH MEMBER OF THE GRAINMEM STRUCT
 	for (i = 0; i < MAXGRAINS; i++) {
 		x->grainmem[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 		if (x->grainmem[i].left == NULL) {
@@ -402,6 +402,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	// BUFFER CHECKS
 	if (!b_sample || !w_sample) { // if the sample buffer does not exist
 		goto zero;
+		object_error((t_object *)x, "DSP init: one of the buffers is not here");
 	}
 
 	// GET BUFFER INFORMATION
@@ -424,7 +425,8 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	x->grain_params[8] = x->connect_status[8] ? *ins[9] : x->object_inlets[8];						// gain min
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
 
-
+	
+	/************************************************************************************************************************/
 	// DSP LOOP
 	while (n--) {
 		tr_curr = *tr_sigin++; // get current trigger value
@@ -449,21 +451,12 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		}
 
 		if (x->buffer_modified) { // reset all playback information when any of the buffers was modified
-			for (i = 0; i < MAXGRAINS; i++) {
-				x->grainmem[i].busy = 0;
-			}
-			x->grains_count = 0;
+//			for (i = 0; i < MAXGRAINS; i++) {
+//				x->grainmem[i].busy = 0;
+//			}
+//			x->grains_count = 0;
 			x->buffer_modified = 0;
 		}
-		
-		
-		
-		// DEBUG:
-		if (!b_sample || !w_sample) {
-			object_error((t_object *)x, "one of the buffers is not here");
-		}
-		
-		
 		
 		
 		/************************************************************************************************************************/
@@ -533,8 +526,8 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			// write start position
 			start = x->randomized[0];
 			// start position sanity testing
-			if (start > b_framecount - pitch_length) {
-				start = b_framecount - pitch_length;
+			if (start > b_framecount - (pitch_length + 1)) { // plus 1 because of interpolation sample increment
+				start = b_framecount - (pitch_length + 1);
 			}
 			if (start < 0) {
 				start = 0;
@@ -700,12 +693,15 @@ void cmbuffercloud_assist(t_cmbuffercloud *x, void *b, long msg, long arg, char 
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
 void cmbuffercloud_free(t_cmbuffercloud *x) {
+	int i;
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
 	object_free(x->buffer); // free the buffer reference
 	object_free(x->w_buffer); // free the window buffer reference
 	
-	sysmem_freeptr(x->grainmem->left);
-	sysmem_freeptr(x->grainmem->right);
+	for (i = 0; i < MAXGRAINS; i++) {
+		sysmem_freeptr(x->grainmem[i].left);
+		sysmem_freeptr(x->grainmem[i].right);
+	}
 	sysmem_freeptr(x->grainmem);
 	
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
@@ -831,6 +827,9 @@ void cmbuffercloud_dblclick(t_cmbuffercloud *x) {
 /************************************************************************************************************************/
 t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	t_symbol *buffer_name = (t_symbol *)object_method((t_object *)sender, gensym("getname"));
+	
+	//char *message = (char *)msg->s_name;
+	
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = 1;
 	}
