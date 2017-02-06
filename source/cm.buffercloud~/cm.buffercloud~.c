@@ -44,18 +44,15 @@
 
 
 /************************************************************************************************************************/
-/* GRAIN INFO STRUCTURE                                                                                                 */
+/* GRAIN STORAGE                                                                                                        */
 /************************************************************************************************************************/
-typedef struct cmgraininfo {
-	short busy; // array used to store the flag if a grain is currently playing or not
-	long grainpos; // used to store the current playback position per grain
-	long start; // used to store the start position in the buffer for each grain
-	long smp_length; // current grain length before pitch adjustment
-	long pitch_length; // current grain length after pitch adjustment
-	double pan_left; // pan information for left channel for each grain
-	double pan_right; // pan information for right channel for each grain
-	double gain; // gain information for each grain
-} cm_graininfo;
+typedef struct cmgrainstorage {
+	double *grain_left;
+	double *grain_right;
+	long grain_length;
+	long grain_pos;
+	short busy; // used to store the flag if a grain is currently playing or not
+} cm_grainstorage;
 
 
 /************************************************************************************************************************/
@@ -87,7 +84,7 @@ typedef struct _cmbuffercloud {
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
 	short bang_trigger; // trigger received from bang method
-	cm_graininfo *graininfo; // struct array for grain playback information
+	cm_grainstorage *grainstorage; // struct array for storing the grains and associated variables in memory
 } t_cmbuffercloud;
 
 
@@ -190,6 +187,7 @@ void ext_main(void *r) {
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
 void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
+	long i;
 	t_cmbuffercloud *x = (t_cmbuffercloud *)object_alloc(cmbuffercloud_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 11); // create 11 inlets
 
@@ -252,13 +250,28 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
-	// ALLOCATE MEMORY FOR THE GRAININFO STRUCT ARRAY
-	x->graininfo = (cm_graininfo *)sysmem_newptrclear((MAXGRAINS) * sizeof(cm_graininfo));
-	if (x->graininfo == NULL) {
+	
+	// ALLOCATE MEMORY FOR THE GRAINSTORAGE ARRAY
+	x->grainstorage = (cm_grainstorage *)sysmem_newptrclear((MAXGRAINS) * sizeof(cm_grainstorage));
+	if (x->grainstorage == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
+	
+	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH GRAINSTORAGE MEMBER
+	for (i = 0; i < MAXGRAINS; i++) {
+		x->grainstorage[i].grain_left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		if (x->grainstorage[i].grain_left == NULL) {
+			object_error((t_object *)x, "out of memory");
+			return NULL;
+		}
+		x->grainstorage[i].grain_right = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		if (x->grainstorage[i].grain_left == NULL) {
+			object_error((t_object *)x, "out of memory");
+			return NULL;
+		}
+	}
+	
 
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
@@ -349,6 +362,12 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	double outsample_right = 0.0; // temporary right output sample used for adding up all grain samples
 	int slot = 0; // variable for the current slot in the arrays to write grain info to
 	cm_panstruct panstruct; // struct for holding the calculated constant power left and right stereo values
+	
+	double start;
+	double smp_length;
+	double pitch_length;
+	double gain;
+	double pan_left, pan_right;
 
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
@@ -415,7 +434,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 
 		if (x->buffer_modified) { // reset all playback information when any of the buffers was modified
 			for (i = 0; i < MAXGRAINS; i++) {
-				x->graininfo[i].busy = 0;
+				x->grainstorage[i].busy = 0;
 			}
 			x->grains_count = 0;
 			x->buffer_modified = 0;
@@ -428,8 +447,8 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			// FIND A FREE SLOT FOR THE NEW GRAIN
 			i = 0;
 			while (i < x->grains_limit) {
-				if (!x->graininfo[i].busy) {
-					x->graininfo[i].busy = 1;
+				if (!x->grainstorage[i].busy) {
+					x->grainstorage[i].busy = 1;
 					slot = i;
 					break;
 				}
@@ -476,27 +495,34 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			}
 
 			// write grain lenght slot (non-pitch)
-			x->graininfo[slot].smp_length = x->randomized[1];
-			x->graininfo[slot].pitch_length = x->graininfo[slot].smp_length * x->randomized[2]; // length * pitch
+			smp_length = x->randomized[1];
+			pitch_length = smp_length * x->randomized[2]; // length * pitch
 			// check that grain length is not larger than size of buffer
-			if (x->graininfo[slot].pitch_length > b_framecount) {
-				x->graininfo[slot].pitch_length = b_framecount;
+			if (pitch_length > b_framecount) {
+				pitch_length = b_framecount;
 			}
+			x->grainstorage[slot].grain_length = smp_length;
+			
 			// write start position
-			x->graininfo[slot].start = x->randomized[0];
+			start = x->randomized[0];
 			// start position sanity testing
-			if (x->graininfo[slot].start > b_framecount - x->graininfo[slot].pitch_length) {
-				x->graininfo[slot].start = b_framecount - x->graininfo[slot].pitch_length;
+			if (start > b_framecount - pitch_length) {
+				start = b_framecount - pitch_length;
 			}
-			if (x->graininfo[slot].start < 0) {
-				x->graininfo[slot].start = 0;
+			if (start < 0) {
+				start = 0;
 			}
 			// compute pan values
 			cm_panning(&panstruct, &x->randomized[3], x); // calculate pan values in panstruct
-			x->graininfo[slot].pan_left = panstruct.left;
-			x->graininfo[slot].pan_right = panstruct.right;
+			pan_left = panstruct.left;
+			pan_right = panstruct.right;
 			// write gain value
-			x->graininfo[slot].gain = x->randomized[4];
+			gain = x->randomized[4];
+			
+			
+			// grain is written here
+			
+			
 		}
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
