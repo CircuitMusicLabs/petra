@@ -411,7 +411,6 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	// BUFFER CHECKS
 	if (!b_sample || !w_sample) { // if the sample buffer does not exist
 		goto zero;
-		object_error((t_object *)x, "DSP init: one of the buffers is not here");
 	}
 
 	// GET BUFFER INFORMATION
@@ -457,10 +456,6 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				trigger = 1;
 				x->bang_trigger = 0;
 			}
-		}
-
-		if (x->buffer_modified) {
-			x->buffer_modified = 0;
 		}
 		
 		/************************************************************************************************************************/
@@ -606,6 +601,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
 			x->limit_modified = 0; // reset limit modified checkflag
+			x->buffer_modified = 0;
 		}
 
 		/************************************************************************************************************************/
