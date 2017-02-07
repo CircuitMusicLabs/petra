@@ -56,6 +56,7 @@ typedef struct cmgrainmem {
 	short busy; // used to store the flag if a grain is currently playing or not
 } cm_grainmem;
 
+
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
 /************************************************************************************************************************/
@@ -524,6 +525,8 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			if (pitch_length > b_framecount) {
 				pitch_length = b_framecount;
 			}
+			x->grainmem[slot].length = smp_length;
+			
 			// write start position
 			start = x->randomized[0];
 			// start position sanity testing
@@ -595,7 +598,6 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 				}
 			}
 		}
-		
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
 			x->limit_modified = 0; // reset limit modified checkflag
