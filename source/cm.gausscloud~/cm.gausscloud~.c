@@ -595,6 +595,9 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 					x->grainmem[i].pos = 0;
 					x->grainmem[i].busy = 0;
 					x->grains_count--;
+					if (x->grains_count < 0) {
+						x->grains_count = 0;
+					}
 				}
 			}
 		}

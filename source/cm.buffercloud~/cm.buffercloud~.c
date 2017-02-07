@@ -520,7 +520,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			if (pitch_length > b_framecount) {
 				pitch_length = b_framecount;
 			}
-			x->grainmem[slot].length = smp_length;
+			x->grainmem[slot].length = smp_length; // IMPORTANT!! DO NOT FORGET TO WRITE THE SAMPLE LENGTH INTO THE MEMORY STRUCTURE
 			
 			// write start position
 			start = x->randomized[0];
@@ -595,6 +595,9 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 					x->grainmem[i].pos = 0;
 					x->grainmem[i].busy = 0;
 					x->grains_count--;
+					if (x->grains_count < 0) {
+						x->grains_count = 0;
+					}
 				}
 			}
 		}
