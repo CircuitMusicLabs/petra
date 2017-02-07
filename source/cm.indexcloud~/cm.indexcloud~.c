@@ -504,7 +504,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->w_writeflag && !x->buffer_modified && !x->w_window_modified) {
+		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->w_writeflag && !x->buffer_modified && !x->w_window_modified && b_sample) {
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
