@@ -45,7 +45,7 @@ After you cloned the repository, you have to pull the contents of the Max SDK su
 	git submodule update --init --recursive
 
 ### Compiling the External Objects (Mac OS)
-Go to ~/yourdirectory/source, open the included Xcode projects and compile the externals with via Product > Build (Command-B).
+Go to ~/yourdirectory/petra/source, open the included Xcode projects and compile the externals with via Product > Build (Command-B).
 
 ### Compiling the External Objects (Windows)
 Currently, the repository does not contain preconfigured project files for Visual Studio on Windows. Apparently, managing the locations of the Max SDK include-files is not as straight forward.
