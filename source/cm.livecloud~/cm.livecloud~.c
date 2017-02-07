@@ -487,18 +487,9 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			}
 		}
 
-		// check if buffer was modified (sample replaced, etc.)
-		if (x->buffer_modified) { // reset all playback information when any of the buffers was modified
-			for (i = 0; i < MAXGRAINS; i++) {
-				x->busy[i] = 0;
-			}
-			x->grains_count = 0;
-			x->buffer_modified = 0;
-		}
-
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->recordflag && !x->buffer_modified) {
+		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->recordflag && !x->buffer_modified && w_sample) {
 
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
@@ -663,6 +654,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		if (x->grains_count == 0) {
 			x->limit_modified = 0; // reset limit modified checkflag
 			x->recordflag = 0;
+			x->buffer_modified = 0;
 		}
 
 		/************************************************************************************************************************/
