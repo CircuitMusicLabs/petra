@@ -388,9 +388,9 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	cm_panstruct panstruct; // struct for holding the calculated constant power left and right stereo values
 	
 	long readpos;
-	double start;
-	double smp_length;
-	double pitch_length;
+	long start;
+	long smp_length;
+	long pitch_length;
 	double gain;
 	double pan_left, pan_right;
 
