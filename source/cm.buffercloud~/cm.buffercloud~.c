@@ -464,11 +464,6 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				x->bang_trigger = 0;
 			}
 		}
-		
-		// if buffer modified during DSP loop, force update of buffer info
-		if (x->buffer_modified) {
-			x->bufferstatus = cmbuffercloud_bufferinfo(x);
-		}
 
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
@@ -619,8 +614,10 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
 			x->limit_modified = 0; // reset limit modified checkflag
-			if (x->bufferstatus) {
-				x->buffer_modified = 0;
+			if (x->buffer_modified) {
+				if (x->bufferstatus) {
+					x->buffer_modified = 0;
+				}
 			}
 		}
 
