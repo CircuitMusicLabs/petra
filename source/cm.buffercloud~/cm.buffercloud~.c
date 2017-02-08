@@ -134,7 +134,7 @@ void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbuffercloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTION
-double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
+double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
 
 
 /************************************************************************************************************************/
@@ -467,13 +467,12 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		
 		// if buffer modified during DSP loop, force update of buffer info
 		if (x->buffer_modified) {
-			x->buffer_modified = 0;
 			x->bufferstatus = cmbuffercloud_bufferinfo(x);
 		}
 
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->buffer_modified && x->bufferstatus) {
+		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->buffer_modified && x->bufferstatus && b_sample && w_sample) {
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -538,8 +537,8 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			// write start position
 			start = x->randomized[0];
 			// start position sanity testing
-			if (start > x->b_framecount - (pitch_length + 1)) { // plus 1 because of interpolation sample increment
-				start = x->b_framecount - (pitch_length + 1);
+			if (start > x->b_framecount - pitch_length) {
+				start = x->b_framecount - pitch_length;
 			}
 			if (start < 0) {
 				start = 0;
@@ -556,7 +555,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			for (readpos = 0; readpos < smp_length; readpos++) {
 				if (x->attr_winterp) {
 					distance = ((double)readpos / (double)smp_length) * (double)x->w_framecount;
-					w_read = cm_lininterp(distance, w_sample, x->w_channelcount, 0);
+					w_read = cm_lininterp(distance, w_sample, x->w_channelcount, x->w_framecount, 0);
 				}
 				else {
 					index = (long)(((double)readpos / (double)smp_length) * (double)x->w_framecount);
@@ -568,8 +567,8 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				if (x->b_channelcount > 1 && x->attr_stereo) { // if more than one channel
 					if (x->attr_sinterp) {
 						// get interpolated sample
-						x->grainmem[slot].left[readpos] = ((cm_lininterp(distance, b_sample, x->b_channelcount, 0) * w_read) * pan_left) * gain;
-						x->grainmem[slot].right[readpos] = ((cm_lininterp(distance, b_sample, x->b_channelcount, 1) * w_read) * pan_right) * gain;
+						x->grainmem[slot].left[readpos] = ((cm_lininterp(distance, b_sample, x->b_channelcount, x->b_framecount, 0) * w_read) * pan_left) * gain;
+						x->grainmem[slot].right[readpos] = ((cm_lininterp(distance, b_sample, x->b_channelcount, x->b_framecount, 1) * w_read) * pan_right) * gain;
 					}
 					else {
 						// get non-interpolated sample
@@ -579,7 +578,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				}
 				else { // if only one channel
 					if (x->attr_sinterp) {
-						b_read = cm_lininterp(distance, b_sample, x->b_channelcount, 0) * w_read; // get interpolated sample
+						b_read = cm_lininterp(distance, b_sample, x->b_channelcount, x->b_framecount, 0) * w_read; // get interpolated sample
 						x->grainmem[slot].left[readpos] = (b_read * pan_left) * gain;
 						x->grainmem[slot].right[readpos] = (b_read * pan_right) * gain;
 					}
@@ -620,6 +619,9 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
 			x->limit_modified = 0; // reset limit modified checkflag
+			if (x->bufferstatus) {
+				x->buffer_modified = 0;
+			}
 		}
 
 		/************************************************************************************************************************/
@@ -1001,8 +1003,12 @@ double cm_random(double *min, double *max) {
 #endif
 }
 // LINEAR INTERPOLATION FUNCTION
-double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
+double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
 	long index = (long)distance; // get truncated index
+	long next = index + 1;
+	if (next > b_framecount) {
+		next = 0;
+	}
 	distance -= (long)distance; // calculate fraction value for interpolation
-	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+	return buffer[index * b_channelcount + channel] + distance * (buffer[next * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
 }
