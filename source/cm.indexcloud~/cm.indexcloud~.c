@@ -143,7 +143,7 @@ void cm_panning(cm_panstruct *panstruct, double *pos, t_cmindexcloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTIONS
-double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
+double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
 double cm_lininterpwin(double distance, double *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
 // WINDOW FUNCTIONS
 void cm_hann(double *window, long *length);
@@ -569,8 +569,8 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			// write start position
 			start = x->randomized[0];
 			// start position sanity testing
-			if (start > b_framecount - (pitch_length + 1)) { // plus 1 because of interpolation sample increment
-				start = b_framecount - (pitch_length + 1);
+			if (start > b_framecount - pitch_length) { // plus 1 because of interpolation sample increment
+				start = b_framecount - pitch_length;
 			}
 			if (start < 0) {
 				start = 0;
@@ -599,8 +599,8 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 				if (b_channelcount > 1 && x->attr_stereo) { // if more than one channel
 					if (x->attr_sinterp) {
 						// get interpolated sample
-						x->grainmem[slot].left[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, 0) * w_read) * pan_left) * gain;
-						x->grainmem[slot].right[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, 1) * w_read) * pan_right) * gain;
+						x->grainmem[slot].left[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read) * pan_left) * gain;
+						x->grainmem[slot].right[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 1) * w_read) * pan_right) * gain;
 					}
 					else {
 						// get non-interpolated sample
@@ -610,7 +610,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 				}
 				else { // if only one channel
 					if (x->attr_sinterp) {
-						b_read = cm_lininterp(distance, b_sample, b_channelcount, 0) * w_read; // get interpolated sample
+						b_read = cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read; // get interpolated sample
 						x->grainmem[slot].left[readpos] = (b_read * pan_left) * gain;
 						x->grainmem[slot].right[readpos] = (b_read * pan_right) * gain;
 					}
@@ -630,17 +630,19 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			limit = x->grains_limit;
 		}
 		
-		for (i = 0; i < limit; i++) {
-			if (x->grainmem[i].busy) {
-				r = x->grainmem[i].pos++;
-				outsample_left += x->grainmem[i].left[r];
-				outsample_right += x->grainmem[i].right[r];
-				if (x->grainmem[i].pos == x->grainmem[i].length) {
-					x->grainmem[i].pos = 0;
-					x->grainmem[i].busy = 0;
-					x->grains_count--;
-					if (x->grains_count < 0) {
-						x->grains_count = 0;
+		if (x->grains_count) {
+			for (i = 0; i < limit; i++) {
+				if (x->grainmem[i].busy) {
+					r = x->grainmem[i].pos++;
+					outsample_left += x->grainmem[i].left[r];
+					outsample_right += x->grainmem[i].right[r];
+					if (x->grainmem[i].pos == x->grainmem[i].length) {
+						x->grainmem[i].pos = 0;
+						x->grainmem[i].busy = 0;
+						x->grains_count--;
+						if (x->grains_count < 0) {
+							x->grains_count = 0;
+						}
 					}
 				}
 			}
@@ -1110,21 +1112,23 @@ double cm_random(double *min, double *max) {
 }
 
 // LINEAR INTERPOLATION FUNCTION
-double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
+double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
 	long index = (long)distance; // get truncated index
+	long next = index + 1;
+	if (next > b_framecount) {
+		next = 0;
+	}
 	distance -= (long)distance; // calculate fraction value for interpolation
-	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+	return buffer[index * b_channelcount + channel] + distance * (buffer[next * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
 }
 
 // LINEAR INTERPOLATION FUNCTION FOR WINDOW (passing douple pointer)
 double cm_lininterpwin(double distance, double *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
 	long index = (long)distance; // get truncated index
 	long next = index + 1;
-	
 	if (next > b_framecount) {
 		next = 0;
 	}
-	
 	distance -= (long)distance; // calculate fraction value for interpolation
 	return buffer[index * b_channelcount + channel] + distance * (buffer[next * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
 }
