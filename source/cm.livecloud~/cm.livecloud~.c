@@ -133,7 +133,7 @@ void cm_panning(cm_panstruct *panstruct, double *pos, t_cmlivecloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTION
-double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
+double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
 double cm_lininterpring(double distance, long index, long next, double *ringbuffer);
 
 
@@ -584,7 +584,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			for (readpos = 0; readpos < smp_length; readpos++) {
 				if (x->attr_winterp) {
 					distance = ((double)readpos / (double)smp_length) * (double)w_framecount;
-					w_read = cm_lininterp(distance, w_sample, w_channelcount, 0);
+					w_read = cm_lininterp(distance, w_sample, w_channelcount, w_framecount, 0);
 				}
 				else {
 					index = (long)(((double)readpos / (double)smp_length) * (double)w_framecount);
@@ -1005,10 +1005,14 @@ double cm_random(double *min, double *max) {
 #endif
 }
 // LINEAR INTERPOLATION FUNCTION
-double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
+double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
 	long index = (long)distance; // get truncated index
+	long next = index + 1;
+	if (next > b_framecount) {
+		next = 0;
+	}
 	distance -= (long)distance; // calculate fraction value for interpolation
-	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+	return buffer[index * b_channelcount + channel] + distance * (buffer[next * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
 }
 
 double cm_lininterpring(double distance, long index, long next, double *ringbuffer) {
