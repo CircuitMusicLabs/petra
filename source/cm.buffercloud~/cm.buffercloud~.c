@@ -64,11 +64,6 @@ typedef struct _cmbuffercloud {
 	t_buffer_ref *buffer; // sample buffer reference
 	t_symbol *window_name; // window buffer name
 	t_buffer_ref *w_buffer; // window buffer reference
-	t_atom_long b_framecount; // number of frames in the sample buffer
-	t_atom_long w_framecount; // number of frames in the window buffer
-	t_atom_long b_channelcount; // number of channels in the sample buffer
-	t_atom_long w_channelcount; // number of channels in the window buffer
-	t_bool bufferstatus;
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
 	short connect_status[FLOAT_INLETS]; // array for signal inlet connection statuses
 	double *object_inlets; // array to store the incoming values coming from the object inlets
@@ -320,9 +315,6 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		x->grainmem[i].pos = 0;
 		x->grainmem[i].busy = 0;
 	}
-	
-	// initialize the buffer-status to false
-	x->bufferstatus = false;
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -395,8 +387,6 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	double outsample_right = 0.0; // temporary right output sample used for adding up all grain samples
 	int slot = 0; // variable for the current slot in the arrays to write grain info to
 	cm_panstruct panstruct; // struct for holding the calculated constant power left and right stereo values
-	float *b_sample; // pointer to the first sample in the sample buffer
-	float *w_sample; // pointer to the first sample in the window buffer
 	
 	long readpos;
 	long start;
@@ -412,18 +402,23 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	// BUFFER VARIABLE DECLARATIONS
 	t_buffer_obj *buffer = buffer_ref_getobject(x->buffer);
 	t_buffer_obj *w_buffer = buffer_ref_getobject(x->w_buffer);
+	float *b_sample = buffer_locksamples(buffer);
+	float *w_sample = buffer_locksamples(w_buffer);
+	long b_framecount; // number of frames in the sample buffer
+	long w_framecount; // number of frames in the window buffer
+	t_atom_long b_channelcount; // number of channels in the sample buffer
+	t_atom_long w_channelcount; // number of channels in the window buffer
 	
-	// lock buffers
-	b_sample = buffer_locksamples(buffer);
-	w_sample = buffer_locksamples(w_buffer);
-	
-	// write buffer information and get status
-	x->bufferstatus = cmbuffercloud_bufferinfo(x);
-	
-	// if status returns false
-	if (!x->bufferstatus){
+	// BUFFER CHECKS
+	if (!b_sample || !w_sample) { // if the sample buffer does not exist
 		goto zero;
 	}
+	
+	// GET BUFFER INFORMATION
+	b_framecount = buffer_getframecount(buffer); // get number of frames in the sample buffer
+	w_framecount = buffer_getframecount(w_buffer); // get number of frames in the window buffer
+	b_channelcount = buffer_getchannelcount(buffer); // get number of channels in the sample buffer
+	w_channelcount = buffer_getchannelcount(w_buffer); // get number of channels in the sample buffer
 
 	// GET INLET VALUES
 	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
@@ -467,7 +462,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->buffer_modified && x->bufferstatus && b_sample && w_sample) {
+		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->buffer_modified && b_sample && w_sample) {
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -524,16 +519,16 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			smp_length = x->randomized[1];
 			pitch_length = smp_length * x->randomized[2]; // length * pitch
 			// check that grain length is not larger than size of buffer
-			if (pitch_length > x->b_framecount) {
-				pitch_length = x->b_framecount;
+			if (pitch_length > b_framecount) {
+				pitch_length = b_framecount;
 			}
 			x->grainmem[slot].length = smp_length; // IMPORTANT!! DO NOT FORGET TO WRITE THE SAMPLE LENGTH INTO THE MEMORY STRUCTURE
 			
 			// write start position
 			start = x->randomized[0];
 			// start position sanity testing
-			if (start > x->b_framecount - pitch_length) {
-				start = x->b_framecount - pitch_length;
+			if (start > b_framecount - pitch_length) {
+				start = b_framecount - pitch_length;
 			}
 			if (start < 0) {
 				start = 0;
@@ -549,37 +544,37 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			// grain is written into memory here
 			for (readpos = 0; readpos < smp_length; readpos++) {
 				if (x->attr_winterp) {
-					distance = ((double)readpos / (double)smp_length) * (double)x->w_framecount;
-					w_read = cm_lininterp(distance, w_sample, x->w_channelcount, x->w_framecount, 0);
+					distance = ((double)readpos / (double)smp_length) * (double)w_framecount;
+					w_read = cm_lininterp(distance, w_sample, w_channelcount, w_framecount, 0);
 				}
 				else {
-					index = (long)(((double)readpos / (double)smp_length) * (double)x->w_framecount);
+					index = (long)(((double)readpos / (double)smp_length) * (double)w_framecount);
 					w_read = w_sample[index];
 				}
 				// GET GRAIN SAMPLE FROM SAMPLE BUFFER
 				distance = start + (((double)readpos / (double)smp_length) * (double)pitch_length);
 				
-				if (x->b_channelcount > 1 && x->attr_stereo) { // if more than one channel
+				if (b_channelcount > 1 && x->attr_stereo) { // if more than one channel
 					if (x->attr_sinterp) {
 						// get interpolated sample
-						x->grainmem[slot].left[readpos] = ((cm_lininterp(distance, b_sample, x->b_channelcount, x->b_framecount, 0) * w_read) * pan_left) * gain;
-						x->grainmem[slot].right[readpos] = ((cm_lininterp(distance, b_sample, x->b_channelcount, x->b_framecount, 1) * w_read) * pan_right) * gain;
+						x->grainmem[slot].left[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read) * pan_left) * gain;
+						x->grainmem[slot].right[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 1) * w_read) * pan_right) * gain;
 					}
 					else {
 						// get non-interpolated sample
-						x->grainmem[slot].left[readpos] = ((b_sample[(long)distance * x->b_channelcount] * w_read) * pan_left) * gain;
-						x->grainmem[slot].right[readpos] = ((b_sample[((long)distance * x->b_channelcount) + 1] * w_read) * pan_right) * gain;
+						x->grainmem[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
+						x->grainmem[slot].right[readpos] = ((b_sample[((long)distance * b_channelcount) + 1] * w_read) * pan_right) * gain;
 					}
 				}
 				else { // if only one channel
 					if (x->attr_sinterp) {
-						b_read = cm_lininterp(distance, b_sample, x->b_channelcount, x->b_framecount, 0) * w_read; // get interpolated sample
+						b_read = cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read; // get interpolated sample
 						x->grainmem[slot].left[readpos] = (b_read * pan_left) * gain;
 						x->grainmem[slot].right[readpos] = (b_read * pan_right) * gain;
 					}
 					else {
-						x->grainmem[slot].left[readpos] = ((b_sample[(long)distance * x->b_channelcount] * w_read) * pan_left) * gain;
-						x->grainmem[slot].right[readpos] = ((b_sample[(long)distance * x->b_channelcount] * w_read) * pan_right) * gain;
+						x->grainmem[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
+						x->grainmem[slot].right[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_right) * gain;
 					}
 				}
 			}
@@ -614,11 +609,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
 			x->limit_modified = 0; // reset limit modified checkflag
-			if (x->buffer_modified) {
-				if (x->bufferstatus) {
-					x->buffer_modified = 0;
-				}
-			}
+			x->buffer_modified = 0;
 		}
 
 		/************************************************************************************************************************/
@@ -873,7 +864,12 @@ void cmbuffercloud_doset(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 		x->window_name = atom_getsym(av+1); // write buffer name into object structure
 		buffer_ref_set(x->buffer, x->buffer_name);
 		buffer_ref_set(x->w_buffer, x->window_name);
-		cmbuffercloud_bufferinfo(x);
+		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->buffer))) > 2) {
+			object_error((t_object *)x, "referenced sample buffer has more than 2 channels. using channels 1 and 2.");
+		}
+		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->w_buffer))) > 1) {
+			object_error((t_object *)x, "referenced window buffer has more than 1 channel. expect strange results.");
+		}
 	}
 	else {
 		object_error((t_object *)x, "%d arguments required (sample/window)", 2);
@@ -886,29 +882,6 @@ void cmbuffercloud_doset(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 // original quote from simpwave~ example: "calls set the buffer ref should happen on the main thread only" (typo?)
 void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 	defer(x, (method)cmbuffercloud_doset, s, ac, av);
-}
-
-
-/************************************************************************************************************************/
-/* THE BUFFER INFO METHOD																								*/
-/************************************************************************************************************************/
-t_bool cmbuffercloud_bufferinfo(t_cmbuffercloud *x) {
-	t_buffer_obj *b = buffer_ref_getobject(x->buffer);
-	t_buffer_obj *w = buffer_ref_getobject(x->w_buffer);
-	if (b) {
-		x->b_framecount = buffer_getframecount(b);
-		x->b_channelcount = buffer_getchannelcount(b);
-	}
-	if (w) {
-		x->w_framecount = buffer_getframecount(w);
-		x->w_channelcount = buffer_getchannelcount(w);
-	}
-	if (b && w) {
-		return true;
-	}
-	else {
-		return false;
-	}
 }
 
 
