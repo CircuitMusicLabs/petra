@@ -414,6 +414,10 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		goto zero;
 	}
 	
+	// NOTE:
+	// Never, ever, ever try to update the buffer information below during the DSP loop of the perform routine.
+	// Tried it and failed (horrible noise when called)!
+	
 	// GET BUFFER INFORMATION
 	b_framecount = buffer_getframecount(buffer); // get number of frames in the sample buffer
 	w_framecount = buffer_getframecount(w_buffer); // get number of frames in the window buffer
