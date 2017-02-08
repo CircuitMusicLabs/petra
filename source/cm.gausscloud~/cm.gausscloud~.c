@@ -586,17 +586,19 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			limit = x->grains_limit;
 		}
 		
-		for (i = 0; i < limit; i++) {
-			if (x->grainmem[i].busy) {
-				r = x->grainmem[i].pos++;
-				outsample_left += x->grainmem[i].left[r];
-				outsample_right += x->grainmem[i].right[r];
-				if (x->grainmem[i].pos == x->grainmem[i].length) {
-					x->grainmem[i].pos = 0;
-					x->grainmem[i].busy = 0;
-					x->grains_count--;
-					if (x->grains_count < 0) {
-						x->grains_count = 0;
+		if (x->grains_count) {
+			for (i = 0; i < limit; i++) {
+				if (x->grainmem[i].busy) {
+					r = x->grainmem[i].pos++;
+					outsample_left += x->grainmem[i].left[r];
+					outsample_right += x->grainmem[i].right[r];
+					if (x->grainmem[i].pos == x->grainmem[i].length) {
+						x->grainmem[i].pos = 0;
+						x->grainmem[i].busy = 0;
+						x->grains_count--;
+						if (x->grains_count < 0) {
+							x->grains_count = 0;
+						}
 					}
 				}
 			}
