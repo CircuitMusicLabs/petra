@@ -127,7 +127,7 @@ void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausscloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTION
-double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
+double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
 // GAUSS WINDOW FUNCTION
 double cm_gauss(long *pos, long *length, double *alpha);
 
@@ -452,7 +452,6 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 				x->bang_trigger = 0;
 			}
 		}
-
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
@@ -530,8 +529,8 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			// write start position
 			start = x->randomized[0];
 			// start position sanity testing
-			if (start > b_framecount - (pitch_length + 1)) {
-				start = b_framecount - (pitch_length + 1);
+			if (start > b_framecount - pitch_length) {
+				start = b_framecount - pitch_length;
 			}
 			if (start < 0) {
 				start = 0;
@@ -556,8 +555,8 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 				if (b_channelcount > 1 && x->attr_stereo) { // if more than one channel
 					if (x->attr_sinterp) {
 						// get interpolated sample
-						x->grainmem[slot].left[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, 0) * w_read) * pan_left) * gain;
-						x->grainmem[slot].right[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, 1) * w_read) * pan_right) * gain;
+						x->grainmem[slot].left[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read) * pan_left) * gain;
+						x->grainmem[slot].right[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 1) * w_read) * pan_right) * gain;
 					}
 					else {
 						x->grainmem[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
@@ -566,7 +565,7 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 				}
 				else {
 					if (x->attr_sinterp) {
-						b_read = cm_lininterp(distance, b_sample, b_channelcount, 0) * w_read; // get interpolated sample
+						b_read = cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read; // get interpolated sample
 						x->grainmem[slot].left[readpos] = (b_read * pan_left) * gain;
 						x->grainmem[slot].right[readpos] = (b_read * pan_right) * gain;
 					}
@@ -959,10 +958,14 @@ double cm_random(double *min, double *max) {
 #endif
 }
 // LINEAR INTERPOLATION FUNCTION
-double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
+double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
 	long index = (long)distance; // get truncated index
+	long next = index + 1;
+	if (next > b_framecount) {
+		next = 0;
+	}
 	distance -= (long)distance; // calculate fraction value for interpolation
-	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+	return buffer[index * b_channelcount + channel] + distance * (buffer[next * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
 }
 // GAUSS WINDOW FUNCTION
 double cm_gauss(long *pos, long *length, double *alpha) {
