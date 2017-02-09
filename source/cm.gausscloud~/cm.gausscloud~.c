@@ -32,7 +32,7 @@
 #define MAX_GRAINLENGTH 500 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MIN_PITCH 0.001 // min pitch
-#define MAX_PITCH 10 // max pitch
+#define MAX_PITCH 4 // max pitch
 #define MIN_PAN -1.0 // min pan
 #define MAX_PAN 1.0 // max pan
 #define MIN_GAIN 0.0 // min gain
@@ -46,19 +46,16 @@
 
 
 /************************************************************************************************************************/
-/* GRAIN INFO STRUCTURE                                                                                                 */
+/* GRAIN MEMORY STORAGE                                                                                                 */
 /************************************************************************************************************************/
-typedef struct cmgraininfo {
-	short busy; // array used to store the flag if a grain is currently playing or not
-	long grainpos; // used to store the current playback position per grain
-	long start; // used to store the start position in the buffer for each grain
-	long smp_length; // current grain length before pitch adjustment
-	long pitch_length; // current grain length after pitch adjustment
-	double pan_left; // pan information for left channel for each grain
-	double pan_right; // pan information for right channel for each grain
-	double gain; // gain information for each grain
-	double alpha; // alpha for gauss window for each grain
-} cm_graininfo;
+typedef struct cmgrainmem {
+	double *left;
+	double *right;
+	long length;
+	long pos;
+	short busy; // used to store the flag if a grain is currently playing or not
+} cm_grainmem;
+
 
 /************************************************************************************************************************/
 /* OBJECT STRUCTURE                                                                                                     */
@@ -86,7 +83,7 @@ typedef struct _cmgausscloud {
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
 	short bang_trigger;
-	cm_graininfo *graininfo; // struct array for grain playback information
+	cm_grainmem *grainmem; // struct array for grain playback information
 } t_cmgausscloud;
 
 
@@ -130,7 +127,7 @@ void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausscloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
 // LINEAR INTERPOLATION FUNCTION
-double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, short channel);
+double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
 // GAUSS WINDOW FUNCTION
 double cm_gauss(long *pos, long *length, double *alpha);
 
@@ -185,6 +182,7 @@ void ext_main(void *r) {
 /* NEW INSTANCE ROUTINE                                                                                                 */
 /************************************************************************************************************************/
 void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
+	long i;
 	t_cmgausscloud *x = (t_cmgausscloud *)object_alloc(cmgausscloud_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 13); // create 13 inlets
 
@@ -246,11 +244,25 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 
-	// ALLOCATE MEMORY FOR THE GRAININFO STRUCT ARRAY
-	x->graininfo = (cm_graininfo *)sysmem_newptrclear((MAXGRAINS) * sizeof(cm_graininfo));
-	if (x->graininfo == NULL) {
+	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
+	x->grainmem = (cm_grainmem *)sysmem_newptrclear((MAXGRAINS) * sizeof(cm_grainmem));
+	if (x->grainmem == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
+	}
+	
+	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH MEMBER OF THE GRAINMEM STRUCT
+	for (i = 0; i < MAXGRAINS; i++) {
+		x->grainmem[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		if (x->grainmem[i].left == NULL) {
+			object_error((t_object *)x, "out of memory");
+			return NULL;
+		}
+		x->grainmem[i].right = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		if (x->grainmem[i].right == NULL) {
+			object_error((t_object *)x, "out of memory");
+			return NULL;
+		}
 	}
 
 
@@ -290,7 +302,15 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
 	x->root2ovr2 = sqrt(2.0) * 0.5;
 
+	// bang trigger flag
 	x->bang_trigger = 0;
+	
+	// grainmem structure members
+	for (i = 0; i < MAXGRAINS; i++) {
+		x->grainmem[i].length = 0;
+		x->grainmem[i].pos = 0;
+		x->grainmem[i].busy = 0;
+	}
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -308,6 +328,7 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 /* THE 64 BIT DSP METHOD                                                                                                */
 /************************************************************************************************************************/
 void cmgausscloud_dsp64(t_cmgausscloud *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags) {
+	int i;
 	x->connect_status[0] = count[1]; // 2nd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[1] = count[2]; // 3rd inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[2] = count[3]; // 4th inlet: write connection flag into object structure (1 if signal connected)
@@ -323,6 +344,20 @@ void cmgausscloud_dsp64(t_cmgausscloud *x, t_object *dsp64, short *count, double
 
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
+		for (i = 0; i < MAXGRAINS; i++) {
+			x->grainmem[i].left = (double *)sysmem_resizeptrclear(x->grainmem[i].left, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+			if (x->grainmem[i].left == NULL) {
+				object_error((t_object *)x, "out of memory");
+				return;
+			}
+		}
+		for (i = 0; i < MAXGRAINS; i++) {
+			x->grainmem[i].right = (double *)sysmem_resizeptrclear(x->grainmem[i].right, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+			if (x->grainmem[i].right == NULL) {
+				object_error((t_object *)x, "out of memory");
+				return;
+			}
+		}
 	}
 	// calcuate the sampleRate-dependant test values
 	x->testvalues[2] = MIN_GRAINLENGTH * x->m_sr;
@@ -340,7 +375,7 @@ void cmgausscloud_dsp64(t_cmgausscloud *x, t_object *dsp64, short *count, double
 void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
-	long i, limit; // for loop counters
+	long i, limit, r; // for loop counters
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr; // current trigger value
 	double distance; // floating point index for reading from buffers
@@ -349,7 +384,15 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	double outsample_right = 0.0; // temporary right output sample used for adding up all grain samples
 	int slot = 0; // variable for the current slot in the arrays to write grain info to
 	cm_panstruct panstruct; // struct for holding the calculated constant power left and right stereo values
-
+	// grain generation variables
+	long readpos;
+	long start;
+	long smp_length;
+	long pitch_length;
+	double gain;
+	double pan_left, pan_right;
+	double alpha;
+	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
@@ -409,24 +452,17 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 				x->bang_trigger = 0;
 			}
 		}
-
-		if (x->buffer_modified) { // reset all playback information when any of the buffers was modified
-			for (i = 0; i < MAXGRAINS; i++) {
-				x->graininfo[i].busy = 0;
-			}
-			x->grains_count = 0;
-			x->buffer_modified = 0;
-		}
+		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->buffer_modified) { // based on zero crossing --> when ramp from 0-1 restarts.
+		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->buffer_modified && b_sample) {
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
 			i = 0;
 			while (i < x->grains_limit) {
-				if (!x->graininfo[i].busy) {
-					x->graininfo[i].busy = 1;
+				if (!x->grainmem[i].busy) {
+					x->grainmem[i].busy = 1;
 					slot = i;
 					break;
 				}
@@ -482,77 +518,82 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			}
 
 			// write grain lenght slot (non-pitch)
-			x->graininfo[slot].smp_length = x->randomized[1];
-			x->graininfo[slot].pitch_length = x->graininfo[slot].smp_length * x->randomized[2]; // length * pitch
+			smp_length = x->randomized[1];
+			pitch_length = smp_length * x->randomized[2]; // length * pitch
 			// check that grain length is not larger than size of buffer
-			if (x->graininfo[slot].pitch_length > b_framecount) {
-				x->graininfo[slot].pitch_length = b_framecount;
+			if (pitch_length > b_framecount) {
+				pitch_length = b_framecount;
 			}
+			x->grainmem[slot].length = smp_length;
+			
 			// write start position
-			x->graininfo[slot].start = x->randomized[0];
+			start = x->randomized[0];
 			// start position sanity testing
-			if (x->graininfo[slot].start > b_framecount - x->graininfo[slot].pitch_length) {
-				x->graininfo[slot].start = b_framecount - x->graininfo[slot].pitch_length;
+			if (start > b_framecount - pitch_length) {
+				start = b_framecount - pitch_length;
 			}
-			if (x->graininfo[slot].start < 0) {
-				x->graininfo[slot].start = 0;
+			if (start < 0) {
+				start = 0;
 			}
 			// compute pan values
 			cm_panning(&panstruct, &x->randomized[3], x); // calculate pan values in panstruct
-			x->graininfo[slot].pan_left = panstruct.left;
-			x->graininfo[slot].pan_right = panstruct.right;
+			pan_left = panstruct.left;
+			pan_right = panstruct.right;
 			// write gain value
-			x->graininfo[slot].gain = x->randomized[4];
+			gain = x->randomized[4];
 			// write alpha value
-			x->graininfo[slot].alpha = x->randomized[5];
-
-		}
-
-		/************************************************************************************************************************/
-		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->grains_count == 0 || !b_sample || x->buffer_modified) { // if grains count is zero, there is no playback to be calculated
-			*out_left++ = 0.0;
-			*out_right++ = 0.0;
-		}
-		else {
-			if (x->limit_modified) {
-				limit = x->grains_limit_old;
-			}
-			else {
-				limit = x->grains_limit;
-			}
-			for (i = 0; i < limit; i++) {
-				if (x->graininfo[i].busy) { // if the current slot contains grain playback information
-					// GET WINDOW SAMPLE FROM WINDOW BUFFER
-					w_read = cm_gauss(&x->graininfo[i].grainpos, &x->graininfo[i].smp_length, &x->graininfo[i].alpha);
-
-					// GET GRAIN SAMPLE FROM SAMPLE BUFFER
-					distance = x->graininfo[i].start + (((double)x->graininfo[i].grainpos++ / (double)x->graininfo[i].smp_length) * (double)x->graininfo[i].pitch_length);
-
-					if (b_channelcount > 1 && x->attr_stereo) { // if more than one channel
-						if (x->attr_sinterp) {
-							outsample_left += ((cm_lininterp(distance, b_sample, b_channelcount, 0) * w_read) * x->graininfo[i].pan_left) * x->graininfo[i].gain; // get interpolated sample
-							outsample_right += ((cm_lininterp(distance, b_sample, b_channelcount, 1) * w_read) * x->graininfo[i].pan_right) * x->graininfo[i].gain;
-						}
-						else {
-							outsample_left += ((b_sample[(long)distance * b_channelcount] * w_read) * x->graininfo[i].pan_left) * x->graininfo[i].gain;
-							outsample_right += ((b_sample[((long)distance * b_channelcount) + 1] * w_read) * x->graininfo[i].pan_right) * x->graininfo[i].gain;
-						}
+			alpha = x->randomized[5];
+			
+			
+			for (readpos = 0; readpos < smp_length; readpos++) { // if the current slot contains grain playback information
+				// GET WINDOW SAMPLE FROM WINDOW BUFFER
+				w_read = cm_gauss(&readpos, &smp_length, &alpha);
+				
+				// GET GRAIN SAMPLE FROM SAMPLE BUFFER
+				distance = start + (((double)readpos / (double)smp_length) * (double)pitch_length);
+				
+				if (b_channelcount > 1 && x->attr_stereo) { // if more than one channel
+					if (x->attr_sinterp) {
+						// get interpolated sample
+						x->grainmem[slot].left[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read) * pan_left) * gain;
+						x->grainmem[slot].right[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 1) * w_read) * pan_right) * gain;
 					}
 					else {
-						if (x->attr_sinterp) {
-							b_read = cm_lininterp(distance, b_sample, b_channelcount, 0) * w_read; // get interpolated sample
-							outsample_left += (b_read * x->graininfo[i].pan_left) * x->graininfo[i].gain;
-							outsample_right += (b_read * x->graininfo[i].pan_right) * x->graininfo[i].gain;
-						}
-						else {
-							outsample_left += ((b_sample[(long)distance * b_channelcount] * w_read) * x->graininfo[i].pan_left) * x->graininfo[i].gain;
-							outsample_right += ((b_sample[(long)distance * b_channelcount] * w_read) * x->graininfo[i].pan_right) * x->graininfo[i].gain;
-						}
+						x->grainmem[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
+						x->grainmem[slot].right[readpos] = ((b_sample[((long)distance * b_channelcount) + 1] * w_read) * pan_right) * gain;
 					}
-					if (x->graininfo[i].grainpos == x->graininfo[i].smp_length) { // if current grain has reached the end position
-						x->graininfo[i].grainpos = 0; // reset parameters for overwrite
-						x->graininfo[i].busy = 0;
+				}
+				else {
+					if (x->attr_sinterp) {
+						b_read = cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read; // get interpolated sample
+						x->grainmem[slot].left[readpos] = (b_read * pan_left) * gain;
+						x->grainmem[slot].right[readpos] = (b_read * pan_right) * gain;
+					}
+					else {
+						x->grainmem[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
+						x->grainmem[slot].right[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_right) * gain;
+					}
+				}
+			}
+		}
+		/************************************************************************************************************************/
+		// CONTINUE WITH THE PLAYBACK ROUTINE
+		if (x->limit_modified) {
+			limit = x->grains_limit_old;
+		}
+		else {
+			limit = x->grains_limit;
+		}
+		
+		if (x->grains_count) {
+			for (i = 0; i < limit; i++) {
+				if (x->grainmem[i].busy) {
+					r = x->grainmem[i].pos++;
+					outsample_left += x->grainmem[i].left[r];
+					outsample_right += x->grainmem[i].right[r];
+					if (x->grainmem[i].pos == x->grainmem[i].length) {
+						x->grainmem[i].pos = 0;
+						x->grainmem[i].busy = 0;
 						x->grains_count--;
 						if (x->grains_count < 0) {
 							x->grains_count = 0;
@@ -560,16 +601,19 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 					}
 				}
 			}
-			*out_left++ = outsample_left; // write added sample values to left output vector
-			*out_right++ = outsample_right; // write added sample values to right output vector
 		}
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
 			x->limit_modified = 0; // reset limit modified checkflag
+			x->buffer_modified = 0;
 		}
 
 		/************************************************************************************************************************/
 		x->tr_prev = tr_curr; // store current trigger value in object structure
+		
+		*out_left++ = outsample_left; // write added sample values to left output vector
+		*out_right++ = outsample_right; // write added sample values to right output vector
+		
 		outsample_left = 0.0;
 		outsample_right = 0.0;
 	}
@@ -657,10 +701,16 @@ void cmgausscloud_assist(t_cmgausscloud *x, void *b, long msg, long arg, char *d
 /* FREE FUNCTION                                                                                                        */
 /************************************************************************************************************************/
 void cmgausscloud_free(t_cmgausscloud *x) {
+	int i;
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
 	object_free(x->buffer); // free the buffer reference
-
-	sysmem_freeptr(x->graininfo); // free memory allocated to the graininfo array
+	
+	for (i = 0; i < MAXGRAINS; i++) {
+		sysmem_freeptr(x->grainmem[i].left);
+		sysmem_freeptr(x->grainmem[i].right);
+	}
+	sysmem_freeptr(x->grainmem);
+	
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
 	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
 	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
@@ -908,10 +958,14 @@ double cm_random(double *min, double *max) {
 #endif
 }
 // LINEAR INTERPOLATION FUNCTION
-double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, short channel) {
+double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
 	long index = (long)distance; // get truncated index
+	long next = index + 1;
+	if (next > b_framecount) {
+		next = 0;
+	}
 	distance -= (long)distance; // calculate fraction value for interpolation
-	return buffer[index * b_channelcount + channel] + distance * (buffer[(index + 1) * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+	return buffer[index * b_channelcount + channel] + distance * (buffer[next * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
 }
 // GAUSS WINDOW FUNCTION
 double cm_gauss(long *pos, long *length, double *alpha) {
