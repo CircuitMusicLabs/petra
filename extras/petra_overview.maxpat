@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 310.0, 203.0, 976.0, 609.0 ],
+		"rect" : [ 282.0, 89.0, 976.0, 779.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -38,6 +38,20 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"autofit" : 1,
+					"forceaspect" : 1,
+					"id" : "obj-3",
+					"maxclass" : "fpic",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "jit_matrix" ],
+					"patching_rect" : [ 30.0, 15.0, 633.0, 225.56138 ],
+					"pic" : "petra-logo.png"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"bgcolor" : [ 0.145098, 0.352941, 0.670588, 1.0 ],
 					"fontsize" : 14.0,
 					"id" : "obj-14",
@@ -46,7 +60,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 513.0, 436.576721, 219.0, 31.0 ],
+					"patching_rect" : [ 513.0, 607.576721, 219.0, 31.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "open the cm.livecloud~ helpfile",
@@ -64,7 +78,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 513.0, 469.576721, 142.0, 22.0 ],
+					"patching_rect" : [ 513.0, 640.576721, 142.0, 22.0 ],
 					"style" : "",
 					"text" : "zl.reg help cm.livecloud~"
 				}
@@ -79,7 +93,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 513.0, 493.576721, 52.0, 22.0 ],
+					"patching_rect" : [ 513.0, 664.576721, 52.0, 22.0 ],
 					"style" : "",
 					"text" : "pcontrol"
 				}
@@ -95,7 +109,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 513.0, 372.576721, 430.0, 47.0 ],
+					"patching_rect" : [ 513.0, 543.576721, 430.0, 47.0 ],
 					"style" : "",
 					"text" : "Polyphonic granulator object that records incoming audio into an internal circular buffer. Any signal can be granulated in real time with adjustable delay. The object uses a windowing function loaded into a buffer~ object."
 				}
@@ -109,7 +123,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 513.0, 341.576721, 430.0, 29.0 ],
+					"patching_rect" : [ 513.0, 512.576721, 430.0, 29.0 ],
 					"style" : "",
 					"text" : "cm.livecloud~"
 				}
@@ -126,7 +140,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 732.0, 520.576721, 219.0, 68.0 ],
+					"patching_rect" : [ 732.0, 691.576721, 219.0, 68.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "common object properties",
@@ -144,7 +158,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 732.0, 599.076721, 35.0, 22.0 ],
+					"patching_rect" : [ 732.0, 770.076721, 35.0, 22.0 ],
 					"style" : "",
 					"text" : "front"
 				}
@@ -167,7 +181,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 605.0, 270.0, 713.0, 587.0 ],
+						"rect" : [ 524.0, 172.0, 713.0, 587.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -336,7 +350,7 @@
  ]
 					}
 ,
-					"patching_rect" : [ 732.0, 625.576721, 160.0, 22.0 ],
+					"patching_rect" : [ 732.0, 796.576721, 160.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -360,7 +374,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 513.0, 264.576721, 219.0, 31.0 ],
+					"patching_rect" : [ 513.0, 435.576721, 219.0, 31.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "open the cm.gausscloud~ helpfile",
@@ -378,7 +392,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 513.0, 297.576721, 156.0, 22.0 ],
+					"patching_rect" : [ 513.0, 468.576721, 156.0, 22.0 ],
 					"style" : "",
 					"text" : "zl.reg help cm.gausscloud~"
 				}
@@ -393,7 +407,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 513.0, 321.576721, 52.0, 22.0 ],
+					"patching_rect" : [ 513.0, 492.576721, 52.0, 22.0 ],
 					"style" : "",
 					"text" : "pcontrol"
 				}
@@ -409,7 +423,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 513.0, 200.576721, 461.0, 60.0 ],
+					"patching_rect" : [ 513.0, 371.576721, 461.0, 60.0 ],
 					"style" : "",
 					"text" : "Polyphonic granulator object for granulation of mono and stereo audio files loaded into a buffer~ object. It uses a gaussian windowing function calculated inside the external itself. The shape of the gaussian window can be freely manipulated in real time and per grain with the min/max alpha value object inlets."
 				}
@@ -423,7 +437,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 513.0, 169.576721, 430.0, 29.0 ],
+					"patching_rect" : [ 513.0, 340.576721, 430.0, 29.0 ],
 					"style" : "",
 					"text" : "cm.gausscloud~"
 				}
@@ -439,7 +453,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 30.0, 436.576721, 219.0, 31.0 ],
+					"patching_rect" : [ 30.0, 607.576721, 219.0, 31.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "open the cm.indexcloud~ helpfile",
@@ -457,7 +471,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 30.0, 469.576721, 153.0, 22.0 ],
+					"patching_rect" : [ 30.0, 640.576721, 153.0, 22.0 ],
 					"style" : "",
 					"text" : "zl.reg help cm.indexcloud~"
 				}
@@ -472,7 +486,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 467.576721, 52.0, 22.0 ],
+					"patching_rect" : [ 30.0, 587.576721, 52.0, 22.0 ],
 					"style" : "",
 					"text" : "pcontrol"
 				}
@@ -488,7 +502,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 372.576721, 466.0, 60.0 ],
+					"patching_rect" : [ 30.0, 543.576721, 469.0, 60.0 ],
 					"style" : "",
 					"text" : "Polyphonic granulator object for granulation of mono and stereo audio files loaded into a buffer~ object. It uses a windowing function calculated inside the external itself. The windowing functions can be accessed with and index number supplied as an argument or with a message."
 				}
@@ -502,7 +516,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 341.576721, 423.0, 29.0 ],
+					"patching_rect" : [ 30.0, 512.576721, 423.0, 29.0 ],
 					"style" : "",
 					"text" : "cm.indexcloud~"
 				}
@@ -518,7 +532,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 200.576721, 433.0, 47.0 ],
+					"patching_rect" : [ 30.0, 371.576721, 433.0, 47.0 ],
 					"style" : "",
 					"text" : "Polyphonic granulator object for granulation of mono and stereo audio files loaded into a buffer~ object. It uses a windowing function loaded into a buffer~ object."
 				}
@@ -532,7 +546,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 169.576721, 423.0, 29.0 ],
+					"patching_rect" : [ 30.0, 340.576721, 423.0, 29.0 ],
 					"style" : "",
 					"text" : "cm.buffercloud~"
 				}
@@ -547,7 +561,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 231.0, 66.0, 718.0, 60.0 ],
+					"patching_rect" : [ 30.0, 251.826141, 913.0, 60.0 ],
 					"style" : "",
 					"text" : "2012 - 2017 by Circuit Music Labs. A set of polyphonic granular synthesis objects.\n\nAll external objects contained in the package (except for cm.livecloud~) can load and granulate both mono and stereo audio files loaded into a buffer~ object. All objects make use of sample accurate grain trigger methods."
 				}
@@ -563,7 +577,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 30.0, 264.576721, 219.0, 31.0 ],
+					"patching_rect" : [ 30.0, 435.576721, 219.0, 31.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "open the cm.buffercloud~ helpfile",
@@ -581,7 +595,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 30.0, 297.576721, 155.0, 22.0 ],
+					"patching_rect" : [ 30.0, 468.576721, 155.0, 22.0 ],
 					"style" : "",
 					"text" : "zl.reg help cm.buffercloud~"
 				}
@@ -596,37 +610,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 321.576721, 52.0, 22.0 ],
+					"patching_rect" : [ 30.0, 441.576721, 52.0, 22.0 ],
 					"style" : "",
 					"text" : "pcontrol"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontface" : 3,
-					"fontsize" : 36.0,
-					"id" : "obj-3",
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 231.0, 17.0, 551.0, 47.0 ],
-					"style" : "",
-					"text" : "petra by Circuit Music Labs"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"autofit" : 1,
-					"forceaspect" : 1,
-					"id" : "obj-1",
-					"maxclass" : "fpic",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "jit_matrix" ],
-					"patching_rect" : [ 14.0, 5.0, 200.0, 119.57672 ],
-					"pic" : "maxOverviewIcon.png"
 				}
 
 			}
@@ -724,7 +710,13 @@
  ],
 		"dependency_cache" : [ 			{
 				"name" : "maxOverviewIcon.png",
-				"bootpath" : "~/Documents/Max 7/Packages/petra/media/images",
+				"bootpath" : "~/Documents/MaxDeveloper/petra-dev/petra/media/images",
+				"type" : "PNG ",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "petra-logo.png",
+				"bootpath" : "~/Documents/MaxDeveloper/petra-dev/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
