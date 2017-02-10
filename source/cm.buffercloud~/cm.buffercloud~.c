@@ -38,7 +38,6 @@
 #define MIN_GAIN 0.0 // min gain
 #define MAX_GAIN 2.0  // max gain
 #define ARGUMENTS 3 // constant number of arguments required for the external
-#define MAXGRAINS 512 // maximum number of simultaneously playing grains
 #define FLOAT_INLETS 10 // number of object float inlets
 #define RANDMAX 10000
 
@@ -85,6 +84,7 @@ typedef struct _cmbuffercloud {
 	double root2ovr2; // root of 2 over two for panning function
 	short bang_trigger; // trigger received from bang method
 	cm_grainmem *grainmem; // struct array for storing the grains and associated variables in memory
+	long grainmem_size;
 } t_cmbuffercloud;
 
 
@@ -200,7 +200,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 	x->buffer_name = atom_getsymarg(0, argc, argv); // get user supplied argument for sample buffer
 	x->window_name = atom_getsymarg(1, argc, argv); // get user supplied argument for window buffer
-	x->grains_limit = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grains
+	x->grainmem_size = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grains
 
 	// HANDLE ATTRIBUTES
 	object_attr_setlong(x, gensym("stereo"), 0); // initialize stereo attribute
@@ -210,8 +210,8 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (1 - MAXGRAINS)
-	if (x->grains_limit < 1 || x->grains_limit > MAXGRAINS) {
-		object_error((t_object *)x, "maximum grains allowed is %d", MAXGRAINS);
+	if (x->grainmem_size < 1) {
+		object_error((t_object *)x, "maximum grains must be larger than 1");
 		return NULL;
 	}
 
@@ -253,14 +253,14 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
-	x->grainmem = (cm_grainmem *)sysmem_newptrclear((MAXGRAINS) * sizeof(cm_grainmem));
+	x->grainmem = (cm_grainmem *)sysmem_newptrclear((x->grainmem_size) * sizeof(cm_grainmem));
 	if (x->grainmem == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH MEMBER OF THE GRAINMEM STRUCT
-	for (i = 0; i < MAXGRAINS; i++) {
+	for (i = 0; i < x->grainmem_size; i++) {
 		x->grainmem[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 		if (x->grainmem[i].left == NULL) {
 			object_error((t_object *)x, "out of memory");
@@ -310,11 +310,12 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->bang_trigger = 0;
 	
 	// grainmem structure members
-	for (i = 0; i < MAXGRAINS; i++) {
+	for (i = 0; i < x->grainmem_size; i++) {
 		x->grainmem[i].length = 0;
 		x->grainmem[i].pos = 0;
 		x->grainmem[i].busy = 0;
 	}
+	x->grains_limit = x->grainmem_size;
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -347,14 +348,14 @@ void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, doub
 
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
-		for (i = 0; i < MAXGRAINS; i++) {
+		for (i = 0; i < x->grainmem_size; i++) {
 			x->grainmem[i].left = (double *)sysmem_resizeptrclear(x->grainmem[i].left, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 			if (x->grainmem[i].left == NULL) {
 				object_error((t_object *)x, "out of memory");
 				return;
 			}
 		}
-		for (i = 0; i < MAXGRAINS; i++) {
+		for (i = 0; i < x->grainmem_size; i++) {
 			x->grainmem[i].right = (double *)sysmem_resizeptrclear(x->grainmem[i].right, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 			if (x->grainmem[i].right == NULL) {
 				object_error((t_object *)x, "out of memory");
@@ -710,7 +711,7 @@ void cmbuffercloud_free(t_cmbuffercloud *x) {
 	object_free(x->buffer); // free the buffer reference
 	object_free(x->w_buffer); // free the window buffer reference
 	
-	for (i = 0; i < MAXGRAINS; i++) {
+	for (i = 0; i < x->grainmem_size; i++) {
 		sysmem_freeptr(x->grainmem[i].left);
 		sysmem_freeptr(x->grainmem[i].right);
 	}
@@ -895,13 +896,14 @@ void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 void cmbuffercloud_limit(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
-	if (arg < 1 || arg > MAXGRAINS) {
-		object_error((t_object *)x, "value must be in the range 1 - %d", MAXGRAINS);
+	if (arg < 1 || arg > x->grainmem_size) {
+		object_error((t_object *)x, "grain limit must be in the range 1 - %d", x->grainmem_size);
 	}
 	else {
 		x->grains_limit_old = x->grains_limit;
 		x->grains_limit = arg;
 		x->limit_modified = 1;
+		object_post((t_object *)x, "new grain limit %d", x->grains_limit);
 	}
 }
 
