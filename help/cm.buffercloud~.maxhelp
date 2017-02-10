@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 231.0, 147.0, 1014.0, 619.0 ],
+		"rect" : [ 189.0, 129.0, 1014.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -1797,7 +1797,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 231.0, 173.0, 1014.0, 593.0 ],
+						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -2996,7 +2996,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -4502,58 +4502,6 @@
 ,
 									"style" : "",
 									"text" : "p mousegate"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-24",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 2,
-									"outlettype" : [ "float", "bang" ],
-									"patching_rect" : [ 238.099976, 434.5, 199.0, 22.0 ],
-									"style" : "",
-									"text" : "buffer~ winsample2 hanning.wav"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-1",
-									"maxclass" : "newobj",
-									"numinlets" : 1,
-									"numoutlets" : 2,
-									"outlettype" : [ "float", "bang" ],
-									"patching_rect" : [ 238.099976, 402.5, 199.0, 22.0 ],
-									"style" : "",
-									"text" : "buffer~ cloudsample2 jongly.aif"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"bubble" : 1,
-									"id" : "obj-56",
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 440.5, 434.5, 103.0, 24.0 ],
-									"style" : "",
-									"text" : "Window buffer"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"bubble" : 1,
-									"id" : "obj-55",
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 440.5, 405.0, 103.0, 24.0 ],
-									"style" : "",
-									"text" : "Sample buffer"
 								}
 
 							}
@@ -6858,7 +6806,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
+						"rect" : [ 189.0, 155.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -8933,6 +8881,20 @@
 						"showontab" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
+									"hidden" : 1,
+									"id" : "obj-1",
+									"maxclass" : "newobj",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "bang" ],
+									"patching_rect" : [ 44.0, 145.0, 60.0, 22.0 ],
+									"style" : "",
+									"text" : "loadbang"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"bgcolor" : [ 0.145098, 0.352941, 0.670588, 1.0 ],
 									"fontface" : 1,
 									"fontsize" : 18.0,
@@ -9034,7 +8996,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 6.0, 32.055748, 345.0, 207.726316 ],
+													"patching_rect" : [ 6.0, 32.055748, 345.0, 208.452632 ],
 													"pic" : "triggers-ramp.png"
 												}
 
@@ -9983,6 +9945,15 @@
 							}
  ],
 						"lines" : [ 							{
+								"patchline" : 								{
+									"destination" : [ "obj-38", 0 ],
+									"disabled" : 0,
+									"hidden" : 1,
+									"source" : [ "obj-1", 0 ]
+								}
+
+							}
+, 							{
 								"patchline" : 								{
 									"destination" : [ "obj-6", 3 ],
 									"disabled" : 0,
@@ -11300,7 +11271,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -12054,12 +12025,6 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "maxOverviewIcon.png",
-				"bootpath" : "~/Documents/MaxDeveloper/petra-dev/petra/media/images",
-				"type" : "PNG ",
-				"implicit" : 1
-			}
-, 			{
 				"name" : "triggers-zero-crossing.png",
 				"bootpath" : "~/Documents/MaxDeveloper/petra-dev/petra/media/images",
 				"type" : "PNG ",
