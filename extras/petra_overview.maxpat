@@ -563,7 +563,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 254.826141, 913.0, 60.0 ],
 					"style" : "",
-					"text" : "2012 - 2017 by Circuit Music Labs. A set of polyphonic granular synthesis objects.\n\nAll external objects contained in the package (except for cm.livecloud~) can load and granulate both mono and stereo audio files loaded into a buffer~ object. All objects make use of sample accurate grain trigger methods."
+					"text" : "2012 - 2017 by circuit.music.labs. A set of polyphonic granular synthesis objects.\n\nAll external objects contained in the package (except for cm.livecloud~) can load and granulate both mono and stereo audio files loaded into a buffer~ object. All objects make use of sample accurate grain trigger methods."
 				}
 
 			}
