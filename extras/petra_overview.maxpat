@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 282.0, 89.0, 976.0, 779.0 ],
+		"rect" : [ 282.0, 89.0, 976.0, 683.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -140,7 +140,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 732.0, 691.576721, 219.0, 68.0 ],
+					"patching_rect" : [ 724.0, 113.576721, 219.0, 68.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "common object properties",
@@ -158,7 +158,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 732.0, 770.076721, 35.0, 22.0 ],
+					"patching_rect" : [ 724.0, 188.076721, 35.0, 22.0 ],
 					"style" : "",
 					"text" : "front"
 				}
@@ -181,7 +181,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 524.0, 172.0, 713.0, 587.0 ],
+						"rect" : [ 469.0, 123.0, 713.0, 587.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -350,7 +350,7 @@
  ]
 					}
 ,
-					"patching_rect" : [ 732.0, 796.576721, 160.0, 22.0 ],
+					"patching_rect" : [ 724.0, 216.576721, 160.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -561,7 +561,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 251.826141, 913.0, 60.0 ],
+					"patching_rect" : [ 30.0, 254.826141, 913.0, 60.0 ],
 					"style" : "",
 					"text" : "2012 - 2017 by Circuit Music Labs. A set of polyphonic granular synthesis objects.\n\nAll external objects contained in the package (except for cm.livecloud~) can load and granulate both mono and stereo audio files loaded into a buffer~ object. All objects make use of sample accurate grain trigger methods."
 				}
