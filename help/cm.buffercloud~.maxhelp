@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 369.0, 181.0, 1014.0, 619.0 ],
+		"rect" : [ 231.0, 147.0, 1014.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -1177,7 +1177,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -1797,7 +1797,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
+						"rect" : [ 231.0, 173.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -3013,7 +3013,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 166.0, 56.0, 756.0, 36.0 ],
 									"style" : "",
-									"text" : "cm.buffercloud~ is able to overlay a maximum of 512 grains that play back simultaneously. Since granulation is a process that is quite heavy on the CPU, the actual upper limit is specified with the third argument when loading the object."
+									"text" : "cm.buffercloud~ is able to overlay a maximum of 512 grains that play back simultaneously. Since granulation is a process that is quite heavy on the CPU, the actual upper limit can be specified with the third argument when loading the object."
 								}
 
 							}
@@ -4837,7 +4837,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -6894,9 +6894,9 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 76.0, 756.000061, 33.0 ],
+									"patching_rect" : [ 166.0, 76.0, 759.0, 33.0 ],
 									"style" : "",
-									"text" : "When you change the buffer references, cm.buffercloud~ finishes all active grains. Once all grains have finished, granulation restarts with the updated buffer references."
+									"text" : "When you change the buffer~ references, cm.buffercloud~ finishes all active grains. Once all grains have finished, granulation restarts with the updated buffer references."
 								}
 
 							}
@@ -6910,7 +6910,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 411.5, 144.5, 147.0, 37.0 ],
 									"style" : "",
-									"text" : "Change the buffer references"
+									"text" : "Change the buffer~ references"
 								}
 
 							}
@@ -8241,7 +8241,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -8257,7 +8257,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 166.0, 56.0, 756.0, 21.0 ],
 									"style" : "",
-									"text" : "The buffers referenced by cm.buffercloud~ can be changed with the set method."
+									"text" : "The buffers referenced by cm.buffercloud~ can be changed with the set message, followed by the buffer~ references."
 								}
 
 							}
@@ -8844,7 +8844,7 @@
  ]
 					}
 ,
-					"patching_rect" : [ 14.0, 174.0, 120.0, 22.0 ],
+					"patching_rect" : [ 14.0, 174.0, 127.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -8854,7 +8854,7 @@
 					}
 ,
 					"style" : "",
-					"text" : "p \"buffer references\""
+					"text" : "p \"buffer~ references\""
 				}
 
 			}
@@ -8983,7 +8983,7 @@
 											"modernui" : 1
 										}
 ,
-										"rect" : [ 483.0, 253.0, 746.0, 273.0 ],
+										"rect" : [ 481.0, 254.0, 746.0, 273.0 ],
 										"bglocked" : 0,
 										"openinpresentation" : 0,
 										"default_fontsize" : 12.0,
@@ -9010,6 +9010,7 @@
 										"tags" : "",
 										"style" : "",
 										"subpatcher_template" : "",
+										"visible" : 1,
 										"boxes" : [ 											{
 												"box" : 												{
 													"fontsize" : 13.0,
@@ -9034,7 +9035,7 @@
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
 													"patching_rect" : [ 6.0, 32.055748, 345.0, 207.726316 ],
-													"pic" : "Macintosh HD:/Users/matthias/Documents/MaxDeveloper/petra-graphics/triggers-ramp.png"
+													"pic" : "triggers-ramp.png"
 												}
 
 											}
@@ -9048,7 +9049,7 @@
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
 													"patching_rect" : [ 377.0, 32.055748, 345.0, 208.164557 ],
-													"pic" : "/Users/matthias/Documents/MaxDeveloper/petra-graphics/triggers-zero-crossing.png"
+													"pic" : "triggers-zero-crossing.png"
 												}
 
 											}
@@ -9174,7 +9175,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 89.0, 756.0, 47.0 ],
+									"patching_rect" : [ 166.0, 89.0, 758.0, 47.0 ],
 									"style" : "",
 									"text" : "Optionally, trigger detection can be set to zero-crossing detection with the @zero attribute. With the @zero attribute set to 1, cm.buffercloud~ triggers a grain each time the trigger signal changes from zero to non-zero (e.g. the signal produced by cycle~, or any other sound source imaginable."
 								}
@@ -9725,7 +9726,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -10507,7 +10508,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 369.0, 207.0, 1014.0, 593.0 ],
+						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -12043,13 +12044,13 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
-			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
 			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
 			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
-			"obj-4::obj-23" : [ "live.gain~[3]", "live.gain~", 0 ],
-			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
 			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
-			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ]
+			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
+			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
+			"obj-4::obj-23" : [ "live.gain~[3]", "live.gain~", 0 ],
+			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{
@@ -12060,13 +12061,13 @@
 			}
 , 			{
 				"name" : "triggers-zero-crossing.png",
-				"bootpath" : "~/Documents/MaxDeveloper/petra-graphics",
+				"bootpath" : "~/Documents/MaxDeveloper/petra-dev/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "triggers-ramp.png",
-				"bootpath" : "~/Documents/MaxDeveloper/petra-graphics",
+				"bootpath" : "~/Documents/MaxDeveloper/petra-dev/petra/media/images",
 				"type" : "PNG ",
 				"implicit" : 1
 			}
