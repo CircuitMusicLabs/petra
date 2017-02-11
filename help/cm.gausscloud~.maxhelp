@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 267.0, 199.0, 1014.0, 619.0 ],
+		"rect" : [ 215.0, 140.0, 1014.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -409,7 +409,6 @@
 													"numinlets" : 1,
 													"numoutlets" : 0,
 													"patching_rect" : [ 632.699951, 182.0, 30.0, 30.0 ],
-													"presentation_rect" : [ 632.699951, 184.0, 0.0, 0.0 ],
 													"style" : ""
 												}
 
@@ -1169,11 +1168,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 214.5, 103.0, 24.0 ],
+									"patching_rect" : [ 8.0, 209.5, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -1266,7 +1266,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -1489,7 +1489,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.gausscloud~ cloudsample1 128"
+									"text" : "cm.gausscloud~ cloudsample1 32"
 								}
 
 							}
@@ -1951,6 +1951,77 @@
 						"showontab" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
+									"fontface" : 1,
+									"id" : "obj-26",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 239.999969, 377.0, 42.750031, 20.0 ],
+									"style" : "",
+									"text" : "Note:"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-29",
+									"linecount" : 4,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 239.999969, 394.0, 443.0, 60.0 ],
+									"style" : "",
+									"text" : "When you are currently playing a large amount of grains and switch from a high limit to a low limit, over-triggering can occur. This is nothing terrible per-se, but can be nticed by pulsating bursts of grain clouds. To avoid this reduce the density and work your way up to the new limit."
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"angle" : 270.0,
+									"bgcolor" : [ 0.65098, 0.666667, 0.662745, 1.0 ],
+									"id" : "obj-18",
+									"maxclass" : "panel",
+									"mode" : 0,
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 235.999969, 376.0, 451.950043, 84.0 ],
+									"proportion" : 0.39,
+									"style" : ""
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontsize" : 12.0,
+									"id" : "obj-3",
+									"linecount" : 3,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 166.0, 91.0, 805.0, 47.0 ],
+									"style" : "",
+									"text" : "This variable cloud size limit can be changed on the fly with the limit message followed by an integer. cm.gausscloud~ then finishes all active grains and restarts granulation with the new limit. By default, the limit property is equal to the maximum cloud size. The new limit value must be lower than the maximum cloud size."
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontface" : 0,
+									"fontname" : "Arial",
+									"fontsize" : 13.0,
+									"id" : "obj-25",
+									"linecount" : 2,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 166.0, 56.0, 811.0, 36.0 ],
+									"style" : "",
+									"text" : "cm.gausscloud~ can create grain clouds with the maximum amount of overlapping grains that you specify with the second argument when you load the object. To save processing power, you can reduce the cloud size so you don't run out of CPU power by accident."
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"fontname" : "Arial",
 									"fontsize" : 12.0,
 									"id" : "obj-56",
@@ -2041,39 +2112,13 @@
 							}
 , 							{
 								"box" : 								{
-									"id" : "obj-29",
-									"linecount" : 3,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 410.799988, 153.5, 555.200012, 47.0 ],
-									"style" : "",
-									"text" : "When you are currently playing a large amount of grains and switch from a high limit to a low limit, over-triggering can occur. This is nothing terrible per-se, but can be nticed by pulsating bursts of grain clouds. To avoid this reduce the density and work your way up to the new limit."
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontface" : 1,
-									"id" : "obj-26",
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 410.799988, 136.5, 159.0, 20.0 ],
-									"style" : "",
-									"text" : "Note:"
-								}
-
-							}
-, 							{
-								"box" : 								{
 									"bubble" : 1,
 									"id" : "obj-84",
 									"linecount" : 2,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 295.099976, 153.5, 107.0, 37.0 ],
+									"patching_rect" : [ 295.099976, 158.5, 107.0, 37.0 ],
 									"style" : "",
 									"text" : "Change the grain limit"
 								}
@@ -2086,9 +2131,9 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 238.099976, 176.0, 55.0, 22.0 ],
+									"patching_rect" : [ 238.099976, 181.0, 49.0, 22.0 ],
 									"style" : "",
-									"text" : "limit 256"
+									"text" : "limit 16"
 								}
 
 							}
@@ -2099,23 +2144,9 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 238.099976, 149.0, 55.0, 22.0 ],
+									"patching_rect" : [ 238.099976, 154.0, 42.0, 22.0 ],
 									"style" : "",
-									"text" : "limit 64"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontsize" : 12.0,
-									"id" : "obj-3",
-									"linecount" : 2,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 92.0, 756.0, 33.0 ],
-									"style" : "",
-									"text" : "The limit can be changed on the fly with the limit message, followed by an integer specifying the new limit. cm.gausscloud~ then finishes all active grains and restarts granulation with the new limit."
+									"text" : "limit 8"
 								}
 
 							}
@@ -2280,7 +2311,7 @@
  ]
 									}
 ,
-									"patching_rect" : [ 181.583313, 359.0, 131.583344, 22.0 ],
+									"patching_rect" : [ 181.583313, 337.5, 131.583344, 22.0 ],
 									"saved_object_attributes" : 									{
 										"description" : "",
 										"digest" : "",
@@ -2360,7 +2391,6 @@
 													"numinlets" : 1,
 													"numoutlets" : 0,
 													"patching_rect" : [ 627.699951, 182.0, 30.0, 30.0 ],
-													"presentation_rect" : [ 627.699951, 180.0, 0.0, 0.0 ],
 													"style" : ""
 												}
 
@@ -2557,7 +2587,7 @@
  ]
 									}
 ,
-									"patching_rect" : [ 195.199951, 202.5, 569.400024, 22.0 ],
+									"patching_rect" : [ 195.199951, 207.5, 569.400024, 22.0 ],
 									"saved_object_attributes" : 									{
 										"description" : "",
 										"digest" : "",
@@ -3120,11 +3150,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 214.5, 103.0, 24.0 ],
+									"patching_rect" : [ 8.0, 209.5, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -3138,7 +3169,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 627.5, 433.0, 79.0, 22.0 ],
+									"patching_rect" : [ 706.25, 432.0, 79.0, 22.0 ],
 									"style" : "",
 									"text" : "gate"
 								}
@@ -3219,22 +3250,6 @@
 									"outlettype" : [ "jit_matrix" ],
 									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
 									"pic" : "maxOverviewIcon.png"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontface" : 0,
-									"fontname" : "Arial",
-									"fontsize" : 13.0,
-									"id" : "obj-25",
-									"linecount" : 2,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 56.0, 756.0, 36.0 ],
-									"style" : "",
-									"text" : "cm.gausscloud~ is able to overlay a maximum of 512 grains that play back simultaneously. Since granulation is a process that is quite heavy on the CPU, the actual upper limit can be specified with the third argument when loading the object."
 								}
 
 							}
@@ -3440,7 +3455,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.gausscloud~ cloudsample1 128"
+									"text" : "cm.gausscloud~ cloudsample1 32"
 								}
 
 							}
@@ -3639,7 +3654,7 @@
 									"destination" : [ "obj-43", 0 ],
 									"disabled" : 0,
 									"hidden" : 1,
-									"midpoints" : [ 779.099976, 608.5, 951.049988, 608.5, 951.049988, 428.5, 637.0, 428.5 ],
+									"midpoints" : [ 779.099976, 608.5, 951.049988, 608.5, 951.049988, 428.5, 715.75, 428.5 ],
 									"source" : [ "obj-67", 1 ]
 								}
 
@@ -3812,7 +3827,7 @@
 									"destination" : [ "obj-43", 1 ],
 									"disabled" : 0,
 									"hidden" : 1,
-									"midpoints" : [ 191.083313, 361.75, 697.0, 361.75 ],
+									"midpoints" : [ 191.083313, 361.75, 775.75, 361.75 ],
 									"source" : [ "obj-81", 0 ]
 								}
 
@@ -4989,11 +5004,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 214.5, 103.0, 24.0 ],
+									"patching_rect" : [ 8.0, 209.5, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -5086,7 +5102,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -5301,7 +5317,7 @@
 									"numinlets" : 13,
 									"numoutlets" : 3,
 									"outlettype" : [ "signal", "signal", "int" ],
-									"patching_rect" : [ 115.999985, 305.0, 806.0, 22.0 ],
+									"patching_rect" : [ 115.999985, 305.0, 805.999939, 22.0 ],
 									"saved_object_attributes" : 									{
 										"s_interp" : 1,
 										"stereo" : 0,
@@ -5309,7 +5325,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.gausscloud~ cloudsample1 128"
+									"text" : "cm.gausscloud~ cloudsample1 32"
 								}
 
 							}
@@ -8446,11 +8462,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 214.5, 103.0, 24.0 ],
+									"patching_rect" : [ 8.0, 209.5, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -8765,7 +8782,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.gausscloud~ cloudsample2 128"
+									"text" : "cm.gausscloud~ cloudsample2 32"
 								}
 
 							}
@@ -9531,7 +9548,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.gausscloud~ cloudsample1 128"
+									"text" : "cm.gausscloud~ cloudsample1 32"
 								}
 
 							}
@@ -9546,7 +9563,7 @@
 									"numoutlets" : 3,
 									"outlettype" : [ "", "", "int" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 723.0, 375.0, 199.0, 29.0 ],
+									"patching_rect" : [ 750.0, 189.0, 172.0, 37.0 ],
 									"rounded" : 8.0,
 									"style" : "",
 									"text" : "triggers explained",
@@ -10329,7 +10346,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -10850,6 +10867,7 @@
 									"destination" : [ "obj-78", 0 ],
 									"disabled" : 0,
 									"hidden" : 1,
+									"midpoints" : [ 759.5, 234.25, 938.399963, 234.25 ],
 									"source" : [ "obj-68", 0 ]
 								}
 
@@ -10959,7 +10977,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 267.0, 225.0, 1014.0, 593.0 ],
+						"rect" : [ 215.0, 166.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -11158,7 +11176,6 @@
 													"numinlets" : 1,
 													"numoutlets" : 0,
 													"patching_rect" : [ 636.699951, 182.0, 30.0, 30.0 ],
-													"presentation_rect" : [ 636.699951, 183.0, 0.0, 0.0 ],
 													"style" : ""
 												}
 
@@ -11612,11 +11629,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 194.5, 103.0, 24.0 ],
+									"patching_rect" : [ 8.999985, 191.0, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -11867,7 +11885,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 166.0, 105.5, 229.0, 20.0 ],
 									"style" : "",
-									"text" : "cm.gausscloud~ takes 3 arguments:"
+									"text" : "cm.gausscloud~ takes 2 arguments:"
 								}
 
 							}
@@ -11882,7 +11900,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 166.0, 125.5, 534.0, 33.0 ],
 									"style" : "",
-									"text" : "1) Buffer containing the playback sample\n2) Number specifying the maximum number of overlapping grains (maximum value: 512)"
+									"text" : "1) Name of the buffer~ object containing the playback sample\n2) Maximum cloud size (int, the maximum amount of overlapping grains)"
 								}
 
 							}
@@ -12102,7 +12120,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.gausscloud~ cloudsample1 128"
+									"text" : "cm.gausscloud~ cloudsample1 32"
 								}
 
 							}
@@ -12614,12 +12632,12 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
-			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
-			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
-			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
-			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
-			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
 			"obj-4::obj-23" : [ "live.gain~[3]", "live.gain~", 0 ],
+			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
+			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
+			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
+			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
+			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
 			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ]
 		}
 ,

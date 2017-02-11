@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 259.0, 172.0, 1014.0, 619.0 ],
+		"rect" : [ 254.0, 157.0, 1014.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -84,15 +84,30 @@
 						"showontab" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
+									"fontface" : 1,
+									"id" : "obj-26",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 241.499985, 380.0, 42.750031, 20.0 ],
+									"style" : "",
+									"text" : "Note:"
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"bubble" : 1,
+									"bubblepoint" : 1.0,
 									"bubbleside" : 2,
+									"fontface" : 1,
 									"fontname" : "Arial",
 									"fontsize" : 13.0,
 									"id" : "obj-61",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 859.799988, 425.5, 65.0, 40.0 ],
+									"patching_rect" : [ 763.799988, 425.5, 72.0, 40.0 ],
 									"style" : "",
 									"text" : "Click me!"
 								}
@@ -323,7 +338,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 354.68103, 228.563232, 111.0, 87.684932 ],
+													"patching_rect" : [ 354.68103, 228.563232, 111.0, 111.0 ],
 													"pic" : "window_gauss8.png"
 												}
 
@@ -337,7 +352,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 241.787354, 228.563232, 111.0, 87.684932 ],
+													"patching_rect" : [ 241.787354, 228.563232, 111.0, 111.0 ],
 													"pic" : "window_gauss4.png"
 												}
 
@@ -381,7 +396,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 128.893677, 228.563232, 111.0, 87.684932 ],
+													"patching_rect" : [ 128.893677, 228.563232, 111.0, 111.0 ],
 													"pic" : "window_gauss2.png"
 												}
 
@@ -410,7 +425,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 16.0, 228.563232, 111.0, 87.684932 ],
+													"patching_rect" : [ 16.0, 228.563232, 111.0, 111.0 ],
 													"pic" : "window_flattop.png"
 												}
 
@@ -439,7 +454,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 353.574249, 40.563232, 111.0, 87.684932 ],
+													"patching_rect" : [ 353.574249, 40.563232, 111.0, 111.0 ],
 													"pic" : "window_bartlett.png"
 												}
 
@@ -468,7 +483,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 241.787369, 40.563232, 111.0, 87.684932 ],
+													"patching_rect" : [ 241.787369, 40.563232, 111.0, 111.0 ],
 													"pic" : "window_rectangular.png"
 												}
 
@@ -497,7 +512,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 128.893692, 40.563232, 111.0, 87.684932 ],
+													"patching_rect" : [ 128.893692, 40.563232, 111.0, 111.0 ],
 													"pic" : "window_hamming.png"
 												}
 
@@ -526,7 +541,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 16.0, 40.563232, 111.0, 87.684932 ],
+													"patching_rect" : [ 16.0, 40.563232, 111.0, 111.0 ],
 													"pic" : "window_hanning.png"
 												}
 
@@ -611,7 +626,6 @@
 									"numinlets" : 1,
 									"numoutlets" : 0,
 									"patching_rect" : [ 578.200012, 146.5, 147.0, 37.0 ],
-									"presentation_rect" : [ 557.599976, 146.5, 0.0, 0.0 ],
 									"style" : "",
 									"text" : "Change the window length"
 								}
@@ -625,7 +639,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 489.5, 167.5, 82.0, 22.0 ],
-									"presentation_rect" : [ 490.0, 167.5, 0.0, 0.0 ],
 									"style" : "",
 									"text" : "w_length 512"
 								}
@@ -639,7 +652,6 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 489.5, 140.5, 82.0, 22.0 ],
-									"presentation_rect" : [ 490.0, 140.5, 0.0, 0.0 ],
 									"style" : "",
 									"text" : "w_length 128"
 								}
@@ -649,11 +661,11 @@
 								"box" : 								{
 									"fontsize" : 12.0,
 									"id" : "obj-3",
-									"linecount" : 3,
+									"linecount" : 4,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 235.999985, 409.5, 580.099976, 47.0 ],
+									"patching_rect" : [ 241.499985, 396.0, 477.0, 60.0 ],
 									"style" : "",
 									"text" : "You can look up the available window types by clicking the blue button \"window indexes\". The window length is in samples and can be any integer value above 16 samples. The upper limit of the window length is only limited by the amount of computer memory available to you."
 								}
@@ -1799,11 +1811,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 214.5, 103.0, 24.0 ],
+									"patching_rect" : [ 10.0, 209.5, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -1896,7 +1909,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -2091,7 +2104,7 @@
 							}
 , 							{
 								"box" : 								{
-									"buffername" : "cloudsample1",
+									"buffername" : "cloudsample2",
 									"id" : "obj-7",
 									"maxclass" : "waveform~",
 									"numinlets" : 5,
@@ -2119,7 +2132,22 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.indexcloud~ cloudsample1 0 256 128"
+									"text" : "cm.indexcloud~ cloudsample1 0 256 32"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"angle" : 270.0,
+									"bgcolor" : [ 0.65098, 0.666667, 0.662745, 1.0 ],
+									"id" : "obj-20",
+									"maxclass" : "panel",
+									"mode" : 0,
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 235.999985, 375.0, 489.200012, 86.5 ],
+									"proportion" : 0.39,
+									"style" : ""
 								}
 
 							}
@@ -2536,7 +2564,7 @@
  ]
 					}
 ,
-					"patching_rect" : [ 14.0, 206.0, 123.0, 22.0 ],
+					"patching_rect" : [ 14.0, 206.0, 75.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -2546,7 +2574,7 @@
 					}
 ,
 					"style" : "",
-					"text" : "p \"window reference\""
+					"text" : "p windows"
 				}
 
 			}
@@ -3592,11 +3620,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 214.5, 103.0, 24.0 ],
+									"patching_rect" : [ 9.999985, 209.5, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -3689,7 +3718,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -3904,7 +3933,7 @@
 									"numinlets" : 11,
 									"numoutlets" : 3,
 									"outlettype" : [ "signal", "signal", "int" ],
-									"patching_rect" : [ 115.999985, 305.0, 806.000061, 22.0 ],
+									"patching_rect" : [ 115.999985, 305.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
 										"s_interp" : 1,
 										"stereo" : 0,
@@ -3913,7 +3942,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.indexcloud~ cloudsample1 0 256 128"
+									"text" : "cm.indexcloud~ cloudsample1 0 256 32"
 								}
 
 							}
@@ -4339,6 +4368,77 @@
 						"showontab" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
+									"fontface" : 1,
+									"id" : "obj-26",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 239.999985, 375.0, 42.750031, 20.0 ],
+									"style" : "",
+									"text" : "Note:"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-29",
+									"linecount" : 4,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 239.999985, 392.0, 443.0, 60.0 ],
+									"style" : "",
+									"text" : "When you are currently playing a large amount of grains and switch from a high limit to a low limit, over-triggering can occur. This is nothing terrible per-se, but can be nticed by pulsating bursts of grain clouds. To avoid this reduce the density and work your way up to the new limit."
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"angle" : 270.0,
+									"bgcolor" : [ 0.65098, 0.666667, 0.662745, 1.0 ],
+									"id" : "obj-1",
+									"maxclass" : "panel",
+									"mode" : 0,
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 235.999985, 374.0, 451.950043, 84.0 ],
+									"proportion" : 0.39,
+									"style" : ""
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontsize" : 12.0,
+									"id" : "obj-3",
+									"linecount" : 3,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 166.0, 91.0, 805.0, 47.0 ],
+									"style" : "",
+									"text" : "This variable cloud size limit can be changed on the fly with the limit message followed by an integer. cm.indexcloud~ then finishes all active grains and restarts granulation with the new limit. By default, the limit property is equal to the maximum cloud size. The new limit value must be lower than the maximum cloud size."
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontface" : 0,
+									"fontname" : "Arial",
+									"fontsize" : 13.0,
+									"id" : "obj-25",
+									"linecount" : 2,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 166.0, 56.0, 810.0, 36.0 ],
+									"style" : "",
+									"text" : "cm.indexcloud~ can create grain clouds with the maximum amount of overlapping grains that you specify with the fourth argument when you load the object. To save processing power, you can reduce the cloud size so you don't run out of CPU power by accident."
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
 									"id" : "obj-35",
@@ -4367,39 +4467,13 @@
 							}
 , 							{
 								"box" : 								{
-									"id" : "obj-29",
-									"linecount" : 3,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 410.799988, 153.5, 555.200012, 47.0 ],
-									"style" : "",
-									"text" : "When you are currently playing a large amount of grains and switch from a high limit to a low limit, over-triggering can occur. This is nothing terrible per-se, but can be nticed by pulsating bursts of grain clouds. To avoid this reduce the density and work your way up to the new limit."
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontface" : 1,
-									"id" : "obj-26",
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 410.799988, 136.5, 159.0, 20.0 ],
-									"style" : "",
-									"text" : "Note:"
-								}
-
-							}
-, 							{
-								"box" : 								{
 									"bubble" : 1,
 									"id" : "obj-84",
 									"linecount" : 2,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 295.099976, 153.5, 107.0, 37.0 ],
+									"patching_rect" : [ 295.099976, 159.5, 107.0, 37.0 ],
 									"style" : "",
 									"text" : "Change the grain limit"
 								}
@@ -4412,9 +4486,9 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 238.099976, 176.0, 55.0, 22.0 ],
+									"patching_rect" : [ 238.099976, 182.0, 49.0, 22.0 ],
 									"style" : "",
-									"text" : "limit 256"
+									"text" : "limit 16"
 								}
 
 							}
@@ -4425,23 +4499,9 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 238.099976, 149.0, 55.0, 22.0 ],
+									"patching_rect" : [ 238.099976, 155.0, 42.0, 22.0 ],
 									"style" : "",
-									"text" : "limit 64"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontsize" : 12.0,
-									"id" : "obj-3",
-									"linecount" : 2,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 92.0, 756.0, 33.0 ],
-									"style" : "",
-									"text" : "The limit can be changed on the fly with the limit message, followed by an integer specifying the new limit. cm.indexcloud~ then finishes all active grains and restarts granulation with the new limit."
+									"text" : "limit 8"
 								}
 
 							}
@@ -4848,7 +4908,7 @@
  ]
 									}
 ,
-									"patching_rect" : [ 195.199951, 202.5, 569.400024, 22.0 ],
+									"patching_rect" : [ 195.199951, 208.5, 569.400024, 22.0 ],
 									"saved_object_attributes" : 									{
 										"description" : "",
 										"digest" : "",
@@ -5411,11 +5471,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 214.5, 103.0, 24.0 ],
+									"patching_rect" : [ 10.0, 209.5, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -5429,7 +5490,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 627.5, 433.0, 79.0, 22.0 ],
+									"patching_rect" : [ 698.5, 431.0, 79.0, 22.0 ],
 									"style" : "",
 									"text" : "gate"
 								}
@@ -5510,22 +5571,6 @@
 									"outlettype" : [ "jit_matrix" ],
 									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
 									"pic" : "maxOverviewIcon.png"
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontface" : 0,
-									"fontname" : "Arial",
-									"fontsize" : 13.0,
-									"id" : "obj-25",
-									"linecount" : 2,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 56.0, 756.0, 36.0 ],
-									"style" : "",
-									"text" : "cm.indexcloud~ is able to overlay a maximum of 512 grains that play back simultaneously. Since granulation is a process that is quite heavy on the CPU, the actual upper limit can be specified with the third argument when loading the object."
 								}
 
 							}
@@ -5732,7 +5777,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.indexcloud~ cloudsample1 0 256 128"
+									"text" : "cm.indexcloud~ cloudsample1 0 256 32"
 								}
 
 							}
@@ -5913,7 +5958,7 @@
 									"destination" : [ "obj-43", 0 ],
 									"disabled" : 0,
 									"hidden" : 1,
-									"midpoints" : [ 779.099976, 608.5, 951.049988, 608.5, 951.049988, 428.5, 637.0, 428.5 ],
+									"midpoints" : [ 779.099976, 608.5, 951.049988, 608.5, 951.049988, 428.5, 708.0, 428.5 ],
 									"source" : [ "obj-67", 1 ]
 								}
 
@@ -6068,7 +6113,7 @@
 									"destination" : [ "obj-43", 1 ],
 									"disabled" : 0,
 									"hidden" : 1,
-									"midpoints" : [ 204.199982, 361.75, 697.0, 361.75 ],
+									"midpoints" : [ 204.199982, 361.75, 768.0, 361.75 ],
 									"source" : [ "obj-81", 0 ]
 								}
 
@@ -7200,11 +7245,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 229.5, 103.0, 24.0 ],
+									"patching_rect" : [ 10.999985, 224.5, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -7297,7 +7343,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -7512,7 +7558,7 @@
 									"numinlets" : 11,
 									"numoutlets" : 3,
 									"outlettype" : [ "signal", "signal", "int" ],
-									"patching_rect" : [ 115.999985, 320.0, 806.000061, 22.0 ],
+									"patching_rect" : [ 115.999985, 320.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
 										"s_interp" : 1,
 										"stereo" : 0,
@@ -7521,7 +7567,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.indexcloud~ cloudsample1 0 256 128"
+									"text" : "cm.indexcloud~ cloudsample1 0 256 32"
 								}
 
 							}
@@ -10552,11 +10598,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 214.5, 103.0, 24.0 ],
+									"patching_rect" : [ 9.999985, 209.5, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -10649,7 +10696,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -10872,7 +10919,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.indexcloud~ cloudsample2 0 256 128"
+									"text" : "cm.indexcloud~ cloudsample2 0 256 32"
 								}
 
 							}
@@ -11364,7 +11411,7 @@
 									"numoutlets" : 3,
 									"outlettype" : [ "", "", "int" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 723.0, 375.0, 199.0, 29.0 ],
+									"patching_rect" : [ 752.0, 190.0, 172.0, 37.0 ],
 									"rounded" : 8.0,
 									"style" : "",
 									"text" : "triggers explained",
@@ -12376,16 +12423,16 @@
 									"numinlets" : 11,
 									"numoutlets" : 3,
 									"outlettype" : [ "signal", "signal", "int" ],
-									"patching_rect" : [ 115.999985, 341.0, 806.000061, 22.0 ],
+									"patching_rect" : [ 115.999939, 342.0, 806.000427, 22.0 ],
 									"saved_object_attributes" : 									{
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
-										"zero" : 1
+										"zero" : 0
 									}
 ,
 									"style" : "",
-									"text" : "cm.indexcloud~ cloudsample1 0 256 128"
+									"text" : "cm.indexcloud~ cloudsample1 0 256 32"
 								}
 
 							}
@@ -12700,7 +12747,7 @@
 									"destination" : [ "obj-6", 0 ],
 									"disabled" : 0,
 									"hidden" : 0,
-									"midpoints" : [ 282.899994, 253.5, 125.499985, 253.5 ],
+									"midpoints" : [ 282.899994, 253.5, 125.499939, 253.5 ],
 									"source" : [ "obj-44", 0 ]
 								}
 
@@ -12938,7 +12985,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 259.0, 198.0, 1014.0, 593.0 ],
+						"rect" : [ 254.0, 183.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -13967,11 +14014,12 @@
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
+									"bubbletextmargin" : 10,
 									"id" : "obj-41",
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 12.0, 217.5, 103.0, 24.0 ],
+									"patching_rect" : [ 9.999985, 214.0, 103.0, 34.0 ],
 									"style" : "",
 									"text" : "Turn me up!"
 								}
@@ -14237,7 +14285,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 166.0, 125.0, 478.0, 60.0 ],
 									"style" : "",
-									"text" : "1) Name of buffer~ object containing the playback sample\n2) Index number of grain window (see list of windows)\n3) Number specifying the window length (minimum value 16, no maximum value)\n4) Number specifying the maximum number of overlapping grains (maximum value: 512)"
+									"text" : "1) Name of buffer~ object containing the playback sample\n2) Index number of grain window (see list of windows)\n3) Number specifying the window length (minimum value 16, no maximum value)\n4) Maximum cloud size (int, the maximum amount of overlapping grains)"
 								}
 
 							}
@@ -14449,7 +14497,7 @@
 									"numinlets" : 11,
 									"numoutlets" : 3,
 									"outlettype" : [ "signal", "signal", "int" ],
-									"patching_rect" : [ 115.999985, 325.0, 806.000061, 22.0 ],
+									"patching_rect" : [ 115.999985, 325.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
 										"s_interp" : 1,
 										"stereo" : 0,
@@ -14458,7 +14506,7 @@
 									}
 ,
 									"style" : "",
-									"text" : "cm.indexcloud~ cloudsample1 0 256 128"
+									"text" : "cm.indexcloud~ cloudsample1 0 256 32"
 								}
 
 							}
@@ -14953,14 +15001,14 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
-			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
-			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
-			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
-			"obj-4::obj-23" : [ "live.gain~[3]", "live.gain~", 0 ],
-			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
-			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
 			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ],
-			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ]
+			"obj-4::obj-23" : [ "live.gain~[3]", "live.gain~", 0 ],
+			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
+			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
+			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
+			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
+			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
+			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{

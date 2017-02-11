@@ -159,12 +159,12 @@
 				Name of the buffer used for the grain window.
 			</description>
 		</objarg>
-		<objarg name="limit" optional="0" type="int">
+		<objarg name="cloud-size" optional="0" type="int">
 			<digest>
-				Max grains
+				Maximum size of grain cloud
 			</digest>
 			<description>
-				Maximum number of simultaneously playing grains.
+				Maximum number of overlapping grains.
 			</description>
 		</objarg>
 	</objarglist>
@@ -189,7 +189,7 @@
 				Sets the maximum grains value
 			</digest>
 			<description>
-				Specifies the maximum number of simultaneously playing grains (max value 512).
+				Specifies the maximum number of simultaneously playing grains.
 			</description>
 		</method>
 		<method name="record">
