@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 410.0, 132.0, 976.0, 732.0 ],
+		"rect" : [ 468.0, 155.0, 976.0, 732.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -48,7 +48,6 @@
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 772.0, 93.208183, 193.0, 61.291817 ],
-					"presentation_rect" : [ 722.0, 136.0, 0.0, 0.0 ],
 					"rounded" : 8.0,
 					"style" : "",
 					"text" : "general granulation principles",
@@ -67,7 +66,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 772.0, 222.326126, 35.0, 22.0 ],
-					"presentation_rect" : [ 722.0, 206.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "front"
 				}
@@ -156,7 +154,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 200.0, 119.57672 ],
+									"patching_rect" : [ 14.0, 5.0, 200.0, 200.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -204,7 +202,6 @@
 					}
 ,
 					"patching_rect" : [ 772.0, 248.826141, 179.0, 22.0 ],
-					"presentation_rect" : [ 722.0, 232.5, 0.0, 0.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -226,7 +223,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 315.826141, 925.0, 36.0 ],
+					"patching_rect" : [ 30.0, 315.826141, 929.0, 36.0 ],
 					"style" : "",
 					"text" : "In addition, petra contains an audio object for live input granulation. It makes use of a circular buffer and an adjustable, and optionally randomised, delay control over the duration of the entire buffer."
 				}
@@ -427,7 +424,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 200.0, 119.57672 ],
+									"patching_rect" : [ 14.0, 5.0, 200.0, 200.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
