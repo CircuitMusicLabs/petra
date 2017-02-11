@@ -159,7 +159,7 @@
 				Name of the buffer used for the grain window.
 			</description>
 		</objarg>
-		<objarg name="cloud size" optional="0" type="int">
+		<objarg name="cloud-size" optional="0" type="int">
 			<digest>
 				Maximum size of grain cloud
 			</digest>
