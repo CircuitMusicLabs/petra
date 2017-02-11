@@ -14,7 +14,7 @@ All objects share the following controls, which consist of an upper and lower ra
 * panorama position per grain
 * gain per grain
 
-![petra example](http://circuitmusiclabs.com/img/projects/petra/buffercloud-patcher-preview.png)
+![petra example](http://circuitmusiclabs.com/img/projects/petra/buffercloud-patcher.png)
 
 petra is now open for beta-testing. Feel free to download and to report back any feedback you may have.
 
