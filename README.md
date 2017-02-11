@@ -14,8 +14,6 @@ All objects share the following controls, which consist of an upper and lower ra
 * panorama position per grain
 * gain per grain
 
-![petra example](http://circuitmusiclabs.com/img/projects/petra/buffercloud-patcher.png)
-
 petra is now open for beta-testing. Feel free to download and to report back any feedback you may have.
 
 Once beta testing is done, I will try to submit the project as an official Max package for the new [Max Package Manager](https://cycling74.com/2015/12/14/introducing-the-max-package-manager/#.V6BINKJ1Z_B).
