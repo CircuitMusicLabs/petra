@@ -187,7 +187,7 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	dsp_setup((t_pxobject *)x, 13); // create 13 inlets
 
 	if (argc < ARGUMENTS) {
-		object_error((t_object *)x, "%d arguments required (sample buffer / max. voices)", ARGUMENTS);
+		object_error((t_object *)x, "%d arguments required (sample buffer / cloud size)", ARGUMENTS);
 		return NULL;
 	}
 
@@ -203,7 +203,7 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (1 - MAXGRAINS)
 	if (x->grainmem_size < 1) {
-		object_error((t_object *)x, "maximum grains must be larger than 1");
+		object_error((t_object *)x, "cloud size must be larger than 1");
 		return NULL;
 	}
 

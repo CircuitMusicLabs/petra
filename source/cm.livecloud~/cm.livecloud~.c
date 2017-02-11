@@ -193,7 +193,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 
 	if (argc < ARGUMENTS) {
-		object_error((t_object *)x, "%d arguments required (window buffer / max. voices)", ARGUMENTS);
+		object_error((t_object *)x, "%d arguments required (window buffer / cloud size)", ARGUMENTS);
 		return NULL;
 	}
 
@@ -208,7 +208,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (larger than 1)
 	if (x->grainmem_size < 1) {
-		object_error((t_object *)x, "maximum grains must be larger than 1");
+		object_error((t_object *)x, "cloud size must be larger than 1");
 		return NULL;
 	}
 

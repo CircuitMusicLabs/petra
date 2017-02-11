@@ -194,7 +194,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 
 	if (argc < ARGUMENTS) {
-		object_error((t_object *)x, "%d arguments required (sample buffer / window type / max. voices)", ARGUMENTS);
+		object_error((t_object *)x, "%d arguments required (sample buffer / window type / cloud size)", ARGUMENTS);
 		return NULL;
 	}
 
@@ -211,7 +211,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (1 - MAXGRAINS)
 	if (x->grainmem_size < 1) {
-		object_error((t_object *)x, "maximum grains must be larger than 1");
+		object_error((t_object *)x, "cloud size must be larger than 1");
 		return NULL;
 	}
 
