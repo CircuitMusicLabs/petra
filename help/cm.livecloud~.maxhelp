@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 204.0, 126.0, 1014.0, 619.0 ],
+		"rect" : [ 258.0, 193.0, 1014.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -194,9 +194,9 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 56.0, 805.0, 36.0 ],
+									"patching_rect" : [ 166.0, 56.0, 810.0, 36.0 ],
 									"style" : "",
-									"text" : "cm.livecloud~ can create grain clouds with the maximum amount of overlapping grains that you specify with the third argument when you load the object. To save processing power, you can reduce the cloud size so you don't run out of CPU power by accident."
+									"text" : "cm.livecloud~ can create grain clouds with the maximum amount of overlapping grains that you specify with the second argument when you load the object. To save processing power, you can reduce the cloud size so you don't run out of CPU power by accident."
 								}
 
 							}
@@ -777,7 +777,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -1052,7 +1052,7 @@
 									"destination" : [ "obj-6", 1 ],
 									"disabled" : 0,
 									"hidden" : 0,
-									"midpoints" : [ 197.045441, 574.5, 85.04544, 574.5, 85.04544, 294.0, 197.045439, 294.0 ],
+									"midpoints" : [ 197.045441, 574.5, 85.04544, 574.5, 85.04544, 294.0, 197.04544, 294.0 ],
 									"source" : [ "obj-18", 0 ]
 								}
 
@@ -1949,7 +1949,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -2194,7 +2194,7 @@
 									"destination" : [ "obj-6", 1 ],
 									"disabled" : 0,
 									"hidden" : 0,
-									"midpoints" : [ 204.590881, 572.5, 84.81816, 572.5, 84.81816, 312.0, 197.045439, 312.0 ],
+									"midpoints" : [ 204.590881, 572.5, 84.81816, 572.5, 84.81816, 312.0, 197.04544, 312.0 ],
 									"source" : [ "obj-1", 0 ]
 								}
 
@@ -4570,7 +4570,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -4870,7 +4870,7 @@
 									"destination" : [ "obj-6", 1 ],
 									"disabled" : 0,
 									"hidden" : 0,
-									"midpoints" : [ 211.590881, 573.0, 68.81816, 573.0, 68.81816, 298.0, 197.045439, 298.0 ],
+									"midpoints" : [ 211.590881, 573.0, 68.81816, 573.0, 68.81816, 298.0, 197.04544, 298.0 ],
 									"source" : [ "obj-20", 0 ]
 								}
 
@@ -5100,7 +5100,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "jit_matrix" ],
-					"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+					"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 					"pic" : "maxOverviewIcon.png"
 				}
 
@@ -5327,7 +5327,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 6.0, 32.055748, 345.0, 208.452632 ],
+													"patching_rect" : [ 6.0, 32.055748, 345.0, 345.0 ],
 													"pic" : "triggers-ramp.png"
 												}
 
@@ -5341,7 +5341,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 377.0, 32.055748, 345.0, 208.164557 ],
+													"patching_rect" : [ 377.0, 32.055748, 345.0, 345.0 ],
 													"pic" : "triggers-zero-crossing.png"
 												}
 
@@ -5848,7 +5848,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -6444,7 +6444,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 204.0, 152.0, 1014.0, 593.0 ],
+						"rect" : [ 258.0, 219.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -6570,7 +6570,7 @@
 																	"outlettype" : [ "" ],
 																	"patching_rect" : [ 148.404541, 264.0, 50.0, 22.0 ],
 																	"style" : "",
-																	"text" : "449"
+																	"text" : "0"
 																}
 
 															}
@@ -6583,7 +6583,7 @@
 																	"outlettype" : [ "" ],
 																	"patching_rect" : [ 231.0, 264.0, 50.0, 22.0 ],
 																	"style" : "",
-																	"text" : "449"
+																	"text" : "0"
 																}
 
 															}
@@ -8797,22 +8797,22 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
-			"obj-3::obj-20::obj-21::obj-6" : [ "live.tab[4]", "live.tab[1]", 0 ],
-			"obj-3::obj-20::obj-35" : [ "[1]", "Level", 0 ],
-			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
-			"obj-5::obj-1::obj-35" : [ "[3]", "Level", 0 ],
-			"obj-6::obj-18::obj-21::obj-6" : [ "live.tab[7]", "live.tab[1]", 0 ],
-			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
-			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
 			"obj-4::obj-23" : [ "live.gain~[3]", "live.gain~", 0 ],
-			"obj-5::obj-1::obj-21::obj-6" : [ "live.tab[6]", "live.tab[1]", 0 ],
 			"obj-1::obj-3::obj-35" : [ "[5]", "Level", 0 ],
-			"obj-2::obj-20::obj-21::obj-6" : [ "live.tab[5]", "live.tab[1]", 0 ],
+			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
+			"obj-3::obj-20::obj-21::obj-6" : [ "live.tab[4]", "live.tab[1]", 0 ],
+			"obj-5::obj-1::obj-35" : [ "[3]", "Level", 0 ],
 			"obj-2::obj-20::obj-35" : [ "[2]", "Level", 0 ],
-			"obj-1::obj-3::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
+			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
 			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
-			"obj-6::obj-18::obj-35" : [ "[6]", "Level", 0 ],
-			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ]
+			"obj-3::obj-20::obj-35" : [ "[1]", "Level", 0 ],
+			"obj-6::obj-18::obj-21::obj-6" : [ "live.tab[7]", "live.tab[1]", 0 ],
+			"obj-1::obj-3::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
+			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
+			"obj-5::obj-1::obj-21::obj-6" : [ "live.tab[6]", "live.tab[1]", 0 ],
+			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
+			"obj-2::obj-20::obj-21::obj-6" : [ "live.tab[5]", "live.tab[1]", 0 ],
+			"obj-6::obj-18::obj-35" : [ "[6]", "Level", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{

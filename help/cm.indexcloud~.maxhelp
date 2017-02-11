@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 100.0, 100.0, 1014.0, 619.0 ],
+		"rect" : [ 254.0, 157.0, 1014.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -4338,7 +4338,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 100.0, 126.0, 1014.0, 593.0 ],
+						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -4431,9 +4431,9 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 56.0, 805.0, 36.0 ],
+									"patching_rect" : [ 166.0, 56.0, 810.0, 36.0 ],
 									"style" : "",
-									"text" : "cm.indexcloud~ can create grain clouds with the maximum amount of overlapping grains that you specify with the third argument when you load the object. To save processing power, you can reduce the cloud size so you don't run out of CPU power by accident."
+									"text" : "cm.indexcloud~ can create grain clouds with the maximum amount of overlapping grains that you specify with the fourth argument when you load the object. To save processing power, you can reduce the cloud size so you don't run out of CPU power by accident."
 								}
 
 							}
@@ -12985,7 +12985,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
+						"rect" : [ 254.0, 183.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -15001,14 +15001,14 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
-			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
-			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
-			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
-			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
-			"obj-4::obj-23" : [ "live.gain~[3]", "live.gain~", 0 ],
 			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ],
+			"obj-4::obj-23" : [ "live.gain~[3]", "live.gain~", 0 ],
+			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
+			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
+			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
 			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
-			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ]
+			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
+			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{
