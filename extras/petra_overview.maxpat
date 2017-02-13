@@ -735,7 +735,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 14.0, 5.0, 200.0, 119.57672 ],
+													"patching_rect" : [ 14.0, 5.0, 200.0, 200.0 ],
 													"pic" : "maxOverviewIcon.png"
 												}
 

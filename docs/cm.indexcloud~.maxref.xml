@@ -192,13 +192,13 @@
 		</method>
 		<method name="limit">
 			<arglist>
-				<arg name="max. grains" optional="0" type="int" />
+				<arg name="cloud size limit" optional="0" type="int" />
 			</arglist>
 			<digest>
-				Sets the maximum grains value
+				Limits the cloud size
 			</digest>
 			<description>
-				Specifies the maximum number of simultaneously playing grains.
+				Specifies a new maximum number of overlapping grains. The limit value must be lower than the cloud size specified on object load.
 			</description>
 		</method>
 		<method name="w_type">
