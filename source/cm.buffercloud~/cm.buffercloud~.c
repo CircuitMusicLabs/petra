@@ -325,8 +325,6 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	#ifdef WIN_VERSION
 		srand((unsigned int)clock());
 	#endif
-	
-	object_post((t_object *)x, "cm.buffercloud~ | debug | branch memory-resize");
 
 	return x;
 }
