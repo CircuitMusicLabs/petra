@@ -81,10 +81,10 @@ typedef struct _cmbuffercloud {
 	double root2ovr2; // root of 2 over two for panning function
 	short bang_trigger; // trigger received from bang method
 	cm_cloud *cloud; // struct array for storing the grains and associated variables in memory
-	long cloudsize;
-	t_bool resize_request;
-	long cloudsize_new;
-	t_bool resize_verify;
+	long cloudsize; // size of the cloud struct array, value obtained from argument and "cloudsize" method
+	t_bool resize_request; // flag set to true when "cloudsize" method called
+	long cloudsize_new; // new cloudsize obtained from "cloudsize" method
+	t_bool resize_verify; // check-flag for proper memroy re-allocation
 } t_cmbuffercloud;
 
 
