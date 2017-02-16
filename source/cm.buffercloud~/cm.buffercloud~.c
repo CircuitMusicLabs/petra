@@ -411,6 +411,9 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			x->resize_verify = false;
 			x->resize_request = false;
 		}
+		else { // if mem-allocation fails, go to zero and try again next time: x->resize_request is not reset
+			goto zero;
+		}
 	}
 
 	// BUFFER VARIABLE DECLARATIONS
