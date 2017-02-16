@@ -45,13 +45,13 @@
 /************************************************************************************************************************/
 /* GRAIN MEMORY STORAGE                                                                                                 */
 /************************************************************************************************************************/
-typedef struct cmgrainmem {
+typedef struct cmcloud {
 	double *left;
 	double *right;
 	long length;
 	long pos;
 	short busy; // used to store the flag if a grain is currently playing or not
-} cm_grainmem;
+} cm_cloud;
 
 
 /************************************************************************************************************************/
@@ -80,7 +80,7 @@ typedef struct _cmbuffercloud {
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
 	short bang_trigger; // trigger received from bang method
-	cm_grainmem *grainmem; // struct array for storing the grains and associated variables in memory
+	cm_cloud *cloud; // struct array for storing the grains and associated variables in memory
 	long cloudsize;
 	t_bool resize_request;
 	long cloudsize_new;
@@ -253,21 +253,21 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
-	x->grainmem = (cm_grainmem *)sysmem_newptrclear((x->cloudsize) * sizeof(cm_grainmem));
-	if (x->grainmem == NULL) {
+	x->cloud = (cm_cloud *)sysmem_newptrclear((x->cloudsize) * sizeof(cm_cloud));
+	if (x->cloud == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH MEMBER OF THE GRAINMEM STRUCT
 	for (i = 0; i < x->cloudsize; i++) {
-		x->grainmem[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
-		if (x->grainmem[i].left == NULL) {
+		x->cloud[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		if (x->cloud[i].left == NULL) {
 			object_error((t_object *)x, "out of memory");
 			return NULL;
 		}
-		x->grainmem[i].right = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
-		if (x->grainmem[i].right == NULL) {
+		x->cloud[i].right = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		if (x->cloud[i].right == NULL) {
 			object_error((t_object *)x, "out of memory");
 			return NULL;
 		}
@@ -309,9 +309,9 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	// grainmem structure members
 	for (i = 0; i < x->cloudsize; i++) {
-		x->grainmem[i].length = 0;
-		x->grainmem[i].pos = 0;
-		x->grainmem[i].busy = 0;
+		x->cloud[i].length = 0;
+		x->cloud[i].pos = 0;
+		x->cloud[i].busy = 0;
 	}
 	
 	x->resize_request = false;
@@ -351,15 +351,15 @@ void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, doub
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
 		for (i = 0; i < x->cloudsize; i++) {
-			x->grainmem[i].left = (double *)sysmem_resizeptrclear(x->grainmem[i].left, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
-			if (x->grainmem[i].left == NULL) {
+			x->cloud[i].left = (double *)sysmem_resizeptrclear(x->cloud[i].left, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+			if (x->cloud[i].left == NULL) {
 				object_error((t_object *)x, "out of memory");
 				return;
 			}
 		}
 		for (i = 0; i < x->cloudsize; i++) {
-			x->grainmem[i].right = (double *)sysmem_resizeptrclear(x->grainmem[i].right, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
-			if (x->grainmem[i].right == NULL) {
+			x->cloud[i].right = (double *)sysmem_resizeptrclear(x->cloud[i].right, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+			if (x->cloud[i].right == NULL) {
 				object_error((t_object *)x, "out of memory");
 				return;
 			}
@@ -488,8 +488,8 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			// FIND A FREE SLOT FOR THE NEW GRAIN
 			i = 0;
 			while (i < x->cloudsize) {
-				if (!x->grainmem[i].busy) {
-					x->grainmem[i].busy = 1;
+				if (!x->cloud[i].busy) {
+					x->cloud[i].busy = 1;
 					slot = i;
 					break;
 				}
@@ -542,7 +542,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			if (pitch_length > b_framecount) {
 				pitch_length = b_framecount;
 			}
-			x->grainmem[slot].length = smp_length; // IMPORTANT!! DO NOT FORGET TO WRITE THE SAMPLE LENGTH INTO THE MEMORY STRUCTURE
+			x->cloud[slot].length = smp_length; // IMPORTANT!! DO NOT FORGET TO WRITE THE SAMPLE LENGTH INTO THE MEMORY STRUCTURE
 			
 			// write start position
 			start = x->randomized[0];
@@ -577,24 +577,24 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				if (b_channelcount > 1 && x->attr_stereo) { // if more than one channel
 					if (x->attr_sinterp) {
 						// get interpolated sample
-						x->grainmem[slot].left[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read) * pan_left) * gain;
-						x->grainmem[slot].right[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 1) * w_read) * pan_right) * gain;
+						x->cloud[slot].left[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read) * pan_left) * gain;
+						x->cloud[slot].right[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 1) * w_read) * pan_right) * gain;
 					}
 					else {
 						// get non-interpolated sample
-						x->grainmem[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
-						x->grainmem[slot].right[readpos] = ((b_sample[((long)distance * b_channelcount) + 1] * w_read) * pan_right) * gain;
+						x->cloud[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
+						x->cloud[slot].right[readpos] = ((b_sample[((long)distance * b_channelcount) + 1] * w_read) * pan_right) * gain;
 					}
 				}
 				else { // if only one channel
 					if (x->attr_sinterp) {
 						b_read = cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read; // get interpolated sample
-						x->grainmem[slot].left[readpos] = (b_read * pan_left) * gain;
-						x->grainmem[slot].right[readpos] = (b_read * pan_right) * gain;
+						x->cloud[slot].left[readpos] = (b_read * pan_left) * gain;
+						x->cloud[slot].right[readpos] = (b_read * pan_right) * gain;
 					}
 					else {
-						x->grainmem[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
-						x->grainmem[slot].right[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_right) * gain;
+						x->cloud[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
+						x->cloud[slot].right[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_right) * gain;
 					}
 				}
 			}
@@ -606,13 +606,13 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		// playback only if there are grains to play
 		if (x->grains_count) {
 			for (i = 0; i < x->cloudsize; i++) {
-				if (x->grainmem[i].busy) {
-					r = x->grainmem[i].pos++;
-					outsample_left += x->grainmem[i].left[r];
-					outsample_right += x->grainmem[i].right[r];
-					if (x->grainmem[i].pos == x->grainmem[i].length) {
-						x->grainmem[i].pos = 0;
-						x->grainmem[i].busy = 0;
+				if (x->cloud[i].busy) {
+					r = x->cloud[i].pos++;
+					outsample_left += x->cloud[i].left[r];
+					outsample_right += x->cloud[i].right[r];
+					if (x->cloud[i].pos == x->cloud[i].length) {
+						x->cloud[i].pos = 0;
+						x->cloud[i].busy = 0;
 						x->grains_count--;
 						if (x->grains_count < 0) {
 							x->grains_count = 0;
@@ -723,10 +723,10 @@ void cmbuffercloud_free(t_cmbuffercloud *x) {
 	object_free(x->w_buffer); // free the window buffer reference
 	
 	for (i = 0; i < x->cloudsize; i++) {
-		sysmem_freeptr(x->grainmem[i].left);
-		sysmem_freeptr(x->grainmem[i].right);
+		sysmem_freeptr(x->cloud[i].left);
+		sysmem_freeptr(x->cloud[i].right);
 	}
-	sysmem_freeptr(x->grainmem);
+	sysmem_freeptr(x->cloud);
 	
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
 	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
@@ -924,16 +924,16 @@ t_bool cmbuffercloud_resize(t_cmbuffercloud *x) {
 	int i;
 	
 	for (i = 0; i < x->cloudsize; i++) {
-		sysmem_freeptr(x->grainmem[i].left);
-		sysmem_freeptr(x->grainmem[i].right);
+		sysmem_freeptr(x->cloud[i].left);
+		sysmem_freeptr(x->cloud[i].right);
 	}
-	sysmem_freeptr(x->grainmem);
+	sysmem_freeptr(x->cloud);
 	
 	x->cloudsize = x->cloudsize_new;
 	
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
-	x->grainmem = (cm_grainmem *)sysmem_newptrclear((x->cloudsize) * sizeof(cm_grainmem));
-	if (x->grainmem == NULL) {
+	x->cloud = (cm_cloud *)sysmem_newptrclear((x->cloudsize) * sizeof(cm_cloud));
+	if (x->cloud == NULL) {
 		object_error((t_object *)x, "out of memory");
 		x->resize_verify = false;
 		return false;
@@ -941,14 +941,14 @@ t_bool cmbuffercloud_resize(t_cmbuffercloud *x) {
 	
 	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH MEMBER OF THE GRAINMEM STRUCT
 	for (i = 0; i < x->cloudsize; i++) {
-		x->grainmem[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
-		if (x->grainmem[i].left == NULL) {
+		x->cloud[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		if (x->cloud[i].left == NULL) {
 			object_error((t_object *)x, "out of memory");
 			x->resize_verify = false;
 			return false;
 		}
-		x->grainmem[i].right = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
-		if (x->grainmem[i].right == NULL) {
+		x->cloud[i].right = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		if (x->cloud[i].right == NULL) {
 			object_error((t_object *)x, "out of memory");
 			x->resize_verify = false;
 			return false;
