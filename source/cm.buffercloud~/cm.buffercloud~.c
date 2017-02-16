@@ -307,7 +307,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	// bang trigger flag
 	x->bang_trigger = 0;
 	
-	// grainmem structure members
+	// cloud structure members
 	for (i = 0; i < x->cloudsize; i++) {
 		x->cloud[i].length = 0;
 		x->cloud[i].pos = 0;
