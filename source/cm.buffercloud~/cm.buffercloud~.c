@@ -70,9 +70,6 @@ typedef struct _cmbuffercloud {
 	double *randomized; // array to store the randomized grain values
 	double *testvalues; // array for storing the grain parameter test values (sanity testing)
 	double tr_prev; // trigger sample from previous signal vector (required to check if input ramp resets to zero)
-	short grains_limit; // user defined maximum number of grains
-	short grains_limit_old; // used to store the previous grains count limit when user changes the limit via the "limit" message
-	short limit_modified; // checkflag to see if user changed grain limit through "limit" method
 	short buffer_modified; // checkflag to see if buffer has been modified
 	short grains_count; // currently playing grains
 	void *grains_count_out; // outlet for number of currently playing grains (for debugging)
@@ -84,7 +81,10 @@ typedef struct _cmbuffercloud {
 	double root2ovr2; // root of 2 over two for panning function
 	short bang_trigger; // trigger received from bang method
 	cm_grainmem *grainmem; // struct array for storing the grains and associated variables in memory
-	long grainmem_size;
+	long cloudsize;
+	t_bool resize_request;
+	long cloudsize_new;
+	t_bool resize_verify;
 } t_cmbuffercloud;
 
 
@@ -116,13 +116,13 @@ void cmbuffercloud_float(t_cmbuffercloud *x, double f);
 void cmbuffercloud_dblclick(t_cmbuffercloud *x);
 t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
 void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
-void cmbuffercloud_limit(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
+void cmbuffercloud_cloudsize(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
 void cmbuffercloud_bang(t_cmbuffercloud *x);
 t_max_err cmbuffercloud_stereo_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmbuffercloud_winterp_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmbuffercloud_sinterp_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmbuffercloud_zero_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
-t_bool cmbuffercloud_bufferinfo(t_cmbuffercloud *x);
+t_bool cmbuffercloud_resize(t_cmbuffercloud *x);
 
 // PANNING FUNCTION
 void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbuffercloud *x);
@@ -145,7 +145,7 @@ void ext_main(void *r) {
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_dblclick, 	"dblclick",	A_CANT, 0); // Bind the double click message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_notify, 		"notify", 	A_CANT, 0); // Bind the notify message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_cloudsize,	"cloudsize",A_GIMME, 0); // Bind the limit message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_bang,		"bang",		0);
 
 	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "stereo", 0, t_cmbuffercloud, attr_stereo);
@@ -200,7 +200,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 	x->buffer_name = atom_getsymarg(0, argc, argv); // get user supplied argument for sample buffer
 	x->window_name = atom_getsymarg(1, argc, argv); // get user supplied argument for window buffer
-	x->grainmem_size = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grains
+	x->cloudsize = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grains
 
 	// HANDLE ATTRIBUTES
 	object_attr_setlong(x, gensym("stereo"), 0); // initialize stereo attribute
@@ -210,7 +210,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (1 - MAXGRAINS)
-	if (x->grainmem_size < 1) {
+	if (x->cloudsize < 1) {
 		object_error((t_object *)x, "cloud size must be larger than 1");
 		return NULL;
 	}
@@ -253,14 +253,14 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
-	x->grainmem = (cm_grainmem *)sysmem_newptrclear((x->grainmem_size) * sizeof(cm_grainmem));
+	x->grainmem = (cm_grainmem *)sysmem_newptrclear((x->cloudsize) * sizeof(cm_grainmem));
 	if (x->grainmem == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH MEMBER OF THE GRAINMEM STRUCT
-	for (i = 0; i < x->grainmem_size; i++) {
+	for (i = 0; i < x->cloudsize; i++) {
 		x->grainmem[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 		if (x->grainmem[i].left == NULL) {
 			object_error((t_object *)x, "out of memory");
@@ -288,8 +288,6 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->object_inlets[9] = 1.0; // initialize value for max gain
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
-	x->grains_limit_old = 0; // initialize value for the routine when grains limit was modified
-	x->limit_modified = 0; // initialize channel change flag
 	x->buffer_modified = 0; // initialized buffer modified flag
 	
 	// initialize the testvalues which are not dependent on sampleRate
@@ -310,12 +308,14 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->bang_trigger = 0;
 	
 	// grainmem structure members
-	for (i = 0; i < x->grainmem_size; i++) {
+	for (i = 0; i < x->cloudsize; i++) {
 		x->grainmem[i].length = 0;
 		x->grainmem[i].pos = 0;
 		x->grainmem[i].busy = 0;
 	}
-	x->grains_limit = x->grainmem_size;
+	
+	x->resize_request = false;
+	x->resize_verify = false;
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -325,6 +325,8 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	#ifdef WIN_VERSION
 		srand((unsigned int)clock());
 	#endif
+	
+	object_post((t_object *)x, "cm.buffercloud~ | debug | branch memory-resize");
 
 	return x;
 }
@@ -348,14 +350,14 @@ void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, doub
 
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
-		for (i = 0; i < x->grainmem_size; i++) {
+		for (i = 0; i < x->cloudsize; i++) {
 			x->grainmem[i].left = (double *)sysmem_resizeptrclear(x->grainmem[i].left, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 			if (x->grainmem[i].left == NULL) {
 				object_error((t_object *)x, "out of memory");
 				return;
 			}
 		}
-		for (i = 0; i < x->grainmem_size; i++) {
+		for (i = 0; i < x->cloudsize; i++) {
 			x->grainmem[i].right = (double *)sysmem_resizeptrclear(x->grainmem[i].right, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 			if (x->grainmem[i].right == NULL) {
 				object_error((t_object *)x, "out of memory");
@@ -378,7 +380,7 @@ void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, doub
 void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
-	long i, limit, r; // for loop counterS
+	long i, r; // for loop counterS
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr; // current trigger value
 	double distance; // floating point index for reading from buffers
@@ -399,6 +401,17 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
+	
+	
+	// MEMORY RESIZE
+	if (x->grains_count == 0 && x->resize_request) {
+		// allocate new memory and check if all went well
+		x->resize_verify = cmbuffercloud_resize(x);
+		if (x->resize_verify) { // if all OK
+			x->resize_verify = false;
+			x->resize_request = false;
+		}
+	}
 
 	// BUFFER VARIABLE DECLARATIONS
 	t_buffer_obj *buffer = buffer_ref_getobject(x->buffer);
@@ -438,6 +451,8 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	x->grain_params[7] = x->connect_status[7] ? *ins[8] : x->object_inlets[7];						// pan max
 	x->grain_params[8] = x->connect_status[8] ? *ins[9] : x->object_inlets[8];						// gain min
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
+	
+	
 
 	
 	/************************************************************************************************************************/
@@ -467,12 +482,12 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->grains_limit && !x->limit_modified && !x->buffer_modified && b_sample && w_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->buffer_modified && b_sample && w_sample) {
 			trigger = 0; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
 			i = 0;
-			while (i < x->grains_limit) {
+			while (i < x->cloudsize) {
 				if (!x->grainmem[i].busy) {
 					x->grainmem[i].busy = 1;
 					slot = i;
@@ -587,15 +602,10 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
-		if (x->limit_modified) {
-			limit = x->grains_limit_old;
-		}
-		else {
-			limit = x->grains_limit;
-		}
+		
 		// playback only if there are grains to play
 		if (x->grains_count) {
-			for (i = 0; i < limit; i++) {
+			for (i = 0; i < x->cloudsize; i++) {
 				if (x->grainmem[i].busy) {
 					r = x->grainmem[i].pos++;
 					outsample_left += x->grainmem[i].left[r];
@@ -613,8 +623,9 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		}
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
-			x->limit_modified = 0; // reset limit modified checkflag
-			x->buffer_modified = 0;
+			if (x->buffer_modified) {
+				x->buffer_modified = 0;
+			}
 		}
 
 		/************************************************************************************************************************/
@@ -711,7 +722,7 @@ void cmbuffercloud_free(t_cmbuffercloud *x) {
 	object_free(x->buffer); // free the buffer reference
 	object_free(x->w_buffer); // free the window buffer reference
 	
-	for (i = 0; i < x->grainmem_size; i++) {
+	for (i = 0; i < x->cloudsize; i++) {
 		sysmem_freeptr(x->grainmem[i].left);
 		sysmem_freeptr(x->grainmem[i].right);
 	}
@@ -891,20 +902,62 @@ void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 
 
 /************************************************************************************************************************/
-/* THE GRAINS LIMIT METHOD                                                                                              */
+/* THE RESIZE REQUEST METHOD                                                                                            */
 /************************************************************************************************************************/
-void cmbuffercloud_limit(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmbuffercloud_cloudsize(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
-	if (arg < 1 || arg > x->grainmem_size) {
-		object_error((t_object *)x, "grain limit must be in the range 1 - %d", x->grainmem_size);
+	if (arg < 1) {
+		object_error((t_object *)x, "cloud size must be larger than 1");
 	}
 	else {
-		x->grains_limit_old = x->grains_limit;
-		x->grains_limit = arg;
-		x->limit_modified = 1;
-		object_post((t_object *)x, "new grain limit %d", x->grains_limit);
+		x->cloudsize_new = arg;
+		x->resize_request = true;
 	}
+}
+
+
+/************************************************************************************************************************/
+/* THE ACTUAL RESIZE METHOD                                                                                             */
+/************************************************************************************************************************/
+t_bool cmbuffercloud_resize(t_cmbuffercloud *x) {
+	int i;
+	
+	for (i = 0; i < x->cloudsize; i++) {
+		sysmem_freeptr(x->grainmem[i].left);
+		sysmem_freeptr(x->grainmem[i].right);
+	}
+	sysmem_freeptr(x->grainmem);
+	
+	x->cloudsize = x->cloudsize_new;
+	
+	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
+	x->grainmem = (cm_grainmem *)sysmem_newptrclear((x->cloudsize) * sizeof(cm_grainmem));
+	if (x->grainmem == NULL) {
+		object_error((t_object *)x, "out of memory");
+		x->resize_verify = false;
+		return false;
+	}
+	
+	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH MEMBER OF THE GRAINMEM STRUCT
+	for (i = 0; i < x->cloudsize; i++) {
+		x->grainmem[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		if (x->grainmem[i].left == NULL) {
+			object_error((t_object *)x, "out of memory");
+			x->resize_verify = false;
+			return false;
+		}
+		x->grainmem[i].right = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		if (x->grainmem[i].right == NULL) {
+			object_error((t_object *)x, "out of memory");
+			x->resize_verify = false;
+			return false;
+		}
+	}
+	
+	object_post((t_object *)x, "new cloudsize %d", x->cloudsize);
+	
+	return true;
 }
 
 
