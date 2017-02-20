@@ -46,13 +46,13 @@
 /************************************************************************************************************************/
 /* GRAIN MEMORY STORAGE                                                                                                 */
 /************************************************************************************************************************/
-typedef struct cmgrainmem {
+typedef struct cmcloud {
 	double *left;
 	double *right;
 	long length;
 	long pos;
 	short busy; // used to store the flag if a grain is currently playing or not
-} cm_grainmem;
+} cm_cloud;
 
 
 /************************************************************************************************************************/
@@ -87,8 +87,8 @@ typedef struct _cmlivecloud {
 	short record; // record on/off flag from "record" method
 	short recordflag; // boolean to indicate that recording has been started (disables recording until all currently playing grains have finished
 	short bang_trigger; // trigger received from bang method
-	cm_grainmem *grainmem; // struct array for storing the grains and associated variables in memory
-	long grainmem_size;
+	cm_cloud *grainmem; // struct array for storing the grains and associated variables in memory
+	long cloudsize;
 } t_cmlivecloud;
 
 
@@ -120,7 +120,7 @@ void cmlivecloud_float(t_cmlivecloud *x, double f);
 void cmlivecloud_dblclick(t_cmlivecloud *x);
 t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
 void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
-void cmlivecloud_limit(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
+void cmlivecloud_cloudsize(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_bang(t_cmlivecloud *x);
 t_max_err cmlivecloud_stereo_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
@@ -150,7 +150,7 @@ void ext_main(void *r) {
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_dblclick, 	"dblclick",	A_CANT, 0); // Bind the double click message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_notify, 		"notify", 	A_CANT, 0); // Bind the notify message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_set, 		"set", 		A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmlivecloud_class, (method)cmlivecloud_limit, 		"limit", 	A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_cloudsize,	"cloudsize",A_GIMME, 0); // Bind the limit message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_record, 		"record", 	A_GIMME, 0); // Bind the limit message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_bang,		"bang",		0);
 
@@ -198,7 +198,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 
 	x->window_name = atom_getsymarg(0, argc, argv); // get user supplied argument for window buffer
-	x->grainmem_size = atom_getintarg(1, argc, argv); // get user supplied argument for maximum grains
+	x->cloudsize = atom_getintarg(1, argc, argv); // get user supplied argument for maximum grains
 
 	// HANDLE ATTRIBUTES
 	object_attr_setlong(x, gensym("w_interp"), 0); // initialize window interpolation attribute
@@ -207,7 +207,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (larger than 1)
-	if (x->grainmem_size < 1) {
+	if (x->cloudsize < 1) {
 		object_error((t_object *)x, "cloud size must be larger than 1");
 		return NULL;
 	}
@@ -257,14 +257,14 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
-	x->grainmem = (cm_grainmem *)sysmem_newptrclear((x->grainmem_size) * sizeof(cm_grainmem));
+	x->grainmem = (cm_cloud *)sysmem_newptrclear((x->cloudsize) * sizeof(cm_cloud));
 	if (x->grainmem == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH MEMBER OF THE GRAINMEM STRUCT
-	for (i = 0; i < x->grainmem_size; i++) {
+	for (i = 0; i < x->cloudsize; i++) {
 		x->grainmem[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 		if (x->grainmem[i].left == NULL) {
 			object_error((t_object *)x, "out of memory");
@@ -316,12 +316,12 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->bang_trigger = 0;
 	
 	// grainmem structure members
-	for (i = 0; i < x->grainmem_size; i++) {
+	for (i = 0; i < x->cloudsize; i++) {
 		x->grainmem[i].length = 0;
 		x->grainmem[i].pos = 0;
 		x->grainmem[i].busy = 0;
 	}
-	x->grains_limit = x->grainmem_size;
+	x->grains_limit = x->cloudsize;
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -353,14 +353,14 @@ void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double s
 
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
-		for (i = 0; i < x->grainmem_size; i++) {
+		for (i = 0; i < x->cloudsize; i++) {
 			x->grainmem[i].left = (double *)sysmem_resizeptrclear(x->grainmem[i].left, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 			if (x->grainmem[i].left == NULL) {
 				object_error((t_object *)x, "out of memory");
 				return;
 			}
 		}
-		for (i = 0; i < x->grainmem_size; i++) {
+		for (i = 0; i < x->cloudsize; i++) {
 			x->grainmem[i].right = (double *)sysmem_resizeptrclear(x->grainmem[i].right, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
 			if (x->grainmem[i].right == NULL) {
 				object_error((t_object *)x, "out of memory");
@@ -753,7 +753,7 @@ void cmlivecloud_free(t_cmlivecloud *x) {
 	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
 	sysmem_freeptr(x->testvalues); // free memory allocated to the test values array
 
-	for (i = 0; i < x->grainmem_size; i++) {
+	for (i = 0; i < x->cloudsize; i++) {
 		sysmem_freeptr(x->grainmem[i].left);
 		sysmem_freeptr(x->grainmem[i].right);
 	}
@@ -915,11 +915,11 @@ void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE GRAINS LIMIT METHOD                                                                                              */
 /************************************************************************************************************************/
-void cmlivecloud_limit(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmlivecloud_cloudsize(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
-	if (arg < 1 || arg > x->grainmem_size) {
-		object_error((t_object *)x, "value must be in the range 1 - %d", x->grainmem_size);
+	if (arg < 1 || arg > x->cloudsize) {
+		object_error((t_object *)x, "value must be in the range 1 - %d", x->cloudsize);
 	}
 	else {
 		x->grains_limit_old = x->grains_limit;
