@@ -4338,7 +4338,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
+						"rect" : [ 100.0, 126.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -4368,6 +4368,36 @@
 						"showontab" : 1,
 						"boxes" : [ 							{
 								"box" : 								{
+									"fontsize" : 12.0,
+									"id" : "obj-3",
+									"linecount" : 2,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 166.0, 91.0, 805.0, 33.0 ],
+									"style" : "",
+									"text" : "The cloud size can be changed on the fly with the \"cloudsize\" message followed by a positive integer. cm.indexcloud~ then finishes all active grains, clears the existing memory, and reallocates new memory with the new cloud size."
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"fontface" : 0,
+									"fontname" : "Arial",
+									"fontsize" : 13.0,
+									"id" : "obj-25",
+									"linecount" : 2,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 166.0, 56.0, 810.0, 36.0 ],
+									"style" : "",
+									"text" : "cm.indexcloud~ can create grain clouds with the maximum amount of overlapping grains that you specify with the fourth argument when you load the object. To manage memory effectively, you can change the cloud size at any time."
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"fontface" : 1,
 									"id" : "obj-26",
 									"maxclass" : "comment",
@@ -4388,7 +4418,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 239.999985, 392.0, 443.0, 60.0 ],
 									"style" : "",
-									"text" : "When you are currently playing a large amount of grains and switch from a high limit to a low limit, over-triggering can occur. This is nothing terrible per-se, but can be nticed by pulsating bursts of grain clouds. To avoid this reduce the density and work your way up to the new limit."
+									"text" : "When you are currently playing a large amount of grains and switch from a high cloud size to a low cloud size, over-triggering can occur. This is not terrible, but can be nticed by pulsating bursts of grain clouds. To avoid this reduce the density and work your way up to the new cloud size."
 								}
 
 							}
@@ -4404,36 +4434,6 @@
 									"patching_rect" : [ 235.999985, 374.0, 451.950043, 84.0 ],
 									"proportion" : 0.39,
 									"style" : ""
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontsize" : 12.0,
-									"id" : "obj-3",
-									"linecount" : 3,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 91.0, 805.0, 47.0 ],
-									"style" : "",
-									"text" : "This variable cloud size limit can be changed on the fly with the limit message followed by an integer. cm.indexcloud~ then finishes all active grains and restarts granulation with the new limit. By default, the limit property is equal to the maximum cloud size. The new limit value must be lower than the maximum cloud size."
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"fontface" : 0,
-									"fontname" : "Arial",
-									"fontsize" : 13.0,
-									"id" : "obj-25",
-									"linecount" : 2,
-									"maxclass" : "comment",
-									"numinlets" : 1,
-									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 56.0, 810.0, 36.0 ],
-									"style" : "",
-									"text" : "cm.indexcloud~ can create grain clouds with the maximum amount of overlapping grains that you specify with the fourth argument when you load the object. To save processing power, you can reduce the cloud size so you don't run out of CPU power by accident."
 								}
 
 							}
@@ -4473,9 +4473,9 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 295.099976, 159.5, 107.0, 37.0 ],
+									"patching_rect" : [ 325.099976, 159.5, 107.0, 37.0 ],
 									"style" : "",
-									"text" : "Change the grain limit"
+									"text" : "Change the cloud size"
 								}
 
 							}
@@ -4486,9 +4486,9 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 238.099976, 182.0, 49.0, 22.0 ],
+									"patching_rect" : [ 238.099976, 182.0, 77.0, 22.0 ],
 									"style" : "",
-									"text" : "limit 16"
+									"text" : "cloudsize 16"
 								}
 
 							}
@@ -4499,9 +4499,9 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 238.099976, 155.0, 42.0, 22.0 ],
+									"patching_rect" : [ 238.099976, 155.0, 71.0, 22.0 ],
 									"style" : "",
-									"text" : "limit 8"
+									"text" : "cloudsize 8"
 								}
 
 							}
@@ -5569,7 +5569,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -6148,7 +6148,7 @@
  ]
 					}
 ,
-					"patching_rect" : [ 14.0, 275.0, 80.0, 22.0 ],
+					"patching_rect" : [ 14.0, 275.0, 82.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -6158,7 +6158,7 @@
 					}
 ,
 					"style" : "",
-					"text" : "p \"grain limit\""
+					"text" : "p \"cloud size\""
 				}
 
 			}
@@ -10032,7 +10032,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "jit_matrix" ],
-					"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+					"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 					"pic" : "maxOverviewIcon.png"
 				}
 
@@ -11695,7 +11695,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 100.0, 126.0, 1014.0, 593.0 ],
+						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -13711,13 +13711,13 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
+			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
 			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
+			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
 			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
 			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
-			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
-			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ],
 			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
-			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ]
+			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{
