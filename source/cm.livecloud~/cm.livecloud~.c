@@ -323,6 +323,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	x->resize_request = false;
 	x->resize_verify = false;
+	x->recordflag = 0;
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
