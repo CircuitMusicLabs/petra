@@ -696,6 +696,7 @@
 										"tags" : "",
 										"style" : "",
 										"subpatcher_template" : "",
+										"visible" : 1,
 										"boxes" : [ 											{
 												"box" : 												{
 													"fontname" : "Arial",
@@ -705,9 +706,9 @@
 													"maxclass" : "comment",
 													"numinlets" : 1,
 													"numoutlets" : 0,
-													"patching_rect" : [ 14.0, 146.0, 677.0, 137.0 ],
+													"patching_rect" : [ 14.0, 146.0, 678.0, 137.0 ],
 													"style" : "",
-													"text" : "Each object takes an argument to specify the cloud size, i.e. the maximum amount of grains the object is capable of storing in memory to generate a cloud of grains. When the object loads, the required amount of memory is allocated and cannot be changed, unless the object is re-initiated with a new value. A cloud size of 512 grains occupies roughly 1 GB of memory.\n\nIt is therefore important to note that the cloud size you specify depends on the way you wish to use the object. If you wish to generate clouds with a large amount of overlapping grains (asynchronous granulation), you go for a higher value (128 and upwards). If you are rather interested in succession of inidividual grains (synchronous granulation), you are better off with specifying a lower value (32 and below)  to keep your memory free for other things."
+													"text" : "Each object takes an argument to specify the cloud size, i.e. the maximum amount of grains the object is capable of storing in memory to generate a cloud of grains. When the object loads, the required amount of memory is allocated and cannot be changed, unless the object is re-initiated with a new value. A cloud size of 512 grains occupies roughly 800 MB of memory (at a sample rate of 44.1 kHz).\n\nIt is therefore important to note that the cloud size you specify depends on the way you wish to use the object. If you wish to generate clouds with a large amount of overlapping grains (asynchronous granulation), you go for a higher value (128 and upwards). If you are rather interested in succession of inidividual grains (synchronous granulation), you are better off with specifying a lower value (32 and below)  to keep your memory free for other things."
 												}
 
 											}
@@ -735,7 +736,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 14.0, 5.0, 200.0, 200.0 ],
+													"patching_rect" : [ 14.0, 5.0, 200.0, 119.57672 ],
 													"pic" : "maxOverviewIcon.png"
 												}
 
