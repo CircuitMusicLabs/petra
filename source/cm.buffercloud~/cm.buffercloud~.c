@@ -378,7 +378,7 @@ void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, doub
 void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
 	short trigger = 0; // trigger occurred yes/no
-	long i, r; // for loop counterS
+	long i, r, y; // for loop counters
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr; // current trigger value
 	double distance; // floating point index for reading from buffers
@@ -608,8 +608,10 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		
 		// playback only if there are grains to play
 		if (x->grains_count) {
+			y = 0;
 			for (i = 0; i < x->cloudsize; i++) {
 				if (x->cloud[i].busy) {
+					y++;
 					r = x->cloud[i].pos++;
 					outsample_left += x->cloud[i].left[r];
 					outsample_right += x->cloud[i].right[r];
@@ -621,6 +623,10 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 							x->grains_count = 0;
 						}
 					}
+				}
+				// if loop-counter "y" has reached grains_count, there are no more grains to read.
+				if (y == x->grains_count) {
+					break;
 				}
 			}
 		}
