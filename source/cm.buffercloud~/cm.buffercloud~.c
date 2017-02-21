@@ -50,7 +50,7 @@ typedef struct cmcloud {
 	double *right;
 	long length;
 	long pos;
-	short busy; // used to store the flag if a grain is currently playing or not
+	t_bool busy; // used to store the flag if a grain is currently playing or not
 } cm_cloud;
 
 
@@ -70,7 +70,7 @@ typedef struct _cmbuffercloud {
 	double *randomized; // array to store the randomized grain values
 	double *testvalues; // array for storing the grain parameter test values (sanity testing)
 	double tr_prev; // trigger sample from previous signal vector (required to check if input ramp resets to zero)
-	short buffer_modified; // checkflag to see if buffer has been modified
+	t_bool buffer_modified; // checkflag to see if buffer has been modified
 	short grains_count; // currently playing grains
 	void *grains_count_out; // outlet for number of currently playing grains (for debugging)
 	t_atom_long attr_stereo; // attribute: number of channels to be played
@@ -79,7 +79,7 @@ typedef struct _cmbuffercloud {
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
-	short bang_trigger; // trigger received from bang method
+	t_bool bang_trigger; // trigger received from bang method
 	cm_cloud *cloud; // struct array for storing the grains and associated variables in memory
 	long cloudsize; // size of the cloud struct array, value obtained from argument and "cloudsize" method
 	t_bool resize_request; // flag set to true when "cloudsize" method called
@@ -288,7 +288,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->object_inlets[9] = 1.0; // initialize value for max gain
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
-	x->buffer_modified = 0; // initialized buffer modified flag
+	x->buffer_modified = false; // initialized buffer modified flag
 	
 	// initialize the testvalues which are not dependent on sampleRate
 	x->testvalues[0] = 0.0; // dummy MIN_START
@@ -305,13 +305,13 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->root2ovr2 = sqrt(2.0) * 0.5;
 	
 	// bang trigger flag
-	x->bang_trigger = 0;
+	x->bang_trigger = false;
 	
 	// cloud structure members
 	for (i = 0; i < x->cloudsize; i++) {
 		x->cloud[i].length = 0;
 		x->cloud[i].pos = 0;
-		x->cloud[i].busy = 0;
+		x->cloud[i].busy = false;
 	}
 	
 	x->resize_request = false;
@@ -377,7 +377,7 @@ void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, doub
 /************************************************************************************************************************/
 void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
-	short trigger = 0; // trigger occurred yes/no
+	t_bool trigger = false; // trigger occurred yes/no
 	long i, r, y; // for loop counters
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr; // current trigger value
@@ -466,33 +466,33 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 
 		if (x->attr_zero) {
 			if (signbit(tr_curr) != signbit(x->tr_prev)) { // zero crossing from negative to positive
-				trigger = 1;
+				trigger = true;
 			}
 			else if (x->bang_trigger) {
-				trigger = 1;
-				x->bang_trigger = 0;
+				trigger = true;
+				x->bang_trigger = false;
 			}
 		}
 		else {
 			if ((x->tr_prev - tr_curr) > 0.9) {
-				trigger = 1;
+				trigger = true;
 			}
 			else if (x->bang_trigger) {
-				trigger = 1;
-				x->bang_trigger = 0;
+				trigger = true;
+				x->bang_trigger = false;
 			}
 		}
 
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
 		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->buffer_modified && b_sample && w_sample) {
-			trigger = 0; // reset trigger
+			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
 			i = 0;
 			while (i < x->cloudsize) {
 				if (!x->cloud[i].busy) {
-					x->cloud[i].busy = 1;
+					x->cloud[i].busy = true;
 					slot = i;
 					break;
 				}
@@ -617,7 +617,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 					outsample_right += x->cloud[i].right[r];
 					if (x->cloud[i].pos == x->cloud[i].length) {
 						x->cloud[i].pos = 0;
-						x->cloud[i].busy = 0;
+						x->cloud[i].busy = false;
 						x->grains_count--;
 						if (x->grains_count < 0) {
 							x->grains_count = 0;
@@ -633,7 +633,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
 			if (x->buffer_modified) {
-				x->buffer_modified = 0;
+				x->buffer_modified = false;
 			}
 		}
 
@@ -864,7 +864,7 @@ t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, v
 	//char *message = (char *)msg->s_name;
 	
 	if (msg == ps_buffer_modified) {
-		x->buffer_modified = 1;
+		x->buffer_modified = true;
 	}
 	if (buffer_name == x->window_name) { // check if calling object was the window buffer
 		return buffer_ref_notify(x->w_buffer, s, msg, sender, data); // return with the calling buffer
@@ -884,7 +884,7 @@ t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, v
 void cmbuffercloud_doset(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 2) {
 		//object_post((t_object *)x, "buffer ref changed");
-		x->buffer_modified = 1;
+		x->buffer_modified = true;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
 		x->window_name = atom_getsym(av+1); // write buffer name into object structure
 		buffer_ref_set(x->buffer, x->buffer_name);
@@ -972,7 +972,7 @@ t_bool cmbuffercloud_resize(t_cmbuffercloud *x) {
 /* THE BANG METHOD                                                                                                      */
 /************************************************************************************************************************/
 void cmbuffercloud_bang(t_cmbuffercloud *x) {
-	x->bang_trigger = 1;
+	x->bang_trigger = true;
 }
 
 
