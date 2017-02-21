@@ -190,15 +190,15 @@
 				Specifies the sample buffer reference.
 			</description>
 		</method>
-		<method name="limit">
+		<method name="cloudsize">
 			<arglist>
-				<arg name="cloud size limit" optional="0" type="int" />
+				<arg name="grain cloud size" optional="0" type="int" />
 			</arglist>
 			<digest>
-				Limits the cloud size
+				Maximum size of grain cloud
 			</digest>
 			<description>
-				Specifies a new maximum number of overlapping grains. The limit value must be lower than the cloud size specified on object load.
+				Specifies the new maximum size of the grain cloud and resizes allocated memory. The supplied value must be a positive integer.
 			</description>
 		</method>
 		<method name="w_type">
