@@ -454,7 +454,7 @@
 													"maxclass" : "comment",
 													"numinlets" : 1,
 													"numoutlets" : 0,
-													"patching_rect" : [ 14.0, 146.0, 677.0, 297.0 ],
+													"patching_rect" : [ 14.0, 146.0, 680.0, 297.0 ],
 													"style" : "",
 													"text" : "DSP processing of the petra granulation objects consists of two parts. The first part listens for new triggers, generates new grains and stores them in memory. The second part checks if there are grains contained in memory and continues with grain playback.\n\nIn addition to the well-known bang, all objects use audio signals as triggers. By default, they take a signal ramp from 0 to 1 (such as the signal produced by the phasor~ object) and trigger a grain each time the signal falls back to 0. Grain triggering thus occurs with sample precision.\n\nWhen a trigger occurs, the object calculates the grain parameters based on the values provided through the object inlets, generates a single grain, allocates it a slot and writes it into an internal buffer (memory). The size of this buffer is based on the cloud size argument provided when you load the object. For example, when you specify a cloud size of 32 grains, the object allocates memory to store 32 grains. For each grain, the object stores the grain length and the respective playback position throughout the duration of the grain.\n\nAs soon as trigger detection and grain generation is completed, the object continues with grain playback. The playback section checks for existing grains and starts playback of new grains, or continues playback of existing grains. When a grain has finished playing, the slot in memory is freed for new grains and can be overwritten with a new grain.\n\nAfter the playback section, DSP processing restarts and lsitens for new triggers."
 												}
@@ -484,7 +484,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 14.0, 5.0, 200.0, 200.0 ],
+													"patching_rect" : [ 14.0, 5.0, 200.0, 119.57672 ],
 													"pic" : "maxOverviewIcon.png"
 												}
 
@@ -669,7 +669,7 @@
 											"modernui" : 1
 										}
 ,
-										"rect" : [ 378.0, 223.0, 703.0, 303.0 ],
+										"rect" : [ 399.0, 301.0, 720.0, 340.0 ],
 										"bglocked" : 0,
 										"openinpresentation" : 0,
 										"default_fontsize" : 12.0,
@@ -696,19 +696,18 @@
 										"tags" : "",
 										"style" : "",
 										"subpatcher_template" : "",
-										"visible" : 1,
 										"boxes" : [ 											{
 												"box" : 												{
 													"fontname" : "Arial",
 													"fontsize" : 13.0,
 													"id" : "obj-11",
-													"linecount" : 9,
+													"linecount" : 11,
 													"maxclass" : "comment",
 													"numinlets" : 1,
 													"numoutlets" : 0,
-													"patching_rect" : [ 14.0, 146.0, 678.0, 137.0 ],
+													"patching_rect" : [ 14.0, 146.0, 688.0, 166.0 ],
 													"style" : "",
-													"text" : "Each object takes an argument to specify the cloud size, i.e. the maximum amount of grains the object is capable of storing in memory to generate a cloud of grains. When the object loads, the required amount of memory is allocated and cannot be changed, unless the object is re-initiated with a new value. A cloud size of 512 grains occupies roughly 800 MB of memory (at a sample rate of 44.1 kHz).\n\nIt is therefore important to note that the cloud size you specify depends on the way you wish to use the object. If you wish to generate clouds with a large amount of overlapping grains (asynchronous granulation), you go for a higher value (128 and upwards). If you are rather interested in succession of inidividual grains (synchronous granulation), you are better off with specifying a lower value (32 and below)  to keep your memory free for other things."
+													"text" : "Each object takes an argument to specify the grain cloud size, i.e. the maximum amount of grains the object is capable of storing in memory to generate a cloud of grains. When the object loads, the required amount of memory is reserved. This cloud size can be changed at any time with the \"cloudsize\" message, depending on your needs. \n\nAt a sample rate of 44.1 kHz, a cloud size of 512 grains occupies roughly 800 MB of memory.\n\nIt is therefore helpful to remember that the cloud size you specify depends on the way you wish to use the object and that the larger your grain cloud, the more memory the objects will occupy. If you wish to generate clouds with a large amount of overlapping grains (asynchronous granulation), you go for a higher value (128 and upwards). If you are rather interested in succession of inidividual grains (synchronous granulation), you are better off with specifying a lower value (32 and below)  to keep your memory free for other things."
 												}
 
 											}
