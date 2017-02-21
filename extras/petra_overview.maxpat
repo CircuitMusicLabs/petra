@@ -111,7 +111,7 @@
 											"modernui" : 1
 										}
 ,
-										"rect" : [ 302.0, 145.0, 713.0, 587.0 ],
+										"rect" : [ 357.0, 192.0, 713.0, 587.0 ],
 										"bglocked" : 0,
 										"openinpresentation" : 0,
 										"default_fontsize" : 12.0,
@@ -161,7 +161,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 14.0, 5.0, 200.0, 200.0 ],
+													"patching_rect" : [ 14.0, 5.0, 200.0, 119.57672 ],
 													"pic" : "maxOverviewIcon.png"
 												}
 
