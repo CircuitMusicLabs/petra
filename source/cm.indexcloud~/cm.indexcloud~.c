@@ -1050,8 +1050,6 @@ t_bool cmindexcloud_resize(t_cmindexcloud *x) {
 		}
 	}
 	
-	object_post((t_object *)x, "new cloudsize %d", x->cloudsize);
-	
 	return true;
 }
 

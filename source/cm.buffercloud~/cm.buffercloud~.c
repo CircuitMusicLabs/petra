@@ -964,8 +964,6 @@ t_bool cmbuffercloud_resize(t_cmbuffercloud *x) {
 		}
 	}
 	
-	object_post((t_object *)x, "new cloudsize %d", x->cloudsize);
-	
 	return true;
 }
 

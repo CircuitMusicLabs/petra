@@ -990,8 +990,6 @@ t_bool cmlivecloud_resize(t_cmlivecloud *x) {
 		}
 	}
 	
-	object_post((t_object *)x, "new cloudsize %d", x->cloudsize);
-	
 	return true;
 }
 

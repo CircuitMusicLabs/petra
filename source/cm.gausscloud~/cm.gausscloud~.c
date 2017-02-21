@@ -956,8 +956,6 @@ t_bool cmgausscloud_resize(t_cmgausscloud *x) {
 		}
 	}
 	
-	object_post((t_object *)x, "new cloudsize %d", x->cloudsize);
-	
 	return true;
 }
 
