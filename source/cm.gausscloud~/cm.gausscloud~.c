@@ -897,14 +897,19 @@ void cmgausscloud_set(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
 /* THE RESIZE REQUEST METHOD                                                                                            */
 /************************************************************************************************************************/
 void cmgausscloud_cloudsize(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
-	long arg;
-	arg = atom_getlong(av);
-	if (arg < 1) {
-		object_error((t_object *)x, "cloud size must be larger than 1");
+	long arg = atom_getlong(av);
+	if (ac && av) {
+		arg = atom_getlong(av);
+		if (arg < 1) {
+			object_error((t_object *)x, "cloud size must be larger than 1");
+		}
+		else {
+			x->cloudsize_new = arg;
+			x->resize_request = true;
+		}
 	}
 	else {
-		x->cloudsize_new = arg;
-		x->resize_request = true;
+		object_error((t_object *)x, "argument required (cloud size)");
 	}
 }
 
