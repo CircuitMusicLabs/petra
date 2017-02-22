@@ -415,6 +415,9 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 		}
 	}
 	
+	if (x->grains_count == 0 && x->buffer_modified) {
+		x->buffer_modified = false;
+	}
 	
 	// BUFFER VARIABLE DECLARATIONS
 	t_buffer_obj *buffer = buffer_ref_getobject(x->buffer);
@@ -614,12 +617,6 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 						}
 					}
 				}
-			}
-		}
-		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
-		if (x->grains_count == 0) {
-			if (x->buffer_modified) {
-				x->buffer_modified = false;
 			}
 		}
 

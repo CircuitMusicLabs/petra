@@ -431,6 +431,14 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			goto zero;
 		}
 	}
+	
+	if (x->grains_count == 0 && x->buffer_modified) {
+		x->buffer_modified = false;
+	}
+	
+	if (x->grains_count == 0 && x->recordflag) {
+		x->recordflag = false;
+	}
 
 	// BUFFER VARIABLE DECLARATIONS
 	t_buffer_obj *w_buffer = buffer_ref_getobject(x->w_buffer);
@@ -653,15 +661,6 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 						}
 					}
 				}
-			}
-		}
-		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
-		if (x->grains_count == 0) {
-			if (x->buffer_modified) {
-				x->buffer_modified = false;
-			}
-			if (x->recordflag) {
-				x->recordflag = false;
 			}
 		}
 
