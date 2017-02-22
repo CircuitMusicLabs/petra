@@ -51,7 +51,7 @@ typedef struct cmcloud {
 	double *right;
 	long length;
 	long pos;
-	short busy; // used to store the flag if a grain is currently playing or not
+	t_bool busy; // used to store the flag if a grain is currently playing or not
 } cm_cloud;
 
 
@@ -69,7 +69,7 @@ typedef struct _cmlivecloud {
 	double *randomized; // array to store the randomized grain values
 	double *testvalues; // array for storing the grain parameter test values (sanity testing)
 	double tr_prev; // trigger sample from previous signal vector (required to check if input ramp resets to zero)
-	short buffer_modified; // checkflag to see if buffer has been modified
+	t_bool buffer_modified; // checkflag to see if buffer has been modified
 	short grains_count; // currently playing grains
 	void *grains_count_out; // outlet for number of currently playing grains (for debugging)
 	void *rec_position_out; // outlet for current record position in buffer
@@ -81,9 +81,9 @@ typedef struct _cmlivecloud {
 	double *ringbuffer; // circular buffer for recording the audio input
 	long bufferframes; // size of buffer in samples
 	long writepos; // buffer write position
-	short record; // record on/off flag from "record" method
-	short recordflag; // boolean to indicate that recording has been started (disables recording until all currently playing grains have finished
-	short bang_trigger; // trigger received from bang method
+	t_bool record; // record on/off flag from "record" method
+	t_bool recordflag; // boolean to indicate that recording has been started (disables recording until all currently playing grains have finished
+	t_bool bang_trigger; // trigger received from bang method
 	cm_cloud *cloud; // struct array for storing the grains and associated variables in memory
 	long cloudsize; // size of the cloud struct array, value obtained from argument and "cloudsize" method
 	t_bool resize_request; // flag set to true when "cloudsize" method called
@@ -294,7 +294,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->object_inlets[9] = 1.0; // initialize value for max gain
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
-	x->buffer_modified = 0; // initialized buffer modified flag
+	x->buffer_modified = false; // initialized buffer modified flag
 	// initialize the testvalues which are not dependent on sampleRate
 	x->testvalues[3] = MIN_PITCH;
 	x->testvalues[4] = MAX_PITCH;
@@ -305,25 +305,24 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 	x->writepos = 0;
 	x->bufferframes = BUFFERMS * x->m_sr;
-	x->recordflag = 0;
+	x->recordflag = false;
 
 	// calculate constants for panning function
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
 	x->root2ovr2 = sqrt(2.0) * 0.5;
 	
 	// bang trigger flag
-	x->bang_trigger = 0;
+	x->bang_trigger = false;
 	
 	// cloud structure members
 	for (i = 0; i < x->cloudsize; i++) {
 		x->cloud[i].length = 0;
 		x->cloud[i].pos = 0;
-		x->cloud[i].busy = 0;
+		x->cloud[i].busy = false;
 	}
 	
 	x->resize_request = false;
 	x->resize_verify = false;
-	x->recordflag = 0;
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -392,7 +391,7 @@ void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double s
 /************************************************************************************************************************/
 void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
-	short trigger = 0; // trigger occurred yes/no
+	t_bool trigger = false; // trigger occurred yes/no
 	long i, r; // for loop counterS
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr, sig_curr; // current trigger and signal value
@@ -480,20 +479,20 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		// process trigger value
 		if (x->attr_zero) { // if zero crossing attr is set
 			if (signbit(tr_curr) != signbit(x->tr_prev)) { // zero crossing from negative to positive
-				trigger = 1;
+				trigger = true;
 			}
 			else if (x->bang_trigger) {
-				trigger = 1;
-				x->bang_trigger = 0;
+				trigger = true;
+				x->bang_trigger = false;
 			}
 		}
 		else { // if zero crossing attr is not set
 			if ((x->tr_prev - tr_curr) > 0.9) {
-				trigger = 1;
+				trigger = true;
 			}
 			else if (x->bang_trigger) {
-				trigger = 1;
-				x->bang_trigger = 0;
+				trigger = true;
+				x->bang_trigger = false;
 			}
 		}
 
@@ -501,14 +500,14 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
 		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->recordflag && !x->buffer_modified && w_sample) {
 
-			trigger = 0; // reset trigger
+			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 
 			// FIND A FREE SLOT FOR THE NEW GRAIN
 			i = 0;
 			while (i < x->cloudsize) {
 				if (!x->cloud[i].busy) {
-					x->cloud[i].busy = 1;
+					x->cloud[i].busy = true;
 					slot = i;
 					break;
 				}
@@ -647,7 +646,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 					outsample_right += x->cloud[i].right[r];
 					if (x->cloud[i].pos == x->cloud[i].length) {
 						x->cloud[i].pos = 0;
-						x->cloud[i].busy = 0;
+						x->cloud[i].busy = false;
 						x->grains_count--;
 						if (x->grains_count < 0) {
 							x->grains_count = 0;
@@ -659,10 +658,10 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
 			if (x->buffer_modified) {
-				x->buffer_modified = 0;
+				x->buffer_modified = false;
 			}
 			if (x->recordflag) {
-				x->recordflag = 0;
+				x->recordflag = false;
 			}
 		}
 
@@ -893,7 +892,7 @@ void cmlivecloud_dblclick(t_cmlivecloud *x) {
 t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	t_symbol *buffer_name = (t_symbol *)object_method((t_object *)sender, gensym("getname"));
 	if (msg == ps_buffer_modified) {
-		x->buffer_modified = 1;
+		x->buffer_modified = true;
 	}
 	if (buffer_name == x->window_name) { // check if calling object was the window buffer
 		return buffer_ref_notify(x->w_buffer, s, msg, sender, data); // return with the calling buffer
@@ -909,7 +908,7 @@ t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void 
 /************************************************************************************************************************/
 void cmlivecloud_doset(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
-		x->buffer_modified = 1;
+		x->buffer_modified = true;
 		x->window_name = atom_getsym(av); // write buffer name into object structure
 		buffer_ref_set(x->w_buffer, x->window_name);
 		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->w_buffer))) > 1) {
@@ -994,12 +993,12 @@ void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg;
 	arg = atom_getlong(av);
 	if (arg <= 0) { // smaller or equal to zero
-		x->record = 0;
+		x->record = false;
 //		object_post((t_object*)x, "record off");
 	}
 	else { // any non-zero value sets x->record to true
-		x->record = 1;
-		x->recordflag = 1;
+		x->record = true;
+		x->recordflag = true;
 //		object_post((t_object*)x, "record on");
 	}
 }
@@ -1009,7 +1008,7 @@ void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 /* THE BANG METHOD                                                                                                      */
 /************************************************************************************************************************/
 void cmlivecloud_bang(t_cmlivecloud *x) {
-	x->bang_trigger = 1;
+	x->bang_trigger = true;
 }
 
 

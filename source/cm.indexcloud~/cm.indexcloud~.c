@@ -56,7 +56,7 @@ typedef struct cmcloud {
 	double *right;
 	long length;
 	long pos;
-	short busy; // used to store the flag if a grain is currently playing or not
+	t_bool busy; // used to store the flag if a grain is currently playing or not
 } cm_cloud;
 
 
@@ -70,8 +70,8 @@ typedef struct _cmindexcloud {
 	double *window; // window array
 	long window_type; // window typedef
 	long window_length; // window length
-	short w_writeflag; // checkflag to see if window array is currently re-witten
-	short window_modified; // checkflag to mark window changed
+	t_bool w_writeflag; // checkflag to see if window array is currently re-witten
+	t_bool window_modified; // checkflag to mark window changed
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
 	short connect_status[FLOAT_INLETS]; // array for signal inlet connection statuses
 	double *object_inlets; // array to store the incoming values coming from the object inlets
@@ -79,7 +79,7 @@ typedef struct _cmindexcloud {
 	double *randomized; // array to store the randomized grain values
 	double *testvalues; // array for storing the grain parameter test values (sanity testing)
 	double tr_prev; // trigger sample from previous signal vector (required to check if input ramp resets to zero)
-	short buffer_modified; // checkflag to see if buffer has been modified
+	t_bool buffer_modified; // checkflag to see if buffer has been modified
 	short grains_count; // currently playing grains
 	void *grains_count_out; // outlet for number of currently playing grains (for debugging)
 	t_atom_long attr_stereo; // attribute: number of channels to be played
@@ -88,7 +88,7 @@ typedef struct _cmindexcloud {
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
-	short bang_trigger; // trigger received from bang method
+	t_bool bang_trigger; // trigger received from bang method
 	cm_cloud *cloud; // struct array for storing the grains and associated variables in memory
 	long cloudsize; // size of the cloud struct array, value obtained from argument and "cloudsize" method
 	t_bool resize_request; // flag set to true when "cloudsize" method called
@@ -334,8 +334,8 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->object_inlets[9] = 1.0; // initialize value for max gain
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
-	x->buffer_modified = 0; // initialize buffer modified flag
-	x->w_writeflag = 0; // initialize window write flag
+	x->buffer_modified = false; // initialize buffer modified flag
+	x->w_writeflag = false; // initialize window write flag
 
 	// initialize the testvalues which are not dependent on sampleRate
 	x->testvalues[0] = 0.0; // dummy MIN_START
@@ -352,13 +352,13 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->root2ovr2 = sqrt(2.0) * 0.5;
 
 	// bang trigger flag
-	x->bang_trigger = 0;
+	x->bang_trigger = false;
 	
 	// cloud structure members
 	for (i = 0; i < x->cloudsize; i++) {
 		x->cloud[i].length = 0;
 		x->cloud[i].pos = 0;
-		x->cloud[i].busy = 0;
+		x->cloud[i].busy = false;
 	}
 	
 	x->resize_request = false;
@@ -428,7 +428,7 @@ void cmindexcloud_dsp64(t_cmindexcloud *x, t_object *dsp64, short *count, double
 /************************************************************************************************************************/
 void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long sampleframes, long flags, void *userparam) {
 	// VARIABLE DECLARATIONS
-	short trigger = 0; // trigger occurred yes/no
+	t_bool trigger = false; // trigger occurred yes/no
 	long i, r; // for loop counterS
 	long n = sampleframes; // number of samples per signal vector
 	double tr_curr; // current trigger value
@@ -468,6 +468,11 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			goto zero;
 		}
 	}
+	
+	// reset window modified flag
+	if (x->grains_count == 0 && x->window_modified && !x->w_writeflag) {
+		x->window_modified = false;
+	}
 
 	// BUFFER VARIABLE DECLARATIONS
 	t_buffer_obj *buffer = buffer_ref_getobject(x->buffer);
@@ -503,33 +508,33 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 
 		if (x->attr_zero) {
 			if (signbit(tr_curr) != signbit(x->tr_prev)) { // zero crossing from negative to positive
-				trigger = 1;
+				trigger = true;
 			}
 			else if (x->bang_trigger) {
-				trigger = 1;
-				x->bang_trigger = 0;
+				trigger = true;
+				x->bang_trigger = false;
 			}
 		}
 		else {
 			if ((x->tr_prev - tr_curr) > 0.9) {
-				trigger = 1;
+				trigger = true;
 			}
 			else if (x->bang_trigger) {
-				trigger = 1;
-				x->bang_trigger = 0;
+				trigger = true;
+				x->bang_trigger = false;
 			}
 		}
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
 		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->w_writeflag && !x->buffer_modified && !x->window_modified && b_sample) {
-			trigger = 0; // reset trigger
+			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
 			i = 0;
 			while (i < x->cloudsize) {
 				if (!x->cloud[i].busy) {
-					x->cloud[i].busy = 1;
+					x->cloud[i].busy = true;
 					slot = i;
 					break;
 				}
@@ -651,7 +656,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 					outsample_right += x->cloud[i].right[r];
 					if (x->cloud[i].pos == x->cloud[i].length) {
 						x->cloud[i].pos = 0;
-						x->cloud[i].busy = 0;
+						x->cloud[i].busy = false;
 						x->grains_count--;
 						if (x->grains_count < 0) {
 							x->grains_count = 0;
@@ -663,7 +668,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		// CHECK IF GRAINS COUNT IS ZERO, THEN RESET LIMIT_MODIFIED CHECKFLAG
 		if (x->grains_count == 0) {
 			if (x->buffer_modified) {
-				x->buffer_modified = 0;
+				x->buffer_modified = false;
 			}
 		}
 
@@ -888,7 +893,7 @@ void cmindexcloud_dblclick(t_cmindexcloud *x) {
 /************************************************************************************************************************/
 t_max_err cmindexcloud_notify(t_cmindexcloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data) {
 	if (msg == ps_buffer_modified) {
-		x->buffer_modified = 1;
+		x->buffer_modified = true;
 	}
 	return buffer_ref_notify(x->buffer, s, msg, sender, data); // return with the calling buffer
 }
@@ -899,7 +904,7 @@ t_max_err cmindexcloud_notify(t_cmindexcloud *x, t_symbol *s, t_symbol *msg, voi
 /************************************************************************************************************************/
 void cmindexcloud_doset(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
-		x->buffer_modified = 1;
+		x->buffer_modified = true;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
 		buffer_ref_set(x->buffer, x->buffer_name);
 		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->buffer))) > 2) {
@@ -932,11 +937,11 @@ void cmindexcloud_do_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av)
 				object_error((t_object *)x, "invalid window type");
 			}
 			else {
-				x->w_writeflag = 1;
-				x->window_modified = 1;
+				x->w_writeflag = true;
+				x->window_modified = true;
 				x->window_type = arg; // write window type into object structure
 				cmindexcloud_windowwrite(x); // write window into window array
-				x->w_writeflag = 0;
+				x->w_writeflag = false;
 			}
 		}
 	}
@@ -966,12 +971,12 @@ void cmindexcloud_do_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *a
 			object_error((t_object *)x, "window length must be greater than %d", MIN_WINDOWLENGTH);
 		}
 		else if (!x->w_writeflag) { // only if the window array is not currently being rewritten
-			x->w_writeflag = 1;
-			x->window_modified = 1;
+			x->w_writeflag = true;
+			x->window_modified = true;
 			x->window_length = arg; // write window length into object structure
 			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double)); // resize and clear window array
 			cmindexcloud_windowwrite(x); // write window into window array
-			x->w_writeflag = 0;
+			x->w_writeflag = false;
 		}
 	}
 	else {
@@ -1052,7 +1057,7 @@ t_bool cmindexcloud_resize(t_cmindexcloud *x) {
 /* THE BANG METHOD                                                                                                      */
 /************************************************************************************************************************/
 void cmindexcloud_bang(t_cmindexcloud *x) {
-	x->bang_trigger = 1;
+	x->bang_trigger = true;
 }
 
 
