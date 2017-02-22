@@ -129,8 +129,8 @@ void cmindexcloud_cloudsize(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av)
 void cmindexcloud_bang(t_cmindexcloud *x);
 t_bool cmindexcloud_resize(t_cmindexcloud *x);
 
-void cmindexcloud_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
-void cmindexcloud_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
+void cmindexcloud_wintype(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
+void cmindexcloud_winlength(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
 
 t_max_err cmindexcloud_stereo_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmindexcloud_winterp_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
@@ -171,8 +171,8 @@ void ext_main(void *r) {
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_cloudsize,		"cloudsize",	A_GIMME, 0); // Bind the limit message
-	class_addmethod(cmindexcloud_class, (method)cmindexcloud_w_type,		"w_type", 		A_GIMME, 0); // Bind the window type message
-	class_addmethod(cmindexcloud_class, (method)cmindexcloud_w_length,		"w_length", 	A_GIMME, 0); // Bind the window length message
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_wintype,		"wintype", 		A_GIMME, 0); // Bind the window type message
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_winlength,		"winlength", 	A_GIMME, 0); // Bind the window length message
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_bang,			"bang",			0);
 
 
@@ -926,7 +926,7 @@ void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE ACTUAL WINDOW TYPE SET METHOD                                                                                    */
 /************************************************************************************************************************/
-void cmindexcloud_do_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexcloud_do_wintype(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
 		if (!x->w_writeflag) { // only if the window array is not currently being rewritten
@@ -952,8 +952,8 @@ void cmindexcloud_do_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av)
 /************************************************************************************************************************/
 /* THE WINDOW TYPE SET METHOD                                                                                           */
 /************************************************************************************************************************/
-void cmindexcloud_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
-	defer(x, (method)cmindexcloud_do_w_type, s, ac, av);
+void cmindexcloud_wintype(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+	defer(x, (method)cmindexcloud_do_wintype, s, ac, av);
 }
 
 
@@ -961,7 +961,7 @@ void cmindexcloud_w_type(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE ACTUAL WINDOW LENGTH SET METHOD                                                                                  */
 /************************************************************************************************************************/
-void cmindexcloud_do_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+void cmindexcloud_do_winlength(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
 		// CHECK IF WINDOW LENGTH ARGUMENT IS VALID
@@ -992,8 +992,8 @@ void cmindexcloud_do_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *a
 /************************************************************************************************************************/
 /* THE WINDOW LENGTH SET METHOD                                                                                         */
 /************************************************************************************************************************/
-void cmindexcloud_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
-	defer(x, (method)cmindexcloud_do_w_length, s, ac, av);
+void cmindexcloud_winlength(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+	defer(x, (method)cmindexcloud_do_winlength, s, ac, av);
 }
 
 
