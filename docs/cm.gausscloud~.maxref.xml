@@ -179,17 +179,6 @@
 	</objarglist>
 	<!--MESSAGES-->
 	<methodlist>
-		<method name="limit">
-			<arglist>
-				<arg name="cloud size limit" optional="0" type="int" />
-			</arglist>
-			<digest>
-				Limits the cloud size
-			</digest>
-			<description>
-				Specifies a new maximum number of overlapping grains. The limit value must be lower than the cloud size specified on object load.
-			</description>
-		</method>
 		<method name="set">
 			<arglist>
 				<arg name="sample buffer" optional="0" type="symbol" />
@@ -200,6 +189,17 @@
 			</digest>
 			<description>
 				Specifies the sample and window buffer references.
+			</description>
+		</method>
+		<method name="cloudsize">
+			<arglist>
+				<arg name="grain cloud size" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Maximum size of grain cloud
+			</digest>
+			<description>
+				Specifies the new maximum size of the grain cloud and resizes allocated memory. The supplied value must be a positive integer.
 			</description>
 		</method>
 	</methodlist>
