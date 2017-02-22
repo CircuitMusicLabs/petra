@@ -972,7 +972,13 @@ void cmindexcloud_do_w_length(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *a
 			x->w_writeflag = true;
 			x->window_modified = true;
 			x->window_length = arg; // write window length into object structure
-			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double)); // resize and clear window array
+			// resize and clear window array
+			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double));
+			// check if all went well
+			if (x->window == NULL) {
+				object_error((t_object *)x, "out of memory");
+				return; // x->w_writeflag will not be reset if memory allocation fails
+			}
 			cmindexcloud_windowwrite(x); // write window into window array
 			x->w_writeflag = false;
 		}
