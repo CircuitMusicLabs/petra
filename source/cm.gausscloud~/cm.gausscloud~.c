@@ -899,7 +899,6 @@ void cmgausscloud_set(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
 void cmgausscloud_cloudsize(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
-		arg = atom_getlong(av);
 		if (arg < 1) {
 			object_error((t_object *)x, "cloud size must be larger than 1");
 		}
