@@ -201,9 +201,9 @@
 				Specifies the new maximum size of the grain cloud and resizes allocated memory. The supplied value must be a positive integer.
 			</description>
 		</method>
-		<method name="w_type">
+		<method name="wintype">
 			<arglist>
-				<arg name="index" optional="0" type="int" />
+				<arg name="window type index" optional="0" type="int" />
 			</arglist>
 			<digest>
 				Sets the window type
@@ -212,9 +212,9 @@
 				Specifies the type of the window buffer. See the helpfile for a detailed specification of index values.
 			</description>
 		</method>
-		<method name="w_length">
+		<method name="winlength">
 			<arglist>
-				<arg name="length" optional="0" type="int" />
+				<arg name="window length" optional="0" type="int" />
 			</arglist>
 			<digest>
 				Sets the length of the window buffer.
