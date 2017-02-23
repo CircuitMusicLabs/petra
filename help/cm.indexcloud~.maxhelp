@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 140.0, 161.0, 1014.0, 619.0 ],
+		"rect" : [ 100.0, 100.0, 1014.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -54,7 +54,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 140.0, 187.0, 1014.0, 593.0 ],
+						"rect" : [ 100.0, 126.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -117,13 +117,13 @@
 								"box" : 								{
 									"fontsize" : 12.0,
 									"id" : "obj-19",
-									"linecount" : 2,
+									"linecount" : 3,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 166.0, 79.0, 759.0, 33.0 ],
+									"patching_rect" : [ 166.0, 79.0, 776.0, 47.0 ],
 									"style" : "",
-									"text" : "The window type and length can also be specified with the w_type and w_length messages. When you change the window type or length, cm.indexcloud~ finishes all active grains. Once all grains have finished, granulation restarts with the updated window."
+									"text" : "The window type and length can also be specified with the wintype and winlength messages. When you change the window type or length, cm.indexcloud~ finishes all active grains and then recalculates the window. Once all grains have finished, granulation restarts with the updated window."
 								}
 
 							}
@@ -625,7 +625,7 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 578.200012, 146.5, 147.0, 37.0 ],
+									"patching_rect" : [ 581.200012, 146.5, 147.0, 37.0 ],
 									"style" : "",
 									"text" : "Change the window length"
 								}
@@ -638,9 +638,9 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 489.5, 167.5, 82.0, 22.0 ],
+									"patching_rect" : [ 489.5, 167.5, 85.0, 22.0 ],
 									"style" : "",
-									"text" : "w_length 512"
+									"text" : "winlength 512"
 								}
 
 							}
@@ -651,9 +651,9 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 489.5, 140.5, 82.0, 22.0 ],
+									"patching_rect" : [ 489.5, 140.5, 85.0, 22.0 ],
 									"style" : "",
-									"text" : "w_length 128"
+									"text" : "winlength 128"
 								}
 
 							}
@@ -1479,9 +1479,9 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 235.999985, 167.5, 59.0, 22.0 ],
+									"patching_rect" : [ 235.999985, 167.5, 61.0, 22.0 ],
 									"style" : "",
-									"text" : "w_type 1"
+									"text" : "wintype 1"
 								}
 
 							}
@@ -1492,9 +1492,9 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 235.999985, 140.5, 59.0, 22.0 ],
+									"patching_rect" : [ 235.999985, 140.5, 61.0, 22.0 ],
 									"style" : "",
-									"text" : "w_type 0"
+									"text" : "wintype 0"
 								}
 
 							}
@@ -7195,7 +7195,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -9258,7 +9258,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -13563,13 +13563,13 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
-			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
+			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
+			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
 			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
 			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ],
-			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
+			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
 			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
-			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
-			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ]
+			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{
