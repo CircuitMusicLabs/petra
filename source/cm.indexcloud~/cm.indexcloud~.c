@@ -69,9 +69,13 @@ typedef struct _cmindexcloud {
 	t_buffer_ref *buffer; // sample buffer reference
 	double *window; // window array
 	long window_type; // window typedef
+	long window_type_new;
 	long window_length; // window length
-	t_bool w_writeflag; // checkflag to see if window array is currently re-witten
-	t_bool window_modified; // checkflag to mark window changed
+	long window_length_new;
+	t_bool wintype_request;
+	t_bool wintype_verify;
+	t_bool winlength_request;
+	t_bool winlength_verify;
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
 	short connect_status[FLOAT_INLETS]; // array for signal inlet connection statuses
 	double *object_inlets; // array to store the incoming values coming from the object inlets
@@ -138,6 +142,8 @@ t_max_err cmindexcloud_sinterp_set(t_cmindexcloud *x, t_object *attr, long argc,
 t_max_err cmindexcloud_zero_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
 
 void cmindexcloud_windowwrite(t_cmindexcloud *x);
+t_bool cmindexcloud_do_wintype(t_cmindexcloud *x);
+t_bool cmindexcloud_do_winlength(t_cmindexcloud *x);
 
 // PANNING FUNCTION
 void cm_panning(cm_panstruct *panstruct, double *pos, t_cmindexcloud *x);
@@ -335,7 +341,7 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
 	x->buffer_modified = false; // initialize buffer modified flag
-	x->w_writeflag = false; // initialize window write flag
+	x->wintype_request = false; // initialize window write flag
 
 	// initialize the testvalues which are not dependent on sampleRate
 	x->testvalues[0] = 0.0; // dummy MIN_START
@@ -360,6 +366,12 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 		x->cloud[i].pos = 0;
 		x->cloud[i].busy = false;
 	}
+	
+	x->wintype_request = false;
+	x->wintype_verify = false;
+	
+	x->winlength_request = false;
+	x->winlength_verify = false;
 	
 	x->resize_request = false;
 	x->resize_verify = false;
@@ -455,7 +467,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 	
 	
 	// MEMORY RESIZE
-	if (x->grains_count == 0 && x->resize_request) {
+	if (!x->grains_count && x->resize_request) {
 		// allocate new memory and check if all went well
 		x->resize_verify = cmindexcloud_resize(x);
 		if (x->resize_verify) { // if all OK
@@ -470,11 +482,29 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 	}
 	
 	// reset window modified flag
-	if (x->grains_count == 0 && x->window_modified && !x->w_writeflag) {
-		x->window_modified = false;
+	if (!x->grains_count && x->wintype_request) {
+		x->wintype_verify = cmindexcloud_do_wintype(x);
+		if (x->wintype_verify) {
+			x->wintype_verify = false;
+			x->wintype_request = false;
+		}
+		else {
+			goto zero;
+		}
 	}
 	
-	if (x->grains_count == 0 && x->buffer_modified) {
+	if (!x->grains_count && x->winlength_request) {
+		x->winlength_verify = cmindexcloud_do_winlength(x);
+		if (x->winlength_verify) {
+			x->winlength_verify = false;
+			x->winlength_request = false;
+		}
+		else {
+			goto zero;
+		}
+	}
+	
+	if (!x->grains_count && x->buffer_modified) {
 		x->buffer_modified = false;
 	}
 
@@ -531,7 +561,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->w_writeflag && !x->buffer_modified && !x->window_modified && b_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->wintype_request && !x->winlength_request && !x->buffer_modified && b_sample) {
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -926,21 +956,29 @@ void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 /************************************************************************************************************************/
 /* THE ACTUAL WINDOW TYPE SET METHOD                                                                                    */
 /************************************************************************************************************************/
-void cmindexcloud_do_wintype(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+t_bool cmindexcloud_do_wintype(t_cmindexcloud *x) {
+	x->window_type = x->window_type_new;
+	
+	// write window into window array
+	cmindexcloud_windowwrite(x);
+	
+	return true;
+}
+
+
+/************************************************************************************************************************/
+/* THE WINDOW TYPE REQUEST METHOD                                                                                       */
+/************************************************************************************************************************/
+void cmindexcloud_wintype(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
-		if (!x->w_writeflag) { // only if the window array is not currently being rewritten
-			// CHECK IF WINDOW TYPE ARGUMENT IS VALID
-			if (arg < 0 || arg > MAX_WININDEX) {
-				object_error((t_object *)x, "invalid window type");
-			}
-			else {
-				x->w_writeflag = true;
-				x->window_modified = true;
-				x->window_type = arg; // write window type into object structure
-				cmindexcloud_windowwrite(x); // write window into window array
-				x->w_writeflag = false;
-			}
+		arg = atom_getlong(av);
+		if (arg < 0 || arg > MAX_WININDEX) {
+			object_error((t_object *)x, "invalid window type");
+		}
+		else {
+			x->window_type_new = arg;
+			x->wintype_request = true;
 		}
 	}
 	else {
@@ -949,51 +987,46 @@ void cmindexcloud_do_wintype(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av
 }
 
 
-/************************************************************************************************************************/
-/* THE WINDOW TYPE SET METHOD                                                                                           */
-/************************************************************************************************************************/
-void cmindexcloud_wintype(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
-	defer(x, (method)cmindexcloud_do_wintype, s, ac, av);
-}
-
-
 
 /************************************************************************************************************************/
 /* THE ACTUAL WINDOW LENGTH SET METHOD                                                                                  */
 /************************************************************************************************************************/
-void cmindexcloud_do_winlength(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+t_bool cmindexcloud_do_winlength(t_cmindexcloud *x) {
+	x->window_length = x->window_length_new;
+	
+	// resize and clear window array
+	x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double));
+	
+	// check if all went well
+	if (x->window == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return false; // x->wintype_request will not be reset if memory allocation fails
+	}
+	
+	// write window into window array
+	cmindexcloud_windowwrite(x);
+	
+	return true;
+}
+
+
+/************************************************************************************************************************/
+/* THE WINDOW LENGTH REQUEST METHOD                                                                                     */
+/************************************************************************************************************************/
+void cmindexcloud_winlength(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	long arg = atom_getlong(av);
 	if (ac && av) {
-		// CHECK IF WINDOW LENGTH ARGUMENT IS VALID
 		if (arg < MIN_WINDOWLENGTH) {
 			object_error((t_object *)x, "window length must be greater than %d", MIN_WINDOWLENGTH);
 		}
-		else if (!x->w_writeflag) { // only if the window array is not currently being rewritten
-			x->w_writeflag = true;
-			x->window_modified = true;
-			x->window_length = arg; // write window length into object structure
-			// resize and clear window array
-			x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double));
-			// check if all went well
-			if (x->window == NULL) {
-				object_error((t_object *)x, "out of memory");
-				return; // x->w_writeflag will not be reset if memory allocation fails
-			}
-			cmindexcloud_windowwrite(x); // write window into window array
-			x->w_writeflag = false;
+		else {
+			x->window_length_new = arg;
+			x->winlength_request = true;
 		}
 	}
 	else {
 		object_error((t_object *)x, "argument required (window length)");
 	}
-}
-
-
-/************************************************************************************************************************/
-/* THE WINDOW LENGTH SET METHOD                                                                                         */
-/************************************************************************************************************************/
-void cmindexcloud_winlength(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
-	defer(x, (method)cmindexcloud_do_winlength, s, ac, av);
 }
 
 
@@ -1003,14 +1036,19 @@ void cmindexcloud_winlength(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av)
 /* THE RESIZE REQUEST METHOD                                                                                            */
 /************************************************************************************************************************/
 void cmindexcloud_cloudsize(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
-	long arg;
-	arg = atom_getlong(av);
-	if (arg < 1) {
-		object_error((t_object *)x, "cloud size must be larger than 1");
+	long arg = atom_getlong(av);
+	if (ac && av) {
+		arg = atom_getlong(av);
+		if (arg < 1) {
+			object_error((t_object *)x, "cloud size must be larger than 1");
+		}
+		else {
+			x->cloudsize_new = arg;
+			x->resize_request = true;
+		}
 	}
 	else {
-		x->cloudsize_new = arg;
-		x->resize_request = true;
+		object_error((t_object *)x, "argument required (cloud size)");
 	}
 }
 
