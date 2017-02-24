@@ -84,11 +84,11 @@ typedef struct _cmbuffercloud {
 	long cloudsize; // size of the cloud struct array, value obtained from argument and "cloudsize" method
 	t_bool resize_request; // flag set to true when "cloudsize" method called
 	long cloudsize_new; // new cloudsize obtained from "cloudsize" method
-	t_bool resize_verify; // check-flag for proper memroy re-allocation
-	long grainlength;
-	t_bool length_request;
-	long grainlength_new;
-	t_bool length_verify;
+	t_bool resize_verify; // check-flag for proper memory re-allocation
+	long grainlength; // maximum grain length
+	t_bool length_request; // flag set to true when "grainlength" method called
+	long grainlength_new; // new grain length obtained from "grainlength" method
+	t_bool length_verify; // check flag for proper memory re-allocation
 } t_cmbuffercloud;
 
 
@@ -488,7 +488,12 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	x->grain_params[8] = x->connect_status[8] ? *ins[9] : x->object_inlets[8];						// gain min
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
 	
-	
+	if (x->grain_params[2] > x->grainlength * x->m_sr) {
+		x->grain_params[2] = x->grainlength * x->m_sr;
+	}
+	if (x->grain_params[3] > x->grainlength * x->m_sr) {
+		x->grain_params[3] = x->grainlength * x->m_sr;
+	}
 
 	
 	/************************************************************************************************************************/
@@ -989,6 +994,7 @@ t_bool cmbuffercloud_resize(t_cmbuffercloud *x) {
 	}
 	else if (x->length_request) {
 		x->grainlength = x->grainlength_new;
+		x->testvalues[3] = x->grainlength * x->m_sr;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
