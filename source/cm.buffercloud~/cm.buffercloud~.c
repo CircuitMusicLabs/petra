@@ -32,7 +32,7 @@
 #define DEFAULT_GRAINLENGTH 500 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MIN_PITCH 0.001 // min pitch
-#define MAX_PITCH 6 // max pitch
+#define MAX_PITCH 8 // max pitch
 #define MIN_PAN -1.0 // min pan
 #define MAX_PAN 1.0 // max pan
 #define MIN_GAIN 0.0 // min gain
