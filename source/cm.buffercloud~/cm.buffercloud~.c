@@ -326,9 +326,9 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->grainlength_new = x->grainlength;
 	
 	x->resize_request = false;
-	x->length_request = false;
-	
 	x->resize_verify = false;
+	
+	x->length_request = false;
 	x->length_verify = false;
 
 	/************************************************************************************************************************/
@@ -487,6 +487,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	x->grain_params[7] = x->connect_status[7] ? *ins[8] : x->object_inlets[7];						// pan max
 	x->grain_params[8] = x->connect_status[8] ? *ins[9] : x->object_inlets[8];						// gain min
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
+	
 	
 	if (x->grain_params[2] > x->grainlength * x->m_sr) {
 		x->grain_params[2] = x->grainlength * x->m_sr;
