@@ -29,10 +29,10 @@
 #include "ext_obex.h"
 #include <stdlib.h> // for arc4random_uniform
 #include <math.h> // for stereo functions
-#define MAX_GRAINLENGTH 500 // max grain length in ms
+#define DEFAULT_GRAINLENGTH 500 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MIN_PITCH 0.001 // min pitch
-#define MAX_PITCH 4 // max pitch
+#define MAX_PITCH 8 // max pitch
 #define MIN_PAN -1.0 // min pan
 #define MAX_PAN 1.0 // max pan
 #define MIN_GAIN 0.0 // min gain
@@ -84,6 +84,10 @@ typedef struct _cmgausscloud {
 	t_bool resize_request; // flag set to true when "cloudsize" method called
 	long cloudsize_new; // new cloudsize obtained from "cloudsize" method
 	t_bool resize_verify; // check-flag for proper memroy re-allocation
+	long grainlength; // maximum grain length
+	t_bool length_request; // flag set to true when "grainlength" method called
+	long grainlength_new; // new grain length obtained from "grainlength" method
+	t_bool length_verify; // check flag for proper memory re-allocation
 } t_cmgausscloud;
 
 
@@ -116,6 +120,7 @@ void cmgausscloud_dblclick(t_cmgausscloud *x);
 t_max_err cmgausscloud_notify(t_cmgausscloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
 void cmgausscloud_set(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av);
 void cmgausscloud_cloudsize(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av);
+void cmgausscloud_grainlength(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av);
 void cmgausscloud_bang(t_cmgausscloud *x);
 t_bool cmgausscloud_resize(t_cmgausscloud *x);
 
@@ -146,7 +151,8 @@ void ext_main(void *r) {
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_dblclick,		"dblclick",		A_CANT, 0); // Bind the double click message
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_notify, 		"notify", 		A_CANT, 0); // Bind the notify message
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
-	class_addmethod(cmgausscloud_class, (method)cmgausscloud_cloudsize,		"cloudsize",	A_GIMME, 0); // Bind the limit message
+	class_addmethod(cmgausscloud_class, (method)cmgausscloud_cloudsize,		"cloudsize",	A_GIMME, 0); // Bind the cloudsize message
+	class_addmethod(cmgausscloud_class, (method)cmgausscloud_grainlength,	"grainlength",	A_GIMME, 0); // Bind the grainlength message
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_bang,			"bang",			0);
 
 	CLASS_ATTR_ATOM_LONG(cmgausscloud_class, "stereo", 0, t_cmgausscloud, attr_stereo);
@@ -215,6 +221,8 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 	// GET SYSTEM SAMPLE RATE
 	x->m_sr = sys_getsr() * 0.001; // get the current sample rate and write it into the object structure
+	
+	x->grainlength = DEFAULT_GRAINLENGTH;
 
 	/************************************************************************************************************************/
 	// ALLOCATE MEMORY FOR THE OBJET FLOAT_INLETS ARRAY
@@ -254,12 +262,12 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH MEMBER OF THE GRAINMEM STRUCT
 	for (i = 0; i < x->cloudsize; i++) {
-		x->cloud[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		x->cloud[i].left = (double *)sysmem_newptrclear(((x->grainlength * x->m_sr) * MAX_PITCH) * sizeof(double));
 		if (x->cloud[i].left == NULL) {
 			object_error((t_object *)x, "out of memory");
 			return NULL;
 		}
-		x->cloud[i].right = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		x->cloud[i].right = (double *)sysmem_newptrclear(((x->grainlength * x->m_sr) * MAX_PITCH) * sizeof(double));
 		if (x->cloud[i].right == NULL) {
 			object_error((t_object *)x, "out of memory");
 			return NULL;
@@ -311,8 +319,14 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 		x->cloud[i].busy = false;
 	}
 	
+	x->cloudsize_new = x->cloudsize;
+	x->grainlength_new = x->grainlength;
+	
 	x->resize_request = false;
+	x->length_request = false;
+	
 	x->resize_verify = false;
+	x->length_verify = false;
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -347,14 +361,14 @@ void cmgausscloud_dsp64(t_cmgausscloud *x, t_object *dsp64, short *count, double
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
 		for (i = 0; i < x->cloudsize; i++) {
-			x->cloud[i].left = (double *)sysmem_resizeptrclear(x->cloud[i].left, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+			x->cloud[i].left = (double *)sysmem_resizeptrclear(x->cloud[i].left, ((x->grainlength * x->m_sr) * MAX_PITCH) * sizeof(double));
 			if (x->cloud[i].left == NULL) {
 				object_error((t_object *)x, "out of memory");
 				return;
 			}
 		}
 		for (i = 0; i < x->cloudsize; i++) {
-			x->cloud[i].right = (double *)sysmem_resizeptrclear(x->cloud[i].right, ((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+			x->cloud[i].right = (double *)sysmem_resizeptrclear(x->cloud[i].right, ((x->grainlength * x->m_sr) * MAX_PITCH) * sizeof(double));
 			if (x->cloud[i].right == NULL) {
 				object_error((t_object *)x, "out of memory");
 				return;
@@ -363,7 +377,7 @@ void cmgausscloud_dsp64(t_cmgausscloud *x, t_object *dsp64, short *count, double
 	}
 	// calcuate the sampleRate-dependant test values
 	x->testvalues[2] = MIN_GRAINLENGTH * x->m_sr;
-	x->testvalues[3] = MAX_GRAINLENGTH * x->m_sr;
+	x->testvalues[3] = x->grainlength * x->m_sr;
 
 	// CALL THE PERFORM ROUTINE
 	object_method(dsp64, gensym("dsp_add64"), x, cmgausscloud_perform64, 0, NULL);
@@ -415,6 +429,21 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 		}
 	}
 	
+	// CLOUDSIZE - GRAIN LENGTH
+	if (x->grains_count == 0 && x->length_request) {
+		// allocate new memory and check if all went well
+		x->length_verify = cmgausscloud_resize(x);
+		if (x->length_verify) { // if all OK
+			x->length_verify = false;
+			x->length_request = false;
+		}
+		else {
+			// if mem-allocation fails, go to zero and try again next time:
+			// x->length_request is not reset
+			goto zero;
+		}
+	}
+	
 	if (x->grains_count == 0 && x->buffer_modified) {
 		x->buffer_modified = false;
 	}
@@ -450,6 +479,13 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
 	x->grain_params[10] = x->connect_status[10] ? *ins[11] : x->object_inlets[10];					// alpha min
 	x->grain_params[11] = x->connect_status[11] ? *ins[12] : x->object_inlets[11];					// alpha max
+	
+	if (x->grain_params[2] > x->grainlength * x->m_sr) {
+		x->grain_params[2] = x->grainlength * x->m_sr;
+	}
+	if (x->grain_params[3] > x->grainlength * x->m_sr) {
+		x->grain_params[3] = x->grainlength * x->m_sr;
+	}
 
 
 	// DSP LOOP
@@ -477,7 +513,7 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->buffer_modified && b_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->buffer_modified && b_sample) {
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -756,7 +792,7 @@ void cmgausscloud_float(t_cmgausscloud *x, double f) {
 			if (f < MIN_GRAINLENGTH) {
 				dump = f;
 			}
-			else if (f > MAX_GRAINLENGTH) {
+			else if (f > x->grainlength) {
 				dump = f;
 			}
 			else {
@@ -767,7 +803,7 @@ void cmgausscloud_float(t_cmgausscloud *x, double f) {
 			if (f < MIN_GRAINLENGTH) {
 				dump = f;
 			}
-			else if (f > MAX_GRAINLENGTH) {
+			else if (f > x->grainlength) {
 				dump = f;
 			}
 			else {
@@ -914,6 +950,26 @@ void cmgausscloud_cloudsize(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av)
 
 
 /************************************************************************************************************************/
+/* THE GRAINLENGTH REQUEST METHOD                                                                                       */
+/************************************************************************************************************************/
+void cmgausscloud_grainlength(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
+	long arg = atom_getlong(av);
+	if (ac && av) {
+		if (arg < MIN_GRAINLENGTH) {
+			object_error((t_object *)x, "max. grain length must be larger than %d", MIN_GRAINLENGTH);
+		}
+		else {
+			x->grainlength_new = arg;
+			x->length_request = true;
+		}
+	}
+	else {
+		object_error((t_object *)x, "argument required (max. grain length)");
+	}
+}
+
+
+/************************************************************************************************************************/
 /* THE ACTUAL RESIZE METHOD                                                                                             */
 /************************************************************************************************************************/
 t_bool cmgausscloud_resize(t_cmgausscloud *x) {
@@ -925,7 +981,13 @@ t_bool cmgausscloud_resize(t_cmgausscloud *x) {
 	}
 	sysmem_freeptr(x->cloud);
 	
-	x->cloudsize = x->cloudsize_new;
+	if (x->resize_request) {
+		x->cloudsize = x->cloudsize_new;
+	}
+	else if (x->length_request) {
+		x->grainlength = x->grainlength_new;
+		x->testvalues[3] = x->grainlength * x->m_sr;
+	}
 	
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
 	x->cloud = (cm_cloud *)sysmem_newptrclear((x->cloudsize) * sizeof(cm_cloud));
@@ -937,13 +999,13 @@ t_bool cmgausscloud_resize(t_cmgausscloud *x) {
 	
 	// ALLOCATE MEMORY FOR THE GRAIN ARRAY IN EACH MEMBER OF THE GRAINMEM STRUCT
 	for (i = 0; i < x->cloudsize; i++) {
-		x->cloud[i].left = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		x->cloud[i].left = (double *)sysmem_newptrclear(((x->grainlength * x->m_sr) * MAX_PITCH) * sizeof(double));
 		if (x->cloud[i].left == NULL) {
 			object_error((t_object *)x, "out of memory");
 			x->resize_verify = false;
 			return false;
 		}
-		x->cloud[i].right = (double *)sysmem_newptrclear(((MAX_GRAINLENGTH * x->m_sr) * MAX_PITCH) * sizeof(double));
+		x->cloud[i].right = (double *)sysmem_newptrclear(((x->grainlength * x->m_sr) * MAX_PITCH) * sizeof(double));
 		if (x->cloud[i].right == NULL) {
 			object_error((t_object *)x, "out of memory");
 			x->resize_verify = false;
