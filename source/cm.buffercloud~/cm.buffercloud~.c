@@ -216,13 +216,13 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	object_attr_setlong(x, gensym("zero"), 0); // initialize zero crossing attribute
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 	
-	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (1 - MAXGRAINS)
+	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE
 	if (x->cloudsize < MIN_CLOUDSIZE) {
 		object_error((t_object *)x, "cloud size must be equal to or larger than %d", MIN_CLOUDSIZE);
 		return NULL;
 	}
 	
-	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (1 - MAXGRAINS)
+	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE
 	if (x->grainlength < MIN_GRAINLENGTH) {
 		object_error((t_object *)x, "maximum grain length must be equal to or larger than %d", MIN_GRAINLENGTH);
 		return NULL;
