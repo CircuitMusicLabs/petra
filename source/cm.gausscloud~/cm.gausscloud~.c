@@ -29,7 +29,7 @@
 #include "ext_obex.h"
 #include <stdlib.h> // for arc4random_uniform
 #include <math.h> // for stereo functions
-#define DEFAULT_GRAINLENGTH 500 // max grain length in ms
+#define MIN_CLOUDSIZE 1 // max grain length in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MIN_PITCH 0.001 // min pitch
 #define MAX_PITCH 8 // max pitch
@@ -39,7 +39,7 @@
 #define MAX_GAIN 2.0  // max gain
 #define MIN_ALPHA 0.1 // min alpha value
 #define MAX_ALPHA 10.0 // max alpha value
-#define ARGUMENTS 2 // constant number of arguments required for the external
+#define ARGUMENTS 3 // constant number of arguments required for the external
 #define FLOAT_INLETS 12 // number of object float inlets
 #define RANDMAX 10000
 
@@ -194,12 +194,13 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	dsp_setup((t_pxobject *)x, 13); // create 13 inlets
 
 	if (argc < ARGUMENTS) {
-		object_error((t_object *)x, "%d arguments required (sample buffer / cloud size)", ARGUMENTS);
+		object_error((t_object *)x, "%d arguments required: sample buffer | cloud size | max. grain length", ARGUMENTS);
 		return NULL;
 	}
 
 	x->buffer_name = atom_getsymarg(0, argc, argv); // get user supplied argument for sample buffer
-	x->cloudsize = atom_getintarg(1, argc, argv); // get user supplied argument for maximum grains
+	x->cloudsize = atom_getintarg(1, argc, argv); // get user supplied argument for cloud size
+	x->grainlength = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grain length
 
 
 	// HANDLE ATTRIBUTES
@@ -209,8 +210,14 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (1 - MAXGRAINS)
-	if (x->cloudsize < 1) {
-		object_error((t_object *)x, "cloud size must be larger than 1");
+	if (x->cloudsize < MIN_CLOUDSIZE) {
+		object_error((t_object *)x, "cloud size must be equal to or larger than %d", MIN_CLOUDSIZE);
+		return NULL;
+	}
+	
+	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (1 - MAXGRAINS)
+	if (x->grainlength < MIN_GRAINLENGTH) {
+		object_error((t_object *)x, "maximum grain length must be equal to or larger than %d", MIN_GRAINLENGTH);
 		return NULL;
 	}
 
@@ -222,7 +229,6 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	// GET SYSTEM SAMPLE RATE
 	x->m_sr = sys_getsr() * 0.001; // get the current sample rate and write it into the object structure
 	
-	x->grainlength = DEFAULT_GRAINLENGTH;
 
 	/************************************************************************************************************************/
 	// ALLOCATE MEMORY FOR THE OBJET FLOAT_INLETS ARRAY
@@ -414,7 +420,7 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
 	
 	
-	// MEMORY RESIZE
+	// CLOUDSIZE - MEMORY RESIZE
 	if (x->grains_count == 0 && x->resize_request) {
 		// allocate new memory and check if all went well
 		x->resize_verify = cmgausscloud_resize(x);

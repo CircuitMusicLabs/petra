@@ -29,7 +29,7 @@
 #include "ext_obex.h"
 #include <stdlib.h> // for arc4random_uniform
 #include <math.h> // for stereo functions
-#define MIN_CLOUDSIZE 1 // max grain length in ms
+#define MIN_CLOUDSIZE 1 // min cloud size in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MIN_PITCH 0.001 // min pitch
 #define MAX_PITCH 8 // max pitch
