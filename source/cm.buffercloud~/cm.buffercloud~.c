@@ -1,22 +1,22 @@
 /*
  cm.buffercloud~ - a granular synthesis external audio object for Max/MSP.
  Copyright (C) 2012 - 2017  Matthias W. Müller - circuit.music.labs
-
+ 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
-
+ 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
-
+ 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+ 
  info@circuitmusiclabs.com
-
+ 
  */
 
 /************************************************************************************************************************/
@@ -29,7 +29,7 @@
 #include "ext_obex.h"
 #include <stdlib.h> // for arc4random_uniform
 #include <math.h> // for stereo functions
-#define DEFAULT_GRAINLENGTH 500 // max grain length in ms
+#define MIN_CLOUDSIZE 1 // min cloud size in ms
 #define MIN_GRAINLENGTH 1 // min grain length in ms
 #define MIN_PITCH 0.001 // min pitch
 #define MAX_PITCH 8 // max pitch
@@ -37,7 +37,7 @@
 #define MAX_PAN 1.0 // max pan
 #define MIN_GAIN 0.0 // min gain
 #define MAX_GAIN 2.0  // max gain
-#define ARGUMENTS 3 // constant number of arguments required for the external
+#define ARGUMENTS 4 // constant number of arguments required for the external
 #define FLOAT_INLETS 10 // number of object float inlets
 #define RANDMAX 10000
 
@@ -143,7 +143,7 @@ double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount
 void ext_main(void *r) {
 	// Initialize the class - first argument: VERY important to match the name of the object in the procect settings!!!
 	cmbuffercloud_class = class_new("cm.buffercloud~", (method)cmbuffercloud_new, (method)cmbuffercloud_free, sizeof(t_cmbuffercloud), 0, A_GIMME, 0);
-
+	
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_dsp64, 		"dsp64",		A_CANT, 0);  // Bind the 64 bit dsp method
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_assist, 		"assist",		A_CANT, 0); // Bind the assist message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_float, 		"float",		A_FLOAT, 0); // Bind the float message (allowing float input)
@@ -153,36 +153,36 @@ void ext_main(void *r) {
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_cloudsize,	"cloudsize",	A_GIMME, 0); // Bind the cloudsize message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_grainlength,	"grainlength",	A_GIMME, 0); // Bind the grainlength message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_bang,		"bang",			0);
-
+	
 	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "stereo", 0, t_cmbuffercloud, attr_stereo);
 	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "stereo", (method)NULL, (method)cmbuffercloud_stereo_set);
 	CLASS_ATTR_BASIC(cmbuffercloud_class, "stereo", 0);
 	CLASS_ATTR_SAVE(cmbuffercloud_class, "stereo", 0);
 	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "stereo", 0, "onoff", "Multichannel playback");
-
+	
 	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "w_interp", 0, t_cmbuffercloud, attr_winterp);
 	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "w_interp", (method)NULL, (method)cmbuffercloud_winterp_set);
 	CLASS_ATTR_BASIC(cmbuffercloud_class, "w_interp", 0);
 	CLASS_ATTR_SAVE(cmbuffercloud_class, "w_interp", 0);
 	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "w_interp", 0, "onoff", "Window interpolation on/off");
-
+	
 	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "s_interp", 0, t_cmbuffercloud, attr_sinterp);
 	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "s_interp", (method)NULL, (method)cmbuffercloud_sinterp_set);
 	CLASS_ATTR_BASIC(cmbuffercloud_class, "s_interp", 0);
 	CLASS_ATTR_SAVE(cmbuffercloud_class, "s_interp", 0);
 	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "s_interp", 0, "onoff", "Sample interpolation on/off");
-
+	
 	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "zero", 0, t_cmbuffercloud, attr_zero);
 	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "zero", (method)NULL, (method)cmbuffercloud_zero_set);
 	CLASS_ATTR_BASIC(cmbuffercloud_class, "zero", 0);
 	CLASS_ATTR_SAVE(cmbuffercloud_class, "zero", 0);
 	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
-
+	
 	CLASS_ATTR_ORDER(cmbuffercloud_class, "stereo", 0, "1");
 	CLASS_ATTR_ORDER(cmbuffercloud_class, "w_interp", 0, "2");
 	CLASS_ATTR_ORDER(cmbuffercloud_class, "s_interp", 0, "3");
 	CLASS_ATTR_ORDER(cmbuffercloud_class, "zero", 0, "4");
-
+	
 	class_dspinit(cmbuffercloud_class); // Add standard Max/MSP methods to your class
 	class_register(CLASS_BOX, cmbuffercloud_class); // Register the class with Max
 	ps_buffer_modified = gensym("buffer_modified"); // assign the buffer modified message to the static pointer created above
@@ -197,39 +197,45 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	long i;
 	t_cmbuffercloud *x = (t_cmbuffercloud *)object_alloc(cmbuffercloud_class); // create the object and allocate required memory
 	dsp_setup((t_pxobject *)x, 11); // create 11 inlets
-
-
+	
+	
 	if (argc < ARGUMENTS) {
-		object_error((t_object *)x, "%d arguments required (sample buffer / window type / cloud size)", ARGUMENTS);
+		object_error((t_object *)x, "%d arguments required: sample buffer | window buffer | cloud size | max. grain length", ARGUMENTS);
 		return NULL;
 	}
-
+	
 	x->buffer_name = atom_getsymarg(0, argc, argv); // get user supplied argument for sample buffer
 	x->window_name = atom_getsymarg(1, argc, argv); // get user supplied argument for window buffer
-	x->cloudsize = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grains
-
+	x->cloudsize = atom_getintarg(2, argc, argv); // get user supplied argument for cloud size
+	x->grainlength = atom_getintarg(3, argc, argv); // get user supplied argument for maximum grain length
+	
 	// HANDLE ATTRIBUTES
 	object_attr_setlong(x, gensym("stereo"), 0); // initialize stereo attribute
 	object_attr_setlong(x, gensym("w_interp"), 0); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("s_interp"), 1); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("zero"), 0); // initialize zero crossing attribute
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
-
-	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE (1 - MAXGRAINS)
-	if (x->cloudsize < 1) {
-		object_error((t_object *)x, "cloud size must be larger than 1");
+	
+	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE
+	if (x->cloudsize < MIN_CLOUDSIZE) {
+		object_error((t_object *)x, "cloud size must be equal to or larger than %d", MIN_CLOUDSIZE);
 		return NULL;
 	}
-
+	
+	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE
+	if (x->grainlength < MIN_GRAINLENGTH) {
+		object_error((t_object *)x, "maximum grain length must be equal to or larger than %d", MIN_GRAINLENGTH);
+		return NULL;
+	}
+	
 	// CREATE OUTLETS (OUTLETS ARE CREATED FROM RIGHT TO LEFT)
 	x->grains_count_out = intout((t_object *)x); // create outlet for number of currently playing grains
 	outlet_new((t_object *)x, "signal"); // right signal outlet
 	outlet_new((t_object *)x, "signal"); // left signal outlet
-
+	
 	// GET SYSTEM SAMPLE RATE
 	x->m_sr = sys_getsr() * 0.001; // get the current sample rate and write it into the object structure
-
-	x->grainlength = DEFAULT_GRAINLENGTH;
+	
 	
 	/************************************************************************************************************************/
 	// ALLOCATE MEMORY FOR THE OBJET FLOAT_INLETS ARRAY
@@ -238,21 +244,21 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
 	x->grain_params = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
 	if (x->grain_params == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	// ALLOCATE MEMORY FOR THE GRAIN PARAMETERS ARRAY
 	x->randomized = (double *)sysmem_newptrclear((FLOAT_INLETS / 2) * sizeof(double));
 	if (x->randomized == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
 	}
-
+	
 	// ALLOCATE MEMORY FOR THE TEST VALUES ARRAY
 	x->testvalues = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
 	if (x->testvalues == NULL) {
@@ -281,7 +287,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		}
 	}
 	
-
+	
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
 	x->object_inlets[0] = 0.0; // initialize float inlet value for current start min value
@@ -307,7 +313,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->testvalues[7] = MAX_PAN;
 	x->testvalues[8] = MIN_GAIN;
 	x->testvalues[9] = MAX_GAIN;
-
+	
 	// calculate constants for panning function
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
 	x->root2ovr2 = sqrt(2.0) * 0.5;
@@ -330,16 +336,16 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	x->length_request = false;
 	x->length_verify = false;
-
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
 	x->w_buffer = buffer_ref_new((t_object *)x, x->window_name); // write the window buffer reference into the object structure
-
-	#ifdef WIN_VERSION
-		srand((unsigned int)clock());
-	#endif
-
+	
+#ifdef WIN_VERSION
+	srand((unsigned int)clock());
+#endif
+	
 	return x;
 }
 
@@ -359,7 +365,7 @@ void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, doub
 	x->connect_status[7] = count[8]; // 9th inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[8] = count[9]; // 10th inlet: write connection flag into object structure (1 if signal connected)
 	x->connect_status[9] = count[10]; // 11th inlet: write connection flag into object structure (1 if signal connected)
-
+	
 	if (x->m_sr != samplerate * 0.001) { // check if sample rate stored in object structure is the same as the current project sample rate
 		x->m_sr = samplerate * 0.001;
 		for (i = 0; i < x->cloudsize; i++) {
@@ -380,7 +386,7 @@ void cmbuffercloud_dsp64(t_cmbuffercloud *x, t_object *dsp64, short *count, doub
 	// calcuate the sampleRate-dependant test values
 	x->testvalues[2] = MIN_GRAINLENGTH * x->m_sr;
 	x->testvalues[3] = x->grainlength * x->m_sr;
-
+	
 	// CALL THE PERFORM ROUTINE
 	object_method(dsp64, gensym("dsp_add64"), x, cmbuffercloud_perform64, 0, NULL);
 }
@@ -409,7 +415,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	long pitch_length;
 	double gain;
 	double pan_left, pan_right;
-
+	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
@@ -448,7 +454,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	if (x->grains_count == 0 && x->buffer_modified) {
 		x->buffer_modified = false;
 	}
-
+	
 	// BUFFER VARIABLE DECLARATIONS
 	t_buffer_obj *buffer = buffer_ref_getobject(x->buffer);
 	t_buffer_obj *w_buffer = buffer_ref_getobject(x->w_buffer);
@@ -473,10 +479,10 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	w_framecount = buffer_getframecount(w_buffer); // get number of frames in the window buffer
 	b_channelcount = buffer_getchannelcount(buffer); // get number of channels in the sample buffer
 	w_channelcount = buffer_getchannelcount(w_buffer); // get number of channels in the sample buffer
-
+	
 	// GET INLET VALUES
 	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
-
+	
 	x->grain_params[0] = x->connect_status[0] ? *ins[1] * x->m_sr : x->object_inlets[0] * x->m_sr;	// start min
 	x->grain_params[1] = x->connect_status[1] ? *ins[2] * x->m_sr : x->object_inlets[1] * x->m_sr;	// start max
 	x->grain_params[2] = x->connect_status[2] ? *ins[3] * x->m_sr : x->object_inlets[2] * x->m_sr;	// length min
@@ -495,14 +501,14 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	if (x->grain_params[3] > x->grainlength * x->m_sr) {
 		x->grain_params[3] = x->grainlength * x->m_sr;
 	}
-
+	
 	
 	/************************************************************************************************************************/
 	// DSP LOOP
 	while (n--) {
 		
 		tr_curr = *tr_sigin++; // get current trigger value
-
+		
 		if (x->attr_zero) {
 			if (signbit(tr_curr) != signbit(x->tr_prev)) { // zero crossing from negative to positive
 				trigger = true;
@@ -521,7 +527,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				x->bang_trigger = false;
 			}
 		}
-
+		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
 		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->buffer_modified && b_sample && w_sample) {
@@ -537,14 +543,14 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				}
 				i++;
 			}
-
+			
 			// randomize the grain parameters and write them into the randomized array
 			x->randomized[0] = cm_random(&x->grain_params[0], &x->grain_params[1]); // start
 			x->randomized[1] = cm_random(&x->grain_params[2], &x->grain_params[3]); // length
 			x->randomized[2] = cm_random(&x->grain_params[4], &x->grain_params[5]); // pitch
 			x->randomized[3] = cm_random(&x->grain_params[6], &x->grain_params[7]); // pan
 			x->randomized[4] = cm_random(&x->grain_params[8], &x->grain_params[9]); // gain
-
+			
 			// check for parameter sanity of the length value
 			if (x->randomized[1] < x->testvalues[2]) {
 				x->randomized[1] = x->testvalues[2];
@@ -552,7 +558,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			else if (x->randomized[1] > x->testvalues[3]) {
 				x->randomized[1] = x->testvalues[3];
 			}
-
+			
 			// check for parameter sanity of the pitch value
 			if (x->randomized[2] < x->testvalues[4]) {
 				x->randomized[2] = x->testvalues[4];
@@ -560,7 +566,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			else if (x->randomized[2] > x->testvalues[5]) {
 				x->randomized[2] = x->testvalues[5];
 			}
-
+			
 			// check for parameter sanity of the pan value
 			if (x->randomized[3] < x->testvalues[6]) {
 				x->randomized[3] = x->testvalues[6];
@@ -568,7 +574,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			else if (x->randomized[3] > x->testvalues[7]) {
 				x->randomized[3] = x->testvalues[7];
 			}
-
+			
 			// check for parameter sanity of the gain value
 			if (x->randomized[4] < x->testvalues[8]) {
 				x->randomized[4] = x->testvalues[8];
@@ -576,7 +582,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			else if (x->randomized[4] > x->testvalues[9]) {
 				x->randomized[4] = x->testvalues[9];
 			}
-
+			
 			// write grain lenght slot (non-pitch)
 			smp_length = x->randomized[1];
 			
@@ -642,7 +648,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				}
 			}
 		}
-
+		
 		/************************************************************************************************************************/
 		// CONTINUE WITH THE PLAYBACK ROUTINE
 		
@@ -664,7 +670,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				}
 			}
 		}
-
+		
 		/************************************************************************************************************************/
 		x->tr_prev = tr_curr; // store current trigger value in object structure
 		
@@ -674,14 +680,14 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		outsample_left = 0.0;
 		outsample_right = 0.0;
 	}
-
+	
 	/************************************************************************************************************************/
 	// STORE UPDATED RUNNING VALUES INTO THE OBJECT STRUCTURE
 	buffer_unlocksamples(buffer);
 	buffer_unlocksamples(w_buffer);
 	outlet_int(x->grains_count_out, x->grains_count); // send number of currently playing grains to the outlet
 	return;
-
+	
 zero:
 	while (n--) {
 		*out_left++ = 0.0;
