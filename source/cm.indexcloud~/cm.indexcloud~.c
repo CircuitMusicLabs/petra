@@ -1029,8 +1029,10 @@ void cmindexcloud_wintype(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 t_bool cmindexcloud_do_winlength(t_cmindexcloud *x) {
 	x->window_length = x->window_length_new;
 	
+	sysmem_freeptr(x->window);
+	
 	// resize and clear window array
-	x->window = (double *)sysmem_resizeptrclear(x->window, x->window_length * sizeof(double));
+	x->window = (double *)sysmem_newptrclear(x->window_length * sizeof(double));
 	
 	// check if all went well
 	if (x->window == NULL) {
