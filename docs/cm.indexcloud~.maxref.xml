@@ -152,28 +152,20 @@
 				Name of the buffer used for playback.
 			</description>
 		</objarg>
-		<objarg name="index" optional="0" type="int">
-			<digest>
-				Window buffer type
-			</digest>
-			<description>
-				Index number of the desired window buffer. See the helpfile for a detailed specification.
-			</description>
-		</objarg>
-		<objarg name="length" optional="0" type="int">
-			<digest>
-				Window buffer length
-			</digest>
-			<description>
-				Length of the window buffer (in samples).
-			</description>
-		</objarg>
 		<objarg name="cloud-size" optional="0" type="int">
 			<digest>
 				Maximum size of grain cloud
 			</digest>
 			<description>
 				Maximum number of overlapping grains.
+			</description>
+		</objarg>
+		<objarg name="grain-length" optional="0" type="int">
+			<digest>
+				Maximum grain length
+			</digest>
+			<description>
+				Maximum length of grains in ms.
 			</description>
 		</objarg>
 	</objarglist>

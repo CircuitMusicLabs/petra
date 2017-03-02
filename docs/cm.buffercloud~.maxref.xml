@@ -168,6 +168,14 @@
 				Maximum number of overlapping grains.
 			</description>
 		</objarg>
+		<objarg name="grain-length" optional="0" type="int">
+			<digest>
+				Maximum grain length
+			</digest>
+			<description>
+				Maximum length of grains in ms.
+			</description>
+		</objarg>
 	</objarglist>
 	<!--MESSAGES-->
 	<methodlist>
