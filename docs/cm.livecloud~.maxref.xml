@@ -175,6 +175,14 @@
 				Maximum length of grains in ms.
 			</description>
 		</objarg>
+		<objarg name="buffer-length" optional="1" type="int">
+			<digest>
+				Length of circular buffer (ms)
+			</digest>
+			<description>
+				Specifies the length of the internal circular buffer (ms).
+			</description>
+		</objarg>
 	</objarglist>
 	<!--MESSAGES-->
 	<methodlist>

@@ -40,7 +40,7 @@
 #define ARGUMENTS 3 // constant number of arguments required for the external
 #define FLOAT_INLETS 10 // number of object float inlets
 #define RANDMAX 10000
-#define BUFFERMS 2000
+#define DEFAULT_BUFFERMS 2000
 
 
 /************************************************************************************************************************/
@@ -79,6 +79,7 @@ typedef struct _cmlivecloud {
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
 	double *ringbuffer; // circular buffer for recording the audio input
+	long bufferms;
 	long bufferframes; // size of buffer in samples
 	long writepos; // buffer write position
 	t_bool record; // record on/off flag from "record" method
@@ -203,10 +204,19 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		object_error((t_object *)x, "%d arguments required: window buffer | cloud size | max. grain length", ARGUMENTS);
 		return NULL;
 	}
-
-	x->window_name = atom_getsymarg(0, argc, argv); // get user supplied argument for window buffer
-	x->cloudsize = atom_getintarg(1, argc, argv); // get user supplied argument for cloud size
-	x->grainlength = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grain length
+	
+	if (argc == ARGUMENTS) {
+		x->window_name = atom_getsymarg(0, argc, argv); // get user supplied argument for window buffer
+		x->cloudsize = atom_getintarg(1, argc, argv); // get user supplied argument for cloud size
+		x->grainlength = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grain length
+		x->bufferms = DEFAULT_BUFFERMS;
+	}
+	else if (argc > ARGUMENTS) {
+		x->window_name = atom_getsymarg(0, argc, argv); // get user supplied argument for window buffer
+		x->cloudsize = atom_getintarg(1, argc, argv); // get user supplied argument for cloud size
+		x->grainlength = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grain length
+		x->bufferms = atom_getintarg(3, argc, argv); // get user supplied argument for circular buffer length
+	}
 
 	// HANDLE ATTRIBUTES
 	object_attr_setlong(x, gensym("w_interp"), 0); // initialize window interpolation attribute
@@ -265,7 +275,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 
-	x->ringbuffer = (double *)sysmem_newptrclear((BUFFERMS * x->m_sr) * sizeof(double));
+	x->ringbuffer = (double *)sysmem_newptrclear((x->bufferms * x->m_sr) * sizeof(double));
 	if (x->ringbuffer == NULL) {
 		object_error((t_object *)x, "out of memory");
 		return NULL;
@@ -318,7 +328,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->testvalues[8] = MAX_GAIN;
 
 	x->writepos = 0;
-	x->bufferframes = BUFFERMS * x->m_sr;
+	x->bufferframes = x->bufferms * x->m_sr;
 	x->recordflag = false;
 
 	// calculate constants for panning function
@@ -388,18 +398,18 @@ void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double s
 				return;
 			}
 		}
-		x->ringbuffer = (double *)sysmem_resizeptrclear(x->ringbuffer, (BUFFERMS * x->m_sr) * sizeof(double));
+		x->ringbuffer = (double *)sysmem_resizeptrclear(x->ringbuffer, (x->bufferms * x->m_sr) * sizeof(double));
 		if (x->ringbuffer == NULL) {
 			object_error((t_object *)x, "out of memory");
 			return;
 		}
 	}
 	// calcuate the sampleRate-dependant test values
-	x->testvalues[0] = BUFFERMS * x->m_sr; // max delay (min delay = 0)
+	x->testvalues[0] = x->bufferms * x->m_sr; // max delay (min delay = 0)
 	x->testvalues[1] = (MIN_GRAINLENGTH) * x->m_sr; // min grain length
 	x->testvalues[2] = (x->grainlength) * x->m_sr; // max grain legnth
 
-	x->bufferframes = BUFFERMS * x->m_sr;
+	x->bufferframes = x->bufferms * x->m_sr;
 
 	// CALL THE PERFORM ROUTINE
 	object_method(dsp64, gensym("dsp_add64"), x, cmlivecloud_perform64, 0, NULL);
@@ -829,7 +839,7 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 	int inlet = ((t_pxobject*)x)->z_in; // get info as to which inlet was addressed (stored in the z_in component of the object structure
 	switch (inlet) {
 		case 2: // delay min
-			if (f < 0.0 || f > BUFFERMS) {
+			if (f < 0.0 || f > x->bufferms) {
 				dump = f;
 			}
 			else {
@@ -838,7 +848,7 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 			break;
 
 		case 3: // delay max
-			if (f < 0.0 || f > BUFFERMS) {
+			if (f < 0.0 || f > x->bufferms) {
 				dump = f;
 			}
 			else {
