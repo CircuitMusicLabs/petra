@@ -41,6 +41,7 @@
 #define FLOAT_INLETS 10 // number of object float inlets
 #define RANDMAX 10000
 #define DEFAULT_BUFFERMS 2000
+#define MIN_BUFFERMS 100
 
 
 /************************************************************************************************************************/
@@ -79,7 +80,10 @@ typedef struct _cmlivecloud {
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
 	double *ringbuffer; // circular buffer for recording the audio input
-	long bufferms;
+	long bufferms; // length of internal circular
+	t_bool bufferms_request; // flag set to true when "bufferms" method called
+	long bufferms_new; // new buffer length obtained from the "bufferms" method
+	t_bool bufferms_verify; // check flag for proper memory re-allocation
 	long bufferframes; // size of buffer in samples
 	long writepos; // buffer write position
 	t_bool record; // record on/off flag from "record" method
@@ -134,6 +138,8 @@ t_max_err cmlivecloud_winterp_set(t_cmlivecloud *x, t_object *attr, long argc, t
 t_max_err cmlivecloud_sinterp_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmlivecloud_zero_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
 t_bool cmlivecloud_resize(t_cmlivecloud *x);
+void cmlivecloud_bufferms(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
+t_bool cmlivecloud_ringbuffer_resize(t_cmlivecloud *x);
 
 // PANNING FUNCTION
 void cm_panning(cm_panstruct *panstruct, double *pos, t_cmlivecloud *x);
@@ -159,6 +165,7 @@ void ext_main(void *r) {
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_set, 		"set",			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_cloudsize,	"cloudsize",	A_GIMME, 0); // Bind the cloudsize message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_grainlength,	"grainlength",	A_GIMME, 0); // Bind the grainlength message
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_bufferms,	"bufferms",		A_GIMME, 0); // Bind the bufferms message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_record, 		"record",		A_GIMME, 0); // Bind the record message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_bang,		"bang",			0);
 
@@ -216,6 +223,11 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		x->cloudsize = atom_getintarg(1, argc, argv); // get user supplied argument for cloud size
 		x->grainlength = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grain length
 		x->bufferms = atom_getintarg(3, argc, argv); // get user supplied argument for circular buffer length
+		// CHECK IF USER SUPPLIED BUFFERMS IS IN THE LEGAL RANGE
+		if (x->bufferms < MIN_BUFFERMS) {
+			object_error((t_object *)x, "minimum buffer length must be equal to or larger than %d", MIN_BUFFERMS);
+			return NULL;
+		}
 	}
 
 	// HANDLE ATTRIBUTES
@@ -230,11 +242,12 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
-	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE
+	// CHECK IF USER SUPPLIED MAXIMUM GRAIN LENGTH IS IN THE LEGAL RANGE
 	if (x->grainlength < MIN_GRAINLENGTH) {
 		object_error((t_object *)x, "maximum grain length must be equal to or larger than %d", MIN_GRAINLENGTH);
 		return NULL;
 	}
+	
 
 	// CREATE OUTLETS (OUTLETS ARE CREATED FROM RIGHT TO LEFT)
 	x->grains_count_out = intout((t_object *)x); // create outlet for number of currently playing grains
@@ -353,6 +366,9 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	x->length_request = false;
 	x->length_verify = false;
+	
+	x->bufferms_request = false;
+	x->bufferms_verify = false;
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -447,7 +463,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
 	
 	
-	// MEMORY RESIZE
+	// CLOUDSIZE - MEMORY RESIZE
 	if (x->grains_count == 0 && x->resize_request) {
 		// allocate new memory and check if all went well
 		x->resize_verify = cmlivecloud_resize(x);
@@ -473,6 +489,21 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		else {
 			// if mem-allocation fails, go to zero and try again next time:
 			// x->length_request is not reset
+			goto zero;
+		}
+	}
+	
+	// RINGBUFFER - MEMORY RESIZE
+	if (x->grains_count == 0 && x->bufferms_request) {
+		// allocate new memory and check if all went well
+		x->bufferms_verify = cmlivecloud_ringbuffer_resize(x);
+		if (x->bufferms_verify) { // if all OK
+			x->bufferms_verify = false;
+			x->bufferms_request = false;
+		}
+		else {
+			// if mem-allocation fails, go to zero and try again next time:
+			// x->bufferms_request is not reset
 			goto zero;
 		}
 	}
@@ -530,7 +561,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 		sig_curr = *rec_sigin++; // get current signal value
 
 		// WRITE INTO RINGBUFFER:
-		if (x->record) {
+		if (x->record && !x->bufferms_request) {
 			x->ringbuffer[x->writepos++] = sig_curr;
 			if (x->writepos == x->bufferframes) {
 				x->writepos = 0;
@@ -560,7 +591,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->recordflag && !x->buffer_modified && w_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->bufferms_request && !x->recordflag && !x->buffer_modified && w_sample) {
 
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
@@ -1068,6 +1099,50 @@ t_bool cmlivecloud_resize(t_cmlivecloud *x) {
 	
 	return true;
 }
+
+
+/************************************************************************************************************************/
+/* THE BUFFERMS REQUEST METHOD                                                                                          */
+/************************************************************************************************************************/
+void cmlivecloud_bufferms(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
+	long arg = atom_getlong(av);
+	if (ac && av) {
+		if (arg < MIN_BUFFERMS) {
+			object_error((t_object *)x, "minimum buffer length must be equal to or larger than %d", MIN_BUFFERMS);
+		}
+		else {
+			x->bufferms_new = arg;
+			x->bufferms_request = true;
+		}
+	}
+	else {
+		object_error((t_object *)x, "argument required (buffer length in ms)");
+	}
+	
+}
+
+
+/************************************************************************************************************************/
+/* THE ACTUAL RESIZE METHOD                                                                                             */
+/************************************************************************************************************************/
+t_bool cmlivecloud_ringbuffer_resize(t_cmlivecloud *x) {
+	
+	sysmem_freeptr(x->ringbuffer);
+	
+	x->bufferms = x->bufferms_new;
+	x->bufferframes = x->bufferms * x->m_sr;
+	x->writepos = 0;
+	
+	x->ringbuffer = (double *)sysmem_newptrclear((x->bufferms * x->m_sr) * sizeof(double));
+	if (x->ringbuffer == NULL) {
+		object_error((t_object *)x, "out of memory");
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
 
 /************************************************************************************************************************/
 /* THE RECORD METHOD                                                                                                    */
