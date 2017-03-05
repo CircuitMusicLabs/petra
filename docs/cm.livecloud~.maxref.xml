@@ -208,6 +208,17 @@
 				Specifies the new maximum size of the grain cloud and resizes allocated memory. The supplied value must be a positive integer.
 			</description>
 		</method>
+		<method name="grainlength">
+			<arglist>
+				<arg name="max. grain length" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Maximum grain length
+			</digest>
+			<description>
+				Specifies the new maximum grain length and resizes allocated memory. The supplied value must be a positive integer.
+			</description>
+		</method>
 		<method name="record">
 			<arglist>
 				<arg name="record on/off" optional="0" type="int" />
@@ -217,6 +228,17 @@
 			</digest>
 			<description>
 				Value &gt; 0 starts recording into the circular buffer. Value &lt; 1 stops recording into the circular buffer.
+			</description>
+		</method>
+		<method name="bufferms">
+			<arglist>
+				<arg name="circular buffer length" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Size of internal circular buffer (ms)
+			</digest>
+			<description>
+				Specifies the new length of the internal circular buffer and resizes allocated memory. The supplied value must be a positive integer.
 			</description>
 		</method>
 	</methodlist>

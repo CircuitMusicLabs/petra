@@ -202,6 +202,17 @@
 				Specifies the new maximum size of the grain cloud and resizes allocated memory. The supplied value must be a positive integer.
 			</description>
 		</method>
+		<method name="grainlength">
+			<arglist>
+				<arg name="max. grain length" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Maximum grain length
+			</digest>
+			<description>
+				Specifies the new maximum grain length and resizes allocated memory. The supplied value must be a positive integer.
+			</description>
+		</method>
 	</methodlist>
 	<!--ATTRIBUTES-->
 	<attributelist>
