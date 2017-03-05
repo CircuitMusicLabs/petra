@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 80.0, 134.0, 1014.0, 619.0 ],
+		"rect" : [ 100.0, 100.0, 1014.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -54,7 +54,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 80.0, 160.0, 1014.0, 593.0 ],
+						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1965,7 +1965,6 @@
 					}
 ,
 					"patching_rect" : [ 14.0, 278.0, 92.0, 22.0 ],
-					"presentation_rect" : [ 14.0, 278.0, 0.0, 0.0 ],
 					"saved_object_attributes" : 					{
 						"description" : "",
 						"digest" : "",
@@ -3227,7 +3226,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -5901,7 +5900,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
+						"rect" : [ 100.0, 126.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -9337,7 +9336,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -10016,7 +10015,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "jit_matrix" ],
-					"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+					"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 					"pic" : "maxOverviewIcon.png"
 				}
 
@@ -11142,7 +11141,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -12706,7 +12705,7 @@
 									"numoutlets" : 0,
 									"patching_rect" : [ 166.0, 105.5, 229.0, 20.0 ],
 									"style" : "",
-									"text" : "cm.gausscloud~ takes 2 arguments:"
+									"text" : "cm.gausscloud~ takes 3 arguments:"
 								}
 
 							}
