@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 7,
 			"minor" : 3,
-			"revision" : 2,
+			"revision" : 3,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -48,7 +48,7 @@
 						"appversion" : 						{
 							"major" : 7,
 							"minor" : 3,
-							"revision" : 2,
+							"revision" : 3,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -106,12 +106,12 @@
 										"appversion" : 										{
 											"major" : 7,
 											"minor" : 3,
-											"revision" : 2,
+											"revision" : 3,
 											"architecture" : "x64",
 											"modernui" : 1
 										}
 ,
-										"rect" : [ 357.0, 192.0, 713.0, 587.0 ],
+										"rect" : [ 415.0, 253.0, 713.0, 587.0 ],
 										"bglocked" : 0,
 										"openinpresentation" : 0,
 										"default_fontsize" : 12.0,
@@ -161,7 +161,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 14.0, 5.0, 200.0, 200.0 ],
+													"patching_rect" : [ 14.0, 5.0, 200.0, 119.57672 ],
 													"pic" : "maxOverviewIcon.png"
 												}
 
@@ -215,13 +215,13 @@
 													"fontname" : "Arial",
 													"fontsize" : 12.0,
 													"id" : "obj-21",
-													"linecount" : 8,
+													"linecount" : 7,
 													"maxclass" : "comment",
 													"numinlets" : 1,
 													"numoutlets" : 0,
-													"patching_rect" : [ 302.0, 174.0, 67.0, 114.0 ],
+													"patching_rect" : [ 302.0, 174.0, 67.0, 100.0 ],
 													"style" : "",
-													"text" : "1 ms\n500 ms\n0.001\n4\n0\n2\n0.1\n10",
+													"text" : "1 ms\n0.001\n4\n0\n2\n0.1\n10",
 													"textjustification" : 2
 												}
 
@@ -231,13 +231,13 @@
 													"fontname" : "Arial",
 													"fontsize" : 12.0,
 													"id" : "obj-11",
-													"linecount" : 8,
+													"linecount" : 7,
 													"maxclass" : "comment",
 													"numinlets" : 1,
 													"numoutlets" : 0,
-													"patching_rect" : [ 15.0, 174.0, 527.0, 114.0 ],
+													"patching_rect" : [ 15.0, 174.0, 527.0, 100.0 ],
 													"style" : "",
-													"text" : "- Minimum grain length value:\n- Maximum grain length value:\n- Minimum pitch value:\n- Maximum pitch value:\n- Minimum gain value:\n- Maximum gain value:\n- Minimum alpha value (cm.gausscloud~ only):\n- Maximum alpha value (cm.gausscloud~ only):"
+													"text" : "- Minimum grain length value:\n- Minimum pitch value:\n- Maximum pitch value:\n- Minimum gain value:\n- Maximum gain value:\n- Minimum alpha value (cm.gausscloud~ only):\n- Maximum alpha value (cm.gausscloud~ only):"
 												}
 
 											}
@@ -357,7 +357,7 @@
 						"appversion" : 						{
 							"major" : 7,
 							"minor" : 3,
-							"revision" : 2,
+							"revision" : 3,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -415,7 +415,7 @@
 										"appversion" : 										{
 											"major" : 7,
 											"minor" : 3,
-											"revision" : 2,
+											"revision" : 3,
 											"architecture" : "x64",
 											"modernui" : 1
 										}
@@ -486,7 +486,7 @@
 													"numinlets" : 1,
 													"numoutlets" : 1,
 													"outlettype" : [ "jit_matrix" ],
-													"patching_rect" : [ 14.0, 5.0, 200.0, 200.0 ],
+													"patching_rect" : [ 14.0, 5.0, 200.0, 119.57672 ],
 													"pic" : "maxOverviewIcon.png"
 												}
 
@@ -610,7 +610,7 @@
 						"appversion" : 						{
 							"major" : 7,
 							"minor" : 3,
-							"revision" : 2,
+							"revision" : 3,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -668,12 +668,12 @@
 										"appversion" : 										{
 											"major" : 7,
 											"minor" : 3,
-											"revision" : 2,
+											"revision" : 3,
 											"architecture" : "x64",
 											"modernui" : 1
 										}
 ,
-										"rect" : [ 418.0, 279.0, 733.0, 348.0 ],
+										"rect" : [ 489.0, 347.0, 702.0, 344.0 ],
 										"bglocked" : 0,
 										"openinpresentation" : 0,
 										"default_fontsize" : 12.0,
@@ -709,9 +709,9 @@
 													"maxclass" : "comment",
 													"numinlets" : 1,
 													"numoutlets" : 0,
-													"patching_rect" : [ 14.0, 146.0, 688.0, 166.0 ],
+													"patching_rect" : [ 14.0, 146.0, 677.0, 166.0 ],
 													"style" : "",
-													"text" : "Each object takes an argument to specify the grain cloud size, i.e. the maximum amount of grains the object is capable of storing in memory to generate a cloud of grains. When the object loads, the required amount of memory is reserved. This cloud size can be changed at any time with the \"cloudsize\" message, depending on your needs. \n\nAt a sample rate of 44.1 kHz, a cloud size of 512 grains occupies roughly 800 MB of memory.\n\nIt is therefore helpful to remember that the cloud size you specify depends on the way you wish to use the object and that the larger your grain cloud, the more memory the objects will occupy. If you wish to generate clouds with a large amount of overlapping grains (asynchronous granulation), you go for a higher value (128 and upwards). If you are rather interested in succession of inidividual grains (synchronous granulation), you are better off with specifying a lower value (32 and below)  to keep your memory free for other things."
+													"text" : "Each object takes arguments to specify the grain cloud size, i.e. the maximum amount of grains the object is capable of storing in memory to generate a cloud of grains, and the maximum length of the grains. When the object loads, the required amount of memory is reserved. The cloud size and the grain length can be changed at any time with the \"cloudsize\" and \"grainlength\" messages, depending on your needs. \n\nIt is therefore helpful to remember that the cloud size and grain length you specify depends on the way you wish to use the object and that the larger your grain cloud and the longer your grains, the more memory the objects will occupy. For example, if you wish to generate clouds with a large amount of overlapping grains (asynchronous granulation), you go for a higher value (128 and upwards). If you are rather interested in succession of inidividual grains (synchronous granulation), you are better off with specifying a lower value (32 and below)  to keep your memory free for other things."
 												}
 
 											}

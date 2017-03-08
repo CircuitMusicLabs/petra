@@ -54,7 +54,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 100.0, 126.0, 1014.0, 593.0 ],
+						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -3212,7 +3212,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -4398,7 +4398,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -5746,7 +5746,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "jit_matrix" ],
-									"patching_rect" : [ 14.0, 5.0, 135.0, 135.0 ],
+									"patching_rect" : [ 14.0, 5.0, 135.0, 80.714286 ],
 									"pic" : "maxOverviewIcon.png"
 								}
 
@@ -7639,7 +7639,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 0.0, 26.0, 1014.0, 593.0 ],
+						"rect" : [ 100.0, 126.0, 1014.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -7678,9 +7678,9 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 521.5, 371.0, 115.0, 54.0 ],
+									"patching_rect" : [ 503.272705, 371.0, 133.227295, 54.0 ],
 									"style" : "",
-									"text" : "Current record position in circular buffer"
+									"text" : "Current record position in circular buffer (ms)"
 								}
 
 							}
@@ -9006,27 +9006,27 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
-			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
-			"obj-2::obj-20::obj-35" : [ "[2]", "Level", 0 ],
-			"obj-7::obj-18::obj-21::obj-6" : [ "live.tab[8]", "live.tab[1]", 0 ],
-			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
-			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
-			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
-			"obj-3::obj-20::obj-35" : [ "[1]", "Level", 0 ],
-			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
-			"obj-6::obj-18::obj-21::obj-6" : [ "live.tab[7]", "live.tab[1]", 0 ],
-			"obj-8::obj-18::obj-35" : [ "[8]", "Level", 0 ],
+			"obj-1::obj-3::obj-35" : [ "[5]", "Level", 0 ],
 			"obj-5::obj-1::obj-21::obj-6" : [ "live.tab[6]", "live.tab[1]", 0 ],
 			"obj-7::obj-18::obj-35" : [ "[7]", "Level", 0 ],
+			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
+			"obj-1::obj-3::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
+			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
 			"obj-2::obj-20::obj-21::obj-6" : [ "live.tab[5]", "live.tab[1]", 0 ],
 			"obj-6::obj-18::obj-35" : [ "[6]", "Level", 0 ],
-			"obj-1::obj-3::obj-35" : [ "[5]", "Level", 0 ],
 			"obj-3::obj-20::obj-21::obj-6" : [ "live.tab[4]", "live.tab[1]", 0 ],
-			"obj-5::obj-1::obj-35" : [ "[3]", "Level", 0 ],
 			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ],
-			"obj-1::obj-3::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
+			"obj-5::obj-1::obj-35" : [ "[3]", "Level", 0 ],
+			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
 			"obj-8::obj-18::obj-21::obj-6" : [ "live.tab[9]", "live.tab[1]", 0 ],
-			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ]
+			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
+			"obj-2::obj-20::obj-35" : [ "[2]", "Level", 0 ],
+			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
+			"obj-7::obj-18::obj-21::obj-6" : [ "live.tab[8]", "live.tab[1]", 0 ],
+			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
+			"obj-3::obj-20::obj-35" : [ "[1]", "Level", 0 ],
+			"obj-6::obj-18::obj-21::obj-6" : [ "live.tab[7]", "live.tab[1]", 0 ],
+			"obj-8::obj-18::obj-35" : [ "[8]", "Level", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{
