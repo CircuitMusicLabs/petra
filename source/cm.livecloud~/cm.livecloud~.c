@@ -462,6 +462,11 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
 	
+	// BUFFER VARIABLE DECLARATIONS
+	t_buffer_obj *w_buffer = buffer_ref_getobject(x->w_buffer);
+	float *w_sample = buffer_locksamples(w_buffer);
+	long w_framecount; // number of frames in the window buffer
+	t_atom_long w_channelcount; // number of channels in the window buffer
 	
 	// CLOUDSIZE - MEMORY RESIZE
 	if (x->grains_count == 0 && x->resize_request) {
@@ -515,12 +520,6 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	if (x->grains_count == 0 && x->recordflag) {
 		x->recordflag = false;
 	}
-
-	// BUFFER VARIABLE DECLARATIONS
-	t_buffer_obj *w_buffer = buffer_ref_getobject(x->w_buffer);
-	float *w_sample = buffer_locksamples(w_buffer);
-	long w_framecount; // number of frames in the window buffer
-	t_atom_long w_channelcount; // number of channels in the window buffer
 
 	// BUFFER CHECKS
 	if (!w_sample) { // if the sample buffer does not exist

@@ -419,6 +419,11 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
 	
+	// BUFFER VARIABLE DECLARATIONS
+	t_buffer_obj *buffer = buffer_ref_getobject(x->buffer);
+	float *b_sample = buffer_locksamples(buffer);
+	long b_framecount; // number of frames in the sample buffer
+	t_atom_long b_channelcount; // number of channels in the sample buffer
 	
 	// CLOUDSIZE - MEMORY RESIZE
 	if (x->grains_count == 0 && x->resize_request) {
@@ -453,13 +458,6 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	if (x->grains_count == 0 && x->buffer_modified) {
 		x->buffer_modified = false;
 	}
-	
-	// BUFFER VARIABLE DECLARATIONS
-	t_buffer_obj *buffer = buffer_ref_getobject(x->buffer);
-	float *b_sample = buffer_locksamples(buffer);
-	long b_framecount; // number of frames in the sample buffer
-	t_atom_long b_channelcount; // number of channels in the sample buffer
-
 
 	// BUFFER CHECKS
 	if (!b_sample) { // if the sample buffer does not exist
