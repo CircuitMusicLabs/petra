@@ -637,6 +637,9 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 						}
 					}
 				}
+				if (i > x->grains_count) {
+					break;
+				}
 			}
 		}
 		
