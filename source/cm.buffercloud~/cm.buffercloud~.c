@@ -515,12 +515,10 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				i++;
 			}
 			
-			// randomize the grain parameters and write them into the randomized array
-			x->randomized[0] = cm_random(&x->grain_params[0], &x->grain_params[1]); // start
-			x->randomized[1] = cm_random(&x->grain_params[2], &x->grain_params[3]); // length
-			x->randomized[2] = cm_random(&x->grain_params[4], &x->grain_params[5]); // pitch
-			x->randomized[3] = cm_random(&x->grain_params[6], &x->grain_params[7]); // pan
-			x->randomized[4] = cm_random(&x->grain_params[8], &x->grain_params[9]); // gain
+			for (i = 0; i < 5; i++) {
+				r = i * 2;
+				x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+			}
 			
 			// check for parameter sanity of the length value
 			if (x->randomized[1] < MIN_GRAINLENGTH * x->m_sr) {
