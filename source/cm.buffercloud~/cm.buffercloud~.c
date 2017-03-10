@@ -515,6 +515,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 				i++;
 			}
 			
+			// randomize grain parameters
 			for (i = 0; i < 5; i++) {
 				r = i * 2;
 				x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
@@ -636,9 +637,6 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 							x->grains_count = 0;
 						}
 					}
-				}
-				if (i > x->grains_count) {
-					break;
 				}
 			}
 		}
