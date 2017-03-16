@@ -68,7 +68,6 @@ typedef struct _cmgausscloud {
 	double *object_inlets; // array to store the incoming values coming from the object inlets
 	double *grain_params; // array to store the processed values coming from the object inlets
 	double *randomized; // array to store the randomized grain values
-	double *testvalues; // array for storing the grain parameter test values (sanity testing)
 	double tr_prev; // trigger sample from previous signal vector (required to check if input ramp resets to zero)
 	t_bool buffer_modified; // checkflag to see if buffer has been modified
 	short grains_count; // currently playing grains
@@ -252,13 +251,6 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 
-	// ALLOCATE MEMORY FOR THE TEST VALUES ARRAY
-	x->testvalues = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
-	if (x->testvalues == NULL) {
-		object_error((t_object *)x, "out of memory");
-		return NULL;
-	}
-
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
 	x->cloud = (cm_cloud *)sysmem_newptrclear((x->cloudsize) * sizeof(cm_cloud));
 	if (x->cloud == NULL) {
@@ -298,18 +290,6 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->tr_prev = 0.0; // initialize value for previous trigger sample
 	x->grains_count = 0; // initialize the grains count value
 	x->buffer_modified = false; // initialize buffer modified flag
-
-	// initialize the testvalues which are not dependent on sampleRate
-	x->testvalues[0] = 0.0; // dummy MIN_START
-	x->testvalues[1] = 0.0; // dummy MAX_START
-	x->testvalues[4] = MIN_PITCH;
-	x->testvalues[5] = MAX_PITCH;
-	x->testvalues[6] = MIN_PAN;
-	x->testvalues[7] = MAX_PAN;
-	x->testvalues[8] = MIN_GAIN;
-	x->testvalues[9] = MAX_GAIN;
-	x->testvalues[10] = MIN_ALPHA;
-	x->testvalues[11] = MAX_ALPHA;
 
 	// calculate constants for panning function
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
@@ -381,9 +361,6 @@ void cmgausscloud_dsp64(t_cmgausscloud *x, t_object *dsp64, short *count, double
 			}
 		}
 	}
-	// calcuate the sampleRate-dependant test values
-	x->testvalues[2] = MIN_GRAINLENGTH * x->m_sr;
-	x->testvalues[3] = x->grainlength * x->m_sr;
 
 	// CALL THE PERFORM ROUTINE
 	object_method(dsp64, gensym("dsp_add64"), x, cmgausscloud_perform64, 0, NULL);
@@ -531,52 +508,51 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 				i++;
 			}
 
-			// randomize the grain parameters and write them into the randomized array
-			x->randomized[0] = cm_random(&x->grain_params[0], &x->grain_params[1]);		// start
-			x->randomized[1] = cm_random(&x->grain_params[2], &x->grain_params[3]);		// length
-			x->randomized[2] = cm_random(&x->grain_params[4], &x->grain_params[5]);		// pitch
-			x->randomized[3] = cm_random(&x->grain_params[6], &x->grain_params[7]);		// pan
-			x->randomized[4] = cm_random(&x->grain_params[8], &x->grain_params[9]);		// gain
-			x->randomized[5] = cm_random(&x->grain_params[10], &x->grain_params[11]);	// alpha
-
+			
+			for (i = 0; i < 6; i++) {
+				r = i * 2;
+				x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+			}
+			
 			// check for parameter sanity of the length value
-			if (x->randomized[1] < x->testvalues[2]) {
-				x->randomized[1] = x->testvalues[2];
+			if (x->randomized[1] < MIN_GRAINLENGTH * x->m_sr) {
+				x->randomized[1] = MIN_GRAINLENGTH * x->m_sr;
 			}
-			else if (x->randomized[1] > x->testvalues[3]) {
-				x->randomized[1] = x->testvalues[3];
+			else if (x->randomized[1] > x->grainlength * x->m_sr) {
+				x->randomized[1] = x->grainlength * x->m_sr;
 			}
+
 
 			// check for parameter sanity of the pitch value
-			if (x->randomized[2] < x->testvalues[4]) {
-				x->randomized[2] = x->testvalues[4];
+			if (x->randomized[2] < MIN_PITCH) {
+				x->randomized[2] = MIN_PITCH;
 			}
-			else if (x->randomized[2] > x->testvalues[5]) {
-				x->randomized[2] = x->testvalues[5];
+			else if (x->randomized[2] > MAX_PITCH) {
+				x->randomized[2] = MAX_PITCH;
 			}
 
 			// check for parameter sanity of the pan value
-			if (x->randomized[3] < x->testvalues[6]) {
-				x->randomized[3] = x->testvalues[6];
+			if (x->randomized[3] < MIN_PAN) {
+				x->randomized[3] = MIN_PAN;
 			}
-			else if (x->randomized[3] > x->testvalues[7]) {
-				x->randomized[3] = x->testvalues[7];
+			else if (x->randomized[3] > MAX_PAN) {
+				x->randomized[3] = MAX_PAN;
 			}
 
 			// check for parameter sanity of the gain value
-			if (x->randomized[4] < x->testvalues[8]) {
-				x->randomized[4] = x->testvalues[8];
+			if (x->randomized[4] < MIN_GAIN) {
+				x->randomized[4] = MIN_GAIN;
 			}
-			else if (x->randomized[4] > x->testvalues[9]) {
-				x->randomized[4] = x->testvalues[9];
+			else if (x->randomized[4] > MAX_GAIN) {
+				x->randomized[4] = MAX_GAIN;
 			}
 
 			// check for parameter sanity of the alpha value
-			if (x->randomized[5] < x->testvalues[10]) {
-				x->randomized[5] = x->testvalues[10];
+			if (x->randomized[5] < MIN_ALPHA) {
+				x->randomized[5] = MIN_ALPHA;
 			}
-			else if (x->randomized[5] > x->testvalues[11]) {
-				x->randomized[5] = x->testvalues[11];
+			else if (x->randomized[5] > MAX_ALPHA) {
+				x->randomized[5] = MAX_ALPHA;
 			}
 
 			// write grain lenght slot (non-pitch)
@@ -766,7 +742,6 @@ void cmgausscloud_free(t_cmgausscloud *x) {
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
 	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
 	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
-	sysmem_freeptr(x->testvalues); // free memory allocated to the test values array
 }
 
 /************************************************************************************************************************/
@@ -990,7 +965,6 @@ t_bool cmgausscloud_resize(t_cmgausscloud *x) {
 	}
 	else if (x->length_request) {
 		x->grainlength = x->grainlength_new;
-		x->testvalues[3] = x->grainlength * x->m_sr;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
@@ -1082,13 +1056,16 @@ double cm_random(double *min, double *max) {
 }
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
-	long index = (long)distance; // get truncated index
-	long next = index + 1;
+	long trunc = (long)distance; // get truncated index
+	long index = trunc * b_channelcount + channel;
+	long next = (trunc + 1) * b_channelcount + channel;
 	if (next > b_framecount) {
 		next = 0;
 	}
 	distance -= (long)distance; // calculate fraction value for interpolation
-	return buffer[index * b_channelcount + channel] + distance * (buffer[next * b_channelcount + channel] - buffer[index * b_channelcount + channel]);
+	double scurr = buffer[index];
+	double snext = buffer[next];
+	return scurr + distance * (snext - scurr);
 }
 // GAUSS WINDOW FUNCTION
 double cm_gauss(long *pos, long *length, double *alpha) {

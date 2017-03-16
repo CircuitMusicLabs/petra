@@ -1072,13 +1072,14 @@ double cm_random(double *min, double *max) {
 }
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
-	long index = (long)distance; // get truncated index
-	long next = index + 1;
+	long trunc = (long)distance; // get truncated index
+	long index = trunc * b_channelcount + channel;
+	long next = (trunc + 1) * b_channelcount + channel;
 	if (next > b_framecount) {
 		next = 0;
 	}
 	distance -= (long)distance; // calculate fraction value for interpolation
-	double scurr = buffer[index * b_channelcount + channel];
-	double snext = buffer[next * b_channelcount + channel];
+	double scurr = buffer[index];
+	double snext = buffer[next];
 	return scurr + distance * (snext - scurr);
 }
