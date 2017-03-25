@@ -83,7 +83,6 @@ typedef struct _cmindexcloud {
 	double *object_inlets; // array to store the incoming values coming from the object inlets
 	double *grain_params; // array to store the processed values coming from the object inlets
 	double *randomized; // array to store the randomized grain values
-	double *testvalues; // array for storing the grain parameter test values (sanity testing)
 	double tr_prev; // trigger sample from previous signal vector (required to check if input ramp resets to zero)
 	t_bool buffer_modified; // checkflag to see if buffer has been modified
 	short grains_count; // currently playing grains
@@ -304,13 +303,6 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 		return NULL;
 	}
 	
-	// ALLOCATE MEMORY FOR THE TEST VALUES ARRAY
-	x->testvalues = (double *)sysmem_newptrclear((FLOAT_INLETS) * sizeof(double));
-	if (x->testvalues == NULL) {
-		object_error((t_object *)x, "out of memory");
-		return NULL;
-	}
-	
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
 	x->cloud = (cm_cloud *)sysmem_newptrclear((x->cloudsize) * sizeof(cm_cloud));
 	if (x->cloud == NULL) {
@@ -348,16 +340,6 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->grains_count = 0; // initialize the grains count value
 	x->buffer_modified = false; // initialize buffer modified flag
 	x->wintype_request = false; // initialize window write flag
-	
-	// initialize the testvalues which are not dependent on sampleRate
-	x->testvalues[0] = 0.0; // dummy MIN_START
-	x->testvalues[1] = 0.0; // dummy MAX_START
-	x->testvalues[4] = MIN_PITCH;
-	x->testvalues[5] = MAX_PITCH;
-	x->testvalues[6] = MIN_PAN;
-	x->testvalues[7] = MAX_PAN;
-	x->testvalues[8] = MIN_GAIN;
-	x->testvalues[9] = MAX_GAIN;
 	
 	// calculate constants for panning function
 	x->piovr2 = 4.0 * atan(1.0) * 0.5;
@@ -437,9 +419,6 @@ void cmindexcloud_dsp64(t_cmindexcloud *x, t_object *dsp64, short *count, double
 			}
 		}
 	}
-	// calcuate the sampleRate-dependant test values
-	x->testvalues[2] = MIN_GRAINLENGTH * x->m_sr;
-	x->testvalues[3] = x->grainlength * x->m_sr;
 	
 	// CALL THE PERFORM ROUTINE
 	object_method(dsp64, gensym("dsp_add64"), x, cmindexcloud_perform64, 0, NULL);
@@ -562,13 +541,6 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 	x->grain_params[8] = x->connect_status[8] ? *ins[9] : x->object_inlets[8];						// gain min
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
 	
-	if (x->grain_params[2] > x->grainlength * x->m_sr) {
-		x->grain_params[2] = x->grainlength * x->m_sr;
-	}
-	if (x->grain_params[3] > x->grainlength * x->m_sr) {
-		x->grain_params[3] = x->grainlength * x->m_sr;
-	}
-	
 	
 	// DSP LOOP
 	while (n--) {
@@ -609,43 +581,42 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 				i++;
 			}
 			
-			// randomize the grain parameters and write them into the randomized array
-			x->randomized[0] = cm_random(&x->grain_params[0], &x->grain_params[1]); // start
-			x->randomized[1] = cm_random(&x->grain_params[2], &x->grain_params[3]); // length
-			x->randomized[2] = cm_random(&x->grain_params[4], &x->grain_params[5]); // pitch
-			x->randomized[3] = cm_random(&x->grain_params[6], &x->grain_params[7]); // pan
-			x->randomized[4] = cm_random(&x->grain_params[8], &x->grain_params[9]); // gain
+			// randomize grain parameters
+			for (i = 0; i < 5; i++) {
+				r = i * 2;
+				x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+			}
 			
 			// check for parameter sanity of the length value
-			if (x->randomized[1] < x->testvalues[2]) {
-				x->randomized[1] = x->testvalues[2];
+			if (x->randomized[1] < MIN_GRAINLENGTH * x->m_sr) {
+				x->randomized[1] = MIN_GRAINLENGTH * x->m_sr;
 			}
-			else if (x->randomized[1] > x->testvalues[3]) {
-				x->randomized[1] = x->testvalues[3];
+			else if (x->randomized[1] > x->grainlength * x->m_sr) {
+				x->randomized[1] = x->grainlength * x->m_sr;
 			}
 			
 			// check for parameter sanity of the pitch value
-			if (x->randomized[2] < x->testvalues[4]) {
-				x->randomized[2] = x->testvalues[4];
+			if (x->randomized[2] < MIN_PITCH) {
+				x->randomized[2] = MIN_PITCH;
 			}
-			else if (x->randomized[2] > x->testvalues[5]) {
-				x->randomized[2] = x->testvalues[5];
+			else if (x->randomized[2] > MAX_PITCH) {
+				x->randomized[2] = MAX_PITCH;
 			}
 			
 			// check for parameter sanity of the pan value
-			if (x->randomized[3] < x->testvalues[6]) {
-				x->randomized[3] = x->testvalues[6];
+			if (x->randomized[3] < MIN_PAN) {
+				x->randomized[3] = MIN_PAN;
 			}
-			else if (x->randomized[3] > x->testvalues[7]) {
-				x->randomized[3] = x->testvalues[7];
+			else if (x->randomized[3] > MAX_PAN) {
+				x->randomized[3] = MAX_PAN;
 			}
 			
 			// check for parameter sanity of the gain value
-			if (x->randomized[4] < x->testvalues[8]) {
-				x->randomized[4] = x->testvalues[8];
+			if (x->randomized[4] < MIN_GAIN) {
+				x->randomized[4] = MIN_GAIN;
 			}
-			else if (x->randomized[4] > x->testvalues[9]) {
-				x->randomized[4] = x->testvalues[9];
+			else if (x->randomized[4] > MAX_GAIN) {
+				x->randomized[4] = MAX_GAIN;
 			}
 			
 			// write grain lenght slot (non-pitch)
@@ -836,7 +807,6 @@ void cmindexcloud_free(t_cmindexcloud *x) {
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
 	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
 	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
-	sysmem_freeptr(x->testvalues); // free memory allocated to the test values array
 }
 
 /************************************************************************************************************************/
@@ -1126,7 +1096,6 @@ t_bool cmindexcloud_resize(t_cmindexcloud *x) {
 	}
 	else if (x->length_request) {
 		x->grainlength = x->grainlength_new;
-		x->testvalues[3] = x->grainlength * x->m_sr;
 	}
 	
 	// ALLOCATE MEMORY FOR THE GRAINMEM ARRAY
