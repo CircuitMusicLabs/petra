@@ -1,4 +1,4 @@
-![petra logo](http://circuitmusiclabs.com/img/projects/petra/petra-logo-preview.png)
+![petra logo](http://archive.circuitmusiclabs.com/img/projects/petra/petra-logo-preview.png)
 
 **Matthias W. Müller - [@mwmueller](https://twitter.com/mwmueller) - [www.circuitmusiclabs.com](http://www.circuitmusiclabs.com/)**
 
