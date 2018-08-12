@@ -1022,6 +1022,7 @@ void cmbuffercloud_pitchlist(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *a
 		for (int i = 0; i < x->pitchlistsize; i++) {
 			x->pitchlist[i] = atom_getfloat(av+i);
 		}
+		// list values in console
 		for (int i = 0; i < x->pitchlistsize; i++) {
 			value = x->pitchlist[i];
 			object_error((t_object *)x, "%f", value);
