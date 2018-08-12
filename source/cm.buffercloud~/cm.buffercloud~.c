@@ -90,7 +90,9 @@ typedef struct _cmbuffercloud {
 	long grainlength_new; // new grain length obtained from "grainlength" method
 	t_bool length_verify; // check flag for proper memory re-allocation
 	double *pitchlist; // array to store pitch values provided by method
-	long pitchlistsize; // current numer of values stored in the pitch list array
+	long pitchlist_size; // current numer of values stored in the pitch list array
+	t_bool pitchlist_active; // boolean pitch list active true/false
+	t_bool pitchlist_request; // reading values from pitch list has been requested
 } t_cmbuffercloud;
 
 
@@ -155,7 +157,7 @@ void ext_main(void *r) {
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_set, 		"set",			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_cloudsize,	"cloudsize",	A_GIMME, 0); // Bind the cloudsize message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_grainlength,	"grainlength",	A_GIMME, 0); // Bind the grainlength message
-	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_pitchlist,	"pitchlist",	A_GIMME, 0); // Bind the pitchlist message
+	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_pitchlist,	"pitch",		A_GIMME, 0); // Bind the pitchlist message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_bang,		"bang",			0);
 	
 	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "stereo", 0, t_cmbuffercloud, attr_stereo);
@@ -310,6 +312,10 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	// bang trigger flag
 	x->bang_trigger = false;
 	
+	// pitchlist flag
+	x->pitchlist_active = false;
+	x->pitchlist_request = false;
+	
 	// cloud structure members
 	for (i = 0; i < x->cloudsize; i++) {
 		x->cloud[i].length = 0;
@@ -450,6 +456,10 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		x->buffer_modified = false;
 	}
 	
+	if (x->grains_count == 0 && x->pitchlist_request) {
+		x->pitchlist_request = false;
+	}
+	
 	// BUFFER CHECKS
 	if (!b_sample || !w_sample) { // if the sample buffer does not exist
 		goto zero;
@@ -508,7 +518,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->buffer_modified && b_sample && w_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->buffer_modified && !x->pitchlist_request && b_sample && w_sample) {
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -1012,20 +1022,36 @@ t_bool cmbuffercloud_resize(t_cmbuffercloud *x) {
 /************************************************************************************************************************/
 void cmbuffercloud_pitchlist(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 	double value;
-	if (ac <= 10) {
+	if (ac < 1) {
+		object_error((t_object *)x, "minimum number of pitch values is 1");
+	}
+	else if (ac == 1 && atom_getfloat(av) == 0) {
+		object_post((t_object *)x, "pitch list cleared");
+		x->pitchlist_active = false;
+		x->pitchlist_request = true;
+	}
+	else if (ac <= 10) {
+		x->pitchlist_active = true;
+		x->pitchlist_request = true;
 		// clear array
 		for (int i = 0; i < PITCHLIST; i++) {
 			x->pitchlist[i] = 0;
 		}
-		x->pitchlistsize = ac;
+		x->pitchlist_size = ac;
 		// write args into array
-		for (int i = 0; i < x->pitchlistsize; i++) {
-			x->pitchlist[i] = atom_getfloat(av+i);
+		for (int i = 0; i < x->pitchlist_size; i++) {
+			value = atom_getfloat(av+i);
+			if (value > MAX_PITCH) {
+				object_error((t_object *)x, "value of element %d (%.3f) is too high - setting value to %d", (i+1), value, MAX_PITCH);
+				value = MAX_PITCH;
+			}
+			x->pitchlist[i] = value;
 		}
 		// list values in console
-		for (int i = 0; i < x->pitchlistsize; i++) {
+		object_post((t_object *)x, "list of pitch values:");
+		for (int i = 0; i < x->pitchlist_size; i++) {
 			value = x->pitchlist[i];
-			object_error((t_object *)x, "%f", value);
+			object_post((t_object *)x, "%.3f", value);
 		}
 	}
 	else {
