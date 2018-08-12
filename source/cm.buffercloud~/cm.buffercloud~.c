@@ -90,7 +90,7 @@ typedef struct _cmbuffercloud {
 	long grainlength_new; // new grain length obtained from "grainlength" method
 	t_bool length_verify; // check flag for proper memory re-allocation
 	double *pitchlist; // array to store pitch values provided by method
-	double pitchlist_zero;
+	double pitchlist_zero; // zero value pointer for randomize function
 	double pitchlist_size; // current numer of values stored in the pitch list array
 	t_bool pitchlist_active; // boolean pitch list active true/false
 	t_bool pitchlist_request; // reading values from pitch list has been requested
@@ -158,7 +158,7 @@ void ext_main(void *r) {
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_set, 		"set",			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_cloudsize,	"cloudsize",	A_GIMME, 0); // Bind the cloudsize message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_grainlength,	"grainlength",	A_GIMME, 0); // Bind the grainlength message
-	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_pitchlist,	"pitch",		A_GIMME, 0); // Bind the pitchlist message
+	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_pitchlist,	"pitchlist",	A_GIMME, 0); // Bind the pitchlist message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_bang,		"bang",			0);
 	
 	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "stereo", 0, t_cmbuffercloud, attr_stereo);
