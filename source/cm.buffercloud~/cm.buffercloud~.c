@@ -90,7 +90,8 @@ typedef struct _cmbuffercloud {
 	long grainlength_new; // new grain length obtained from "grainlength" method
 	t_bool length_verify; // check flag for proper memory re-allocation
 	double *pitchlist; // array to store pitch values provided by method
-	long pitchlist_size; // current numer of values stored in the pitch list array
+	double pitchlist_zero;
+	double pitchlist_size; // current numer of values stored in the pitch list array
 	t_bool pitchlist_active; // boolean pitch list active true/false
 	t_bool pitchlist_request; // reading values from pitch list has been requested
 } t_cmbuffercloud;
@@ -312,9 +313,11 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	// bang trigger flag
 	x->bang_trigger = false;
 	
-	// pitchlist flag
+	// pitchlist values
 	x->pitchlist_active = false;
 	x->pitchlist_request = false;
+	x->pitchlist_zero = 0.0;
+	x->pitchlist_size = 0.0;
 	
 	// cloud structure members
 	for (i = 0; i < x->cloudsize; i++) {
@@ -534,8 +537,15 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			
 			// randomize grain parameters
 			for (i = 0; i < 5; i++) {
-				r = i * 2;
-				x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+				// if currently processing randomized value for pitch (i == 2) and if pitchlist is active
+				if (i == 2 && x->pitchlist_active) {
+					// get random postition from pitchlist and write stored value
+					x->randomized[i] = x->pitchlist[(int)cm_random(&x->pitchlist_zero, &x->pitchlist_size)];
+				}
+				else {
+					r = i * 2;
+					x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+				}
 			}
 			
 			// check for parameter sanity of the length value
@@ -1037,7 +1047,7 @@ void cmbuffercloud_pitchlist(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *a
 		for (int i = 0; i < PITCHLIST; i++) {
 			x->pitchlist[i] = 0;
 		}
-		x->pitchlist_size = ac;
+		x->pitchlist_size = (double)ac;
 		// write args into array
 		for (int i = 0; i < x->pitchlist_size; i++) {
 			value = atom_getfloat(av+i);
