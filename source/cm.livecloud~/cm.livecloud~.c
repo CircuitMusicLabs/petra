@@ -39,6 +39,7 @@
 #define MAX_GAIN 2.0  // max gain
 #define ARGUMENTS 3 // constant number of arguments required for the external
 #define FLOAT_INLETS 10 // number of object float inlets
+#define PITCHLIST 10 // max values to be provided for pitch list
 #define RANDMAX 10000
 #define DEFAULT_BUFFERMS 2000
 #define MIN_BUFFERMS 100
@@ -97,6 +98,11 @@ typedef struct _cmlivecloud {
 	t_bool length_request; // flag set to true when "grainlength" method called
 	long grainlength_new; // new grain length obtained from "grainlength" method
 	t_bool length_verify; // check flag for proper memory re-allocation
+	double *pitchlist; // array to store pitch values provided by method
+	double pitchlist_zero; // zero value pointer for randomize function
+	double pitchlist_size; // current numer of values stored in the pitch list array
+	t_bool pitchlist_active; // boolean pitch list active true/false
+	t_bool pitchlist_request; // reading values from pitch list has been requested
 } t_cmlivecloud;
 
 
@@ -131,6 +137,7 @@ void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_cloudsize(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_grainlength(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
+void cmlivecloud_pitchlist(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_bang(t_cmlivecloud *x);
 t_max_err cmlivecloud_stereo_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmlivecloud_winterp_set(t_cmlivecloud *x, t_object *attr, long argc, t_atom *argv);
@@ -164,6 +171,7 @@ void ext_main(void *r) {
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_set, 		"set",			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_cloudsize,	"cloudsize",	A_GIMME, 0); // Bind the cloudsize message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_grainlength,	"grainlength",	A_GIMME, 0); // Bind the grainlength message
+	class_addmethod(cmlivecloud_class, (method)cmlivecloud_pitchlist,	"pitchlist",	A_GIMME, 0); // Bind the pitchlist message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_bufferms,	"bufferms",		A_GIMME, 0); // Bind the bufferms message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_record, 		"record",		A_GIMME, 0); // Bind the record message
 	class_addmethod(cmlivecloud_class, (method)cmlivecloud_bang,		"bang",			0);
@@ -307,7 +315,8 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 		}
 	}
 
-
+	// ALLOCATE MEMORY FOR PITCH LIST
+	x->pitchlist = (double *)sysmem_newptrclear(PITCHLIST * sizeof(double));
 	
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
@@ -335,6 +344,12 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	// bang trigger flag
 	x->bang_trigger = false;
+	
+	// pitchlist values
+	x->pitchlist_active = false;
+	x->pitchlist_request = false;
+	x->pitchlist_zero = 0.0;
+	x->pitchlist_size = 0.0;
 	
 	// cloud structure members
 	for (i = 0; i < x->cloudsize; i++) {
@@ -501,6 +516,10 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	if (x->grains_count == 0 && x->recordflag) {
 		x->recordflag = false;
 	}
+	
+	if (x->grains_count == 0 && x->pitchlist_request) {
+		x->pitchlist_request = false;
+	}
 
 	// BUFFER CHECKS
 	if (!w_sample) { // if the sample buffer does not exist
@@ -571,7 +590,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->bufferms_request && !x->recordflag && !x->buffer_modified && w_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->bufferms_request && !x->recordflag && !x->buffer_modified && !x->pitchlist_request && w_sample) {
 
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
@@ -590,8 +609,15 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			
 			// randomize grain parameters
 			for (i = 0; i < 5; i++) {
-				r = i * 2;
-				x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+				// if currently processing randomized value for pitch (i == 2) and if pitchlist is active
+				if (i == 2 && x->pitchlist_active) {
+					// get random postition from pitchlist and write stored value
+					x->randomized[i] = x->pitchlist[(int)cm_random(&x->pitchlist_zero, &x->pitchlist_size)];
+				}
+				else {
+					r = i * 2;
+					x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+				}
 			}
 
 			// check for parameter sanity for delay value
@@ -1136,6 +1162,49 @@ void cmlivecloud_record(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 		x->record = true;
 		x->recordflag = true;
 //		object_post((t_object*)x, "record on");
+	}
+}
+
+
+/************************************************************************************************************************/
+/* THE PITCHLIST METHOD                                                                                                 */
+/************************************************************************************************************************/
+void cmlivecloud_pitchlist(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
+	double value;
+	if (ac < 1) {
+		object_error((t_object *)x, "minimum number of pitch values is 1");
+	}
+	else if (ac == 1 && atom_getfloat(av) == 0) {
+		object_post((t_object *)x, "pitch list cleared");
+		x->pitchlist_active = false;
+		x->pitchlist_request = true;
+	}
+	else if (ac <= 10) {
+		x->pitchlist_active = true;
+		x->pitchlist_request = true;
+		// clear array
+		for (int i = 0; i < PITCHLIST; i++) {
+			x->pitchlist[i] = 0;
+		}
+		x->pitchlist_size = (double)ac;
+		// write args into array
+		for (int i = 0; i < x->pitchlist_size; i++) {
+			value = atom_getfloat(av+i);
+			if (value > MAX_PITCH) {
+				object_error((t_object *)x, "value of element %d (%.3f) is too high - setting value to %d", (i+1), value, MAX_PITCH);
+				value = MAX_PITCH;
+			}
+			x->pitchlist[i] = value;
+		}
+		// list values in console
+		object_post((t_object *)x, "list of pitch values:");
+		for (int i = 0; i < x->pitchlist_size; i++) {
+			value = x->pitchlist[i];
+			object_post((t_object *)x, "%.3f", value);
+		}
+	}
+	else {
+		object_error((t_object *)x, "maximum number of pitch values is 10");
 	}
 }
 
