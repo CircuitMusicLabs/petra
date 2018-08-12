@@ -39,6 +39,7 @@
 #define MAX_GAIN 2.0  // max gain
 #define ARGUMENTS 4 // constant number of arguments required for the external
 #define FLOAT_INLETS 10 // number of object float inlets
+#define PITCHLIST 10 // max values to be provided for pitch list
 #define RANDMAX 10000
 
 
@@ -88,6 +89,8 @@ typedef struct _cmbuffercloud {
 	t_bool length_request; // flag set to true when "grainlength" method called
 	long grainlength_new; // new grain length obtained from "grainlength" method
 	t_bool length_verify; // check flag for proper memory re-allocation
+	double *pitchlist; // array to store pitch values provided by method
+	long pitchlistsize; // current numer of values stored in the pitch list array
 } t_cmbuffercloud;
 
 
@@ -121,6 +124,7 @@ t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, v
 void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
 void cmbuffercloud_cloudsize(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
 void cmbuffercloud_grainlength(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
+void cmbuffercloud_pitchlist(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
 void cmbuffercloud_bang(t_cmbuffercloud *x);
 t_max_err cmbuffercloud_stereo_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmbuffercloud_winterp_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
@@ -151,6 +155,7 @@ void ext_main(void *r) {
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_set, 		"set",			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_cloudsize,	"cloudsize",	A_GIMME, 0); // Bind the cloudsize message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_grainlength,	"grainlength",	A_GIMME, 0); // Bind the grainlength message
+	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_pitchlist,	"pitchlist",	A_GIMME, 0); // Bind the pitchlist message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_bang,		"bang",			0);
 	
 	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "stereo", 0, t_cmbuffercloud, attr_stereo);
@@ -279,6 +284,8 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		}
 	}
 	
+	// ALLOCATE MEMORY FOR PITCH LIST
+	x->pitchlist = (double *)sysmem_newptrclear(PITCHLIST * sizeof(double));
 	
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
@@ -999,6 +1006,31 @@ t_bool cmbuffercloud_resize(t_cmbuffercloud *x) {
 	return true;
 }
 
+
+/************************************************************************************************************************/
+/* THE PITCHLIST METHOD                                                                                                 */
+/************************************************************************************************************************/
+void cmbuffercloud_pitchlist(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
+	double value;
+	if (ac <= 10) {
+		// clear array
+		for (int i = 0; i < PITCHLIST; i++) {
+			x->pitchlist[i] = 0;
+		}
+		x->pitchlistsize = ac;
+		// write args into array
+		for (int i = 0; i < x->pitchlistsize; i++) {
+			x->pitchlist[i] = atom_getfloat(av+i);
+		}
+		for (int i = 0; i < x->pitchlistsize; i++) {
+			value = x->pitchlist[i];
+			object_error((t_object *)x, "%f", value);
+		}
+	}
+	else {
+		object_error((t_object *)x, "maximum number of pitch values is 10");
+	}
+}
 
 /************************************************************************************************************************/
 /* THE BANG METHOD                                                                                                      */
