@@ -43,6 +43,7 @@
 #define MIN_WINDOWLENGTH 16 // min window length in samples
 #define MAX_WININDEX 7 // max object attribute value for window type
 #define FLOAT_INLETS 10 // number of object float inlets
+#define PITCHLIST 10 // max values to be provided for pitch list
 #define RANDMAX 10000
 
 #ifdef WIN_VERSION
@@ -103,6 +104,11 @@ typedef struct _cmindexcloud {
 	t_bool length_request; // flag set to true when "grainlength" method called
 	long grainlength_new; // new grain length obtained from "grainlength" method
 	t_bool length_verify; // check flag for proper memory re-allocation
+	double *pitchlist; // array to store pitch values provided by method
+	double pitchlist_zero; // zero value pointer for randomize function
+	double pitchlist_size; // current numer of values stored in the pitch list array
+	t_bool pitchlist_active; // boolean pitch list active true/false
+	t_bool pitchlist_request; // reading values from pitch list has been requested
 } t_cmindexcloud;
 
 
@@ -136,6 +142,7 @@ t_max_err cmindexcloud_notify(t_cmindexcloud *x, t_symbol *s, t_symbol *msg, voi
 void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
 void cmindexcloud_cloudsize(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
 void cmindexcloud_grainlength(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
+void cmindexcloud_pitchlist(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
 void cmindexcloud_bang(t_cmindexcloud *x);
 t_bool cmindexcloud_resize(t_cmindexcloud *x);
 
@@ -186,6 +193,7 @@ void ext_main(void *r) {
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_grainlength,	"grainlength",	A_GIMME, 0); // Bind the cloudsize message
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_wintype,		"wintype", 		A_GIMME, 0); // Bind the window type message
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_winlength,		"winlength", 	A_GIMME, 0); // Bind the window length message
+	class_addmethod(cmindexcloud_class, (method)cmindexcloud_pitchlist,		"pitchlist",	A_GIMME, 0); // Bind the pitchlist message
 	class_addmethod(cmindexcloud_class, (method)cmindexcloud_bang,			"bang",			0);
 	
 	
@@ -324,6 +332,9 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 		}
 	}
 	
+	// ALLOCATE MEMORY FOR PITCH LIST
+	x->pitchlist = (double *)sysmem_newptrclear(PITCHLIST * sizeof(double));
+	
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
 	x->object_inlets[0] = 0.0; // initialize float inlet value for current start min value
@@ -347,6 +358,12 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	// bang trigger flag
 	x->bang_trigger = false;
+	
+	// pitchlist values
+	x->pitchlist_active = false;
+	x->pitchlist_request = false;
+	x->pitchlist_zero = 0.0;
+	x->pitchlist_size = 0.0;
 	
 	// cloud structure members
 	for (i = 0; i < x->cloudsize; i++) {
@@ -518,6 +535,10 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		x->buffer_modified = false;
 	}
 	
+	if (x->grains_count == 0 && x->pitchlist_request) {
+		x->pitchlist_request = false;
+	}
+	
 	// BUFFER CHECKS
 	if (!b_sample) { // if the sample buffer does not exist
 		goto zero;
@@ -567,7 +588,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->wintype_request && !x->winlength_request && !x->buffer_modified && b_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->wintype_request && !x->winlength_request && !x->buffer_modified && !x->pitchlist_request && b_sample) {
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -583,8 +604,15 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			
 			// randomize grain parameters
 			for (i = 0; i < 5; i++) {
-				r = i * 2;
-				x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+				// if currently processing randomized value for pitch (i == 2) and if pitchlist is active
+				if (i == 2 && x->pitchlist_active) {
+					// get random postition from pitchlist and write stored value
+					x->randomized[i] = x->pitchlist[(int)cm_random(&x->pitchlist_zero, &x->pitchlist_size)];
+				}
+				else {
+					r = i * 2;
+					x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+				}
 			}
 			
 			// check for parameter sanity of the length value
@@ -1123,6 +1151,49 @@ t_bool cmindexcloud_resize(t_cmindexcloud *x) {
 	}
 	
 	return true;
+}
+
+
+/************************************************************************************************************************/
+/* THE PITCHLIST METHOD                                                                                                 */
+/************************************************************************************************************************/
+void cmindexcloud_pitchlist(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
+	double value;
+	if (ac < 1) {
+		object_error((t_object *)x, "minimum number of pitch values is 1");
+	}
+	else if (ac == 1 && atom_getfloat(av) == 0) {
+		object_post((t_object *)x, "pitch list cleared");
+		x->pitchlist_active = false;
+		x->pitchlist_request = true;
+	}
+	else if (ac <= 10) {
+		x->pitchlist_active = true;
+		x->pitchlist_request = true;
+		// clear array
+		for (int i = 0; i < PITCHLIST; i++) {
+			x->pitchlist[i] = 0;
+		}
+		x->pitchlist_size = (double)ac;
+		// write args into array
+		for (int i = 0; i < x->pitchlist_size; i++) {
+			value = atom_getfloat(av+i);
+			if (value > MAX_PITCH) {
+				object_error((t_object *)x, "value of element %d (%.3f) is too high - setting value to %d", (i+1), value, MAX_PITCH);
+				value = MAX_PITCH;
+			}
+			x->pitchlist[i] = value;
+		}
+		// list values in console
+		object_post((t_object *)x, "list of pitch values:");
+		for (int i = 0; i < x->pitchlist_size; i++) {
+			value = x->pitchlist[i];
+			object_post((t_object *)x, "%.3f", value);
+		}
+	}
+	else {
+		object_error((t_object *)x, "maximum number of pitch values is 10");
+	}
 }
 
 
