@@ -108,7 +108,6 @@ typedef struct _cmindexcloud {
 	double pitchlist_zero; // zero value pointer for randomize function
 	double pitchlist_size; // current numer of values stored in the pitch list array
 	t_bool pitchlist_active; // boolean pitch list active true/false
-	t_bool pitchlist_request; // reading values from pitch list has been requested
 } t_cmindexcloud;
 
 
@@ -361,7 +360,6 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	// pitchlist values
 	x->pitchlist_active = false;
-	x->pitchlist_request = false;
 	x->pitchlist_zero = 0.0;
 	x->pitchlist_size = 0.0;
 	
@@ -535,10 +533,6 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		x->buffer_modified = false;
 	}
 	
-	if (x->grains_count == 0 && x->pitchlist_request) {
-		x->pitchlist_request = false;
-	}
-	
 	// BUFFER CHECKS
 	if (!b_sample) { // if the sample buffer does not exist
 		goto zero;
@@ -588,7 +582,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->wintype_request && !x->winlength_request && !x->buffer_modified && !x->pitchlist_request && b_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->wintype_request && !x->winlength_request && !x->buffer_modified && b_sample) {
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -1164,11 +1158,9 @@ void cmindexcloud_pitchlist(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av)
 	}
 	else if (ac == 1 && atom_getfloat(av) == 0) {
 		x->pitchlist_active = false;
-		x->pitchlist_request = true;
 	}
 	else if (ac <= 10) {
 		x->pitchlist_active = true;
-		x->pitchlist_request = true;
 		// clear array
 		for (int i = 0; i < PITCHLIST; i++) {
 			x->pitchlist[i] = 0;
