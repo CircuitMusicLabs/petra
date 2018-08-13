@@ -221,6 +221,17 @@
 				Specifies the new maximum grain length and resizes allocated memory. The supplied value must be a positive integer.
 			</description>
 		</method>
+		<method name="pitchlist">
+			<arglist>
+				<arg name="pitch list" optional="0" type="float" />
+			</arglist>
+			<digest>
+				List of pitch values
+			</digest>
+			<description>
+				When provided, the object randomly selects pitch values from the list and the object inlets for minimum and maximum pitch will be ignored. Supply a single zero value to deactivate pitch list processing.
+			</description>
+		</method>
 	</methodlist>
 	<!--ATTRIBUTES-->
 	<attributelist>
