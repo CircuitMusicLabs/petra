@@ -1024,7 +1024,6 @@ void cmgausscloud_pitchlist(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av)
 		object_error((t_object *)x, "minimum number of pitch values is 1");
 	}
 	else if (ac == 1 && atom_getfloat(av) == 0) {
-		object_post((t_object *)x, "pitch list cleared");
 		x->pitchlist_active = false;
 		x->pitchlist_request = true;
 	}
@@ -1040,16 +1039,14 @@ void cmgausscloud_pitchlist(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av)
 		for (int i = 0; i < x->pitchlist_size; i++) {
 			value = atom_getfloat(av+i);
 			if (value > MAX_PITCH) {
-				object_error((t_object *)x, "value of element %d (%.3f) is too high - setting value to %d", (i+1), value, MAX_PITCH);
+				object_error((t_object *)x, "value of element %d (%.3f) must not be higher than %d - setting value to %d", (i+1), value, MAX_PITCH, MAX_PITCH);
 				value = MAX_PITCH;
 			}
+			else if (value < 0) {
+				object_error((t_object *)x, "value of element %d (%.3f) must be higher than %d - setting value to %.1f", (i+1), value, 0, 1.0);
+				value = 1.0;
+			}
 			x->pitchlist[i] = value;
-		}
-		// list values in console
-		object_post((t_object *)x, "list of pitch values:");
-		for (int i = 0; i < x->pitchlist_size; i++) {
-			value = x->pitchlist[i];
-			object_post((t_object *)x, "%.3f", value);
 		}
 	}
 	else {
