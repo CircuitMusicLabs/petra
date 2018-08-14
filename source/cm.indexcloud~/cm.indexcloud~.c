@@ -1181,7 +1181,7 @@ void cmindexcloud_pitchlist(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av)
 				value = MAX_PITCH;
 			}
 			else if (value < MIN_PITCH) {
-				object_error((t_object *)x, "value of element %d (%.3f) must be higher than %.3f - setting value to %.3f", (i+1), value, MIN_PITCH, MIN_PITCH);
+				object_error((t_object *)x, "value of element %d (%f) must be higher than %.3f - setting value to %.3f", (i+1), value, MIN_PITCH, MIN_PITCH);
 				value = MIN_PITCH;
 			}
 			x->pitchlist[i] = value;
