@@ -1053,9 +1053,9 @@ void cmbuffercloud_pitchlist(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *a
 				object_error((t_object *)x, "value of element %d (%.3f) must not be higher than %d - setting value to %d", (i+1), value, MAX_PITCH, MAX_PITCH);
 				value = MAX_PITCH;
 			}
-			else if (value < 0) {
-				object_error((t_object *)x, "value of element %d (%.3f) must be higher than %d - setting value to %.1f", (i+1), value, 0, 1.0);
-				value = 1.0;
+			else if (value < MIN_PITCH) {
+				object_error((t_object *)x, "value of element %d (%.3f) must be higher than %.3f - setting value to %.3f", (i+1), value, MIN_PITCH, MIN_PITCH);
+				value = MIN_PITCH;
 			}
 			x->pitchlist[i] = value;
 		}
