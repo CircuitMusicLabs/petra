@@ -415,6 +415,8 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	float *b_sample = buffer_locksamples(buffer);
 	long b_framecount; // number of frames in the sample buffer
 	t_atom_long b_channelcount; // number of channels in the sample buffer
+	double b_m_sr; // buffer sample rate
+	double sr_ratio; // ratio between buffer sample rate and system sample rate
 	
 	// CLOUDSIZE - MEMORY RESIZE
 	if (x->grains_count == 0 && x->resize_request) {
@@ -458,12 +460,14 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	// GET BUFFER INFORMATION
 	b_framecount = buffer_getframecount(buffer); // get number of frames in the sample buffer
 	b_channelcount = buffer_getchannelcount(buffer); // get number of channels in the sample buffer
+	b_m_sr = buffer_getsamplerate(buffer) * 0.001; // get the sample buffer sample rate
+	sr_ratio = b_m_sr / x->m_sr; // calculate ratio between system sample rate and buffer sample rate
 
 	// GET INLET VALUES
 	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
 
-	x->grain_params[0] = x->connect_status[0] ? *ins[1] * x->m_sr : x->object_inlets[0] * x->m_sr;	// start min
-	x->grain_params[1] = x->connect_status[1] ? *ins[2] * x->m_sr : x->object_inlets[1] * x->m_sr;	// start max
+	x->grain_params[0] = x->connect_status[0] ? *ins[1] * b_m_sr : x->object_inlets[0] * b_m_sr;	// start min
+	x->grain_params[1] = x->connect_status[1] ? *ins[2] * b_m_sr : x->object_inlets[1] * b_m_sr;	// start max
 	x->grain_params[2] = x->connect_status[2] ? *ins[3] * x->m_sr : x->object_inlets[2] * x->m_sr;	// length min
 	x->grain_params[3] = x->connect_status[3] ? *ins[4] * x->m_sr : x->object_inlets[3] * x->m_sr;	// length max
 	x->grain_params[4] = x->connect_status[4] ? *ins[5] : x->object_inlets[4];						// pitch min
@@ -535,7 +539,9 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			else if (x->randomized[1] > x->grainlength * x->m_sr) {
 				x->randomized[1] = x->grainlength * x->m_sr;
 			}
-
+			
+			// adjust the pitch value according to the sample rate ratio system/buffer
+			x->randomized[2] = x->randomized[2] * sr_ratio;
 
 			// check for parameter sanity of the pitch value
 			if (x->randomized[2] < MIN_PITCH) {
