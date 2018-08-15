@@ -93,6 +93,7 @@ typedef struct _cmbuffercloud {
 	double pitchlist_zero; // zero value pointer for randomize function
 	double pitchlist_size; // current numer of values stored in the pitch list array
 	t_bool pitchlist_active; // boolean pitch list active true/false
+	t_symbol *attr_reverse;
 } t_cmbuffercloud;
 
 
@@ -132,6 +133,7 @@ t_max_err cmbuffercloud_stereo_set(t_cmbuffercloud *x, t_object *attr, long argc
 t_max_err cmbuffercloud_winterp_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmbuffercloud_sinterp_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmbuffercloud_zero_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmbuffercloud_reverse_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
 t_bool cmbuffercloud_resize(t_cmbuffercloud *x);
 
 // PANNING FUNCTION
@@ -184,10 +186,17 @@ void ext_main(void *r) {
 	CLASS_ATTR_SAVE(cmbuffercloud_class, "zero", 0);
 	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
+	CLASS_ATTR_SYM_ARRAY(cmbuffercloud_class, "reverse", 0, t_cmbuffercloud, attr_reverse, 3);
+	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "reverse", (method)NULL, (method)cmbuffercloud_reverse_set);
+	CLASS_ATTR_BASIC(cmbuffercloud_class, "reverse", 0);
+	CLASS_ATTR_SAVE(cmbuffercloud_class, "reverse", 0);
+	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "reverse", 0, "enum", "Reverse mode");
+	
 	CLASS_ATTR_ORDER(cmbuffercloud_class, "stereo", 0, "1");
 	CLASS_ATTR_ORDER(cmbuffercloud_class, "w_interp", 0, "2");
 	CLASS_ATTR_ORDER(cmbuffercloud_class, "s_interp", 0, "3");
 	CLASS_ATTR_ORDER(cmbuffercloud_class, "zero", 0, "4");
+	CLASS_ATTR_ORDER(cmbuffercloud_class, "reverse", 0, "5");
 	
 	class_dspinit(cmbuffercloud_class); // Add standard Max/MSP methods to your class
 	class_register(CLASS_BOX, cmbuffercloud_class); // Register the class with Max
@@ -220,6 +229,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	object_attr_setlong(x, gensym("w_interp"), 0); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("s_interp"), 1); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("zero"), 0); // initialize zero crossing attribute
+	object_attr_setlong(x, gensym("reverse"), 0);
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 	
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE
@@ -1118,6 +1128,16 @@ t_max_err cmbuffercloud_sinterp_set(t_cmbuffercloud *x, t_object *attr, long ac,
 t_max_err cmbuffercloud_zero_set(t_cmbuffercloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
 		x->attr_zero = atom_getlong(av)? 1 : 0;
+	}
+	return MAX_ERR_NONE;
+}
+
+/************************************************************************************************************************/
+/* THE REVERSE ATTRIBUTE SET METHOD                                                                                     */
+/************************************************************************************************************************/
+t_max_err cmbuffercloud_reverse_set(t_cmbuffercloud *x, t_object *attr, long ac, t_atom *av) {
+	if (ac && av) {
+		
 	}
 	return MAX_ERR_NONE;
 }
