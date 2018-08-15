@@ -490,7 +490,13 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	x->grain_params[8] = x->connect_status[8] ? *ins[9] : x->object_inlets[8];						// gain min
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
 	
-	
+	// clip start values
+	if (x->grain_params[0] > x->grain_params[1]) {
+		x->grain_params[1] = x->grain_params[0];
+	}
+	if (x->grain_params[1] < x->grain_params[0]) {
+		x->grain_params[0] = x->grain_params[1];
+	}
 	
 	/************************************************************************************************************************/
 	// DSP LOOP

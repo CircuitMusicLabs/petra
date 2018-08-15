@@ -478,6 +478,14 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
 	x->grain_params[10] = x->connect_status[10] ? *ins[11] : x->object_inlets[10];					// alpha min
 	x->grain_params[11] = x->connect_status[11] ? *ins[12] : x->object_inlets[11];					// alpha max
+	
+	// clip start values
+	if (x->grain_params[0] > x->grain_params[1]) {
+		x->grain_params[1] = x->grain_params[0];
+	}
+	if (x->grain_params[1] < x->grain_params[0]) {
+		x->grain_params[0] = x->grain_params[1];
+	}
 
 
 	// DSP LOOP
