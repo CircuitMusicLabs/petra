@@ -51,6 +51,7 @@ typedef struct cmcloud {
 	double *right;
 	long length;
 	long pos;
+	t_bool reverse; // used to store the reverse flag
 	t_bool busy; // used to store the flag if a grain is currently playing or not
 } cm_cloud;
 
@@ -140,6 +141,8 @@ t_bool cmbuffercloud_resize(t_cmbuffercloud *x);
 void cm_panning(cm_panstruct *panstruct, double *pos, t_cmbuffercloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
+// RANDOM REVERSE FLAG GENERATOR
+t_bool cm_randomreverse();
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
 
@@ -186,7 +189,8 @@ void ext_main(void *r) {
 	CLASS_ATTR_SAVE(cmbuffercloud_class, "zero", 0);
 	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
-	CLASS_ATTR_SYM_ARRAY(cmbuffercloud_class, "reverse", 0, t_cmbuffercloud, attr_reverse, 3);
+	CLASS_ATTR_SYM(cmbuffercloud_class, "reverse", 0, t_cmbuffercloud, attr_reverse);
+	CLASS_ATTR_ENUM(cmbuffercloud_class, "reverse", 0, "off on random");
 	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "reverse", (method)NULL, (method)cmbuffercloud_reverse_set);
 	CLASS_ATTR_BASIC(cmbuffercloud_class, "reverse", 0);
 	CLASS_ATTR_SAVE(cmbuffercloud_class, "reverse", 0);
@@ -229,7 +233,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	object_attr_setlong(x, gensym("w_interp"), 0); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("s_interp"), 1); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("zero"), 0); // initialize zero crossing attribute
-	object_attr_setlong(x, gensym("reverse"), 0);
+	object_attr_setsym(x, gensym("reverse"), gensym("off"));
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 	
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE
@@ -332,6 +336,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 		x->cloud[i].length = 0;
 		x->cloud[i].pos = 0;
 		x->cloud[i].busy = false;
+		x->cloud[i].reverse = false;
 	}
 	
 	x->cloudsize_new = x->cloudsize;
@@ -623,6 +628,23 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			// write gain value
 			gain = x->randomized[4];
 			
+			// handle reverse attribute
+			if (x->attr_reverse == gensym("off")) {
+				x->cloud[slot].reverse = false;
+			}
+			else if (x->attr_reverse == gensym("on")) {
+				x->cloud[slot].reverse = true;
+				x->cloud[slot].pos = x->cloud[slot].length - 1;
+			}
+			else if (x->attr_reverse == gensym("random")) {
+				if (cm_randomreverse()) {
+					x->cloud[slot].reverse = true;
+					x->cloud[slot].pos = x->cloud[slot].length - 1;
+				}
+				else {
+					x->cloud[slot].reverse = false;
+				}
+			}
 			
 			// grain is written into memory here
 			for (readpos = 0; readpos < smp_length; readpos++) {
@@ -670,15 +692,29 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		if (x->grains_count) {
 			for (i = 0; i < x->cloudsize; i++) {
 				if (x->cloud[i].busy) {
-					r = x->cloud[i].pos++;
-					outsample_left += x->cloud[i].left[r];
-					outsample_right += x->cloud[i].right[r];
-					if (x->cloud[i].pos == x->cloud[i].length) {
-						x->cloud[i].pos = 0;
-						x->cloud[i].busy = false;
-						x->grains_count--;
-						if (x->grains_count < 0) {
-							x->grains_count = 0;
+					if (x->cloud[i].reverse) {
+						r = x->cloud[i].pos--;
+						outsample_left += x->cloud[i].left[r];
+						outsample_right += x->cloud[i].right[r];
+						if (x->cloud[i].pos < 0) {
+							x->cloud[i].busy = false;
+							x->grains_count--;
+							if (x->grains_count < 0) {
+								x->grains_count = 0;
+							}
+						}
+					}
+					else {
+						r = x->cloud[i].pos++;
+						outsample_left += x->cloud[i].left[r];
+						outsample_right += x->cloud[i].right[r];
+						if (x->cloud[i].pos == x->cloud[i].length) {
+							x->cloud[i].pos = 0;
+							x->cloud[i].busy = false;
+							x->grains_count--;
+							if (x->grains_count < 0) {
+								x->grains_count = 0;
+							}
 						}
 					}
 				}
@@ -1137,7 +1173,7 @@ t_max_err cmbuffercloud_zero_set(t_cmbuffercloud *x, t_object *attr, long ac, t_
 /************************************************************************************************************************/
 t_max_err cmbuffercloud_reverse_set(t_cmbuffercloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
-		
+		x->attr_reverse = atom_getsym(av);
 	}
 	return MAX_ERR_NONE;
 }
@@ -1160,6 +1196,22 @@ double cm_random(double *min, double *max) {
 #ifdef WIN_VERSION
 	return *min + ((*max - *min) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
 #endif
+}
+// RANDOM REVERSE FLAG GENERATOR
+t_bool cm_randomreverse() {
+	double flag;
+#ifdef MAC_VERSION
+	flag = 0.0 + ((1.0 - 0.0) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+#endif
+#ifdef WIN_VERSION
+	flag 0.0 + ((1.0 - 0.0) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
+#endif
+	if (flag > 0.5) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
