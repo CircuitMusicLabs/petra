@@ -255,29 +255,78 @@
 	</methodlist>
 	<!--ATTRIBUTES-->
 	<attributelist>
-		<attribute name="w_interp" get="0" set="1" type="int" size="1">
+		<attribute name="w_interp" get="1" set="1" type="int" size="1" value="0">
 			<digest>
 				Window interpolation on/off
 			</digest>
 			<description>
 				Activates and deactivates window sample interpolation.
 			</description>
+			<attributelist>
+				<attribute name="default" get="1" set="1" type="int" size="1" value="0" />
+			</attributelist>
 		</attribute>
-		<attribute name="s_interp" get="0" set="1" type="int" size="1">
+		<attribute name="s_interp" get="1" set="1" type="int" size="1" value="1">
 			<digest>
 				Sample interpolation on/off
 			</digest>
 			<description>
 				Activates and deactivates buffer sample interpolation.
 			</description>
+			<attributelist>
+				<attribute name="default" get="1" set="1" type="int" size="1" value="1" />
+			</attributelist>
 		</attribute>
-		<attribute name="zero" get="0" set="1" type="int" size="1">
+		<attribute name="zero" get="1" set="1" type="int" size="1" value="0">
 			<digest>
 				Zero crossing trigger mode on/off
 			</digest>
 			<description>
 				Activates and deactivates zero crossing trigger mode.
 			</description>
+			<attributelist>
+				<attribute name="default" get="1" set="1" type="int" size="1" value="0" />
+			</attributelist>
+		</attribute>
+		<attribute name="reverse" get="1" set="1" type="symbol" size="1">
+			<digest>
+				Reverse grain playback mode
+			</digest>
+			<description>
+				Sets the reverse grain playback mode.
+			</description>
+			<attributelist>
+				<attribute name="default" get="1" set="1" type="symbol" size="1" value="off" />
+				<attribute name="enumvals" get="1" set="1" type="atom" size="4">
+					<enumlist>
+						<enum name="off">
+							<digest>
+								Forward grain playback
+							</digest>
+							<description>
+								TEXT_HERE
+							</description>
+						</enum>
+						<enum name="on">
+							<digest>
+								Reverse grain playback
+							</digest>
+							<description>
+								TEXT_HERE
+							</description>
+						</enum>
+						<enum name="random">
+							<digest>
+								Randomly alternating between reverse and forward grain playback
+							</digest>
+							<description>
+								TEXT_HERE
+							</description>
+						</enum>
+					</enumlist>
+				</attribute>
+				<attribute name="style" get="1" set="1" type="symbol" size="1" value="enum" />
+			</attributelist>
 		</attribute>
 	</attributelist>
 	<misc name="Output">
