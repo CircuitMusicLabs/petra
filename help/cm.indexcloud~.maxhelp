@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 339.0, 160.0, 1019.0, 619.0 ],
+		"rect" : [ 100.0, 100.0, 1019.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -1362,6 +1362,7 @@
 									"outlettype" : [ "signal", "signal", "int" ],
 									"patching_rect" : [ 115.999985, 320.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
@@ -3129,6 +3130,7 @@
 									"outlettype" : [ "signal", "signal", "int" ],
 									"patching_rect" : [ 115.999985, 320.0, 806.000061, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
@@ -5403,6 +5405,7 @@
 									"outlettype" : [ "signal", "signal", "int" ],
 									"patching_rect" : [ 116.0, 305.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
@@ -7123,6 +7126,7 @@
 									"outlettype" : [ "signal", "signal", "int" ],
 									"patching_rect" : [ 115.999985, 305.0, 806.000061, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
@@ -8894,6 +8898,7 @@
 									"outlettype" : [ "signal", "signal", "int" ],
 									"patching_rect" : [ 115.999985, 305.0, 806.000061, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
@@ -10616,6 +10621,7 @@
 									"outlettype" : [ "signal", "signal", "int" ],
 									"patching_rect" : [ 115.999985, 320.0, 806.000061, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
@@ -12600,6 +12606,7 @@
 									"outlettype" : [ "signal", "signal", "int" ],
 									"patching_rect" : [ 115.999985, 305.0, 806.000061, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
@@ -14070,6 +14077,7 @@
 									"outlettype" : [ "signal", "signal", "int" ],
 									"patching_rect" : [ 115.999939, 342.0, 806.000305, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
@@ -14571,7 +14579,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 339.0, 186.0, 1019.0, 593.0 ],
+						"rect" : [ 100.0, 126.0, 1019.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -14600,6 +14608,48 @@
 						"subpatcher_template" : "",
 						"showontab" : 1,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-33",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 735.0, 167.0, 183.799988, 20.0 ],
+									"style" : "",
+									"text" : "@reverse attribute"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"bubble" : 1,
+									"bubbleside" : 3,
+									"fontname" : "Arial",
+									"fontsize" : 13.0,
+									"id" : "obj-36",
+									"linecount" : 3,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 621.0, 173.0, 115.0, 54.0 ],
+									"style" : "",
+									"text" : "Switch between three reverse modes"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"attr" : "reverse",
+									"id" : "obj-37",
+									"maxclass" : "attrui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 738.0, 189.0, 184.0, 22.0 ],
+									"style" : ""
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"bgcolor" : [ 0.145098, 0.352941, 0.670588, 1.0 ],
 									"fontface" : 1,
@@ -16079,6 +16129,7 @@
 									"outlettype" : [ "signal", "signal", "int" ],
 									"patching_rect" : [ 115.999985, 325.0, 806.000061, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
@@ -16230,6 +16281,14 @@
 									"hidden" : 1,
 									"midpoints" : [ 694.379944, 671.5, 820.189972, 671.5, 820.189972, 426.5, 578.0, 426.5 ],
 									"source" : [ "obj-35", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-6", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-37", 0 ]
 								}
 
 							}
@@ -16529,15 +16588,15 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
-			"obj-10::obj-23" : [ "live.gain~[9]", "live.gain~", 0 ],
-			"obj-9::obj-23" : [ "live.gain~[8]", "live.gain~", 0 ],
+			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
+			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
+			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
+			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
 			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
 			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
-			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
-			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
-			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
-			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ],
-			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ]
+			"obj-10::obj-23" : [ "live.gain~[9]", "live.gain~", 0 ],
+			"obj-9::obj-23" : [ "live.gain~[8]", "live.gain~", 0 ],
+			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{

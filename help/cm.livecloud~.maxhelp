@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 399.0, 146.0, 1024.0, 619.0 ],
+		"rect" : [ 100.0, 100.0, 1024.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -54,7 +54,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 399.0, 172.0, 1024.0, 593.0 ],
+						"rect" : [ 0.0, 26.0, 1024.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -842,6 +842,7 @@
 									"outlettype" : [ "signal", "signal", "int", "int" ],
 									"patching_rect" : [ 115.999985, 320.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"w_interp" : 0,
 										"zero" : 0
@@ -2053,6 +2054,7 @@
 									"outlettype" : [ "signal", "signal", "int", "int" ],
 									"patching_rect" : [ 115.999985, 329.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"w_interp" : 0,
 										"zero" : 0
@@ -3197,6 +3199,7 @@
 									"outlettype" : [ "signal", "signal", "int", "int" ],
 									"patching_rect" : [ 115.999985, 320.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"w_interp" : 0,
 										"zero" : 0
@@ -4390,6 +4393,7 @@
 									"outlettype" : [ "signal", "signal", "int", "int" ],
 									"patching_rect" : [ 115.999985, 305.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"w_interp" : 0,
 										"zero" : 0
@@ -5525,6 +5529,7 @@
 									"outlettype" : [ "signal", "signal", "int", "int" ],
 									"patching_rect" : [ 115.999985, 320.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"w_interp" : 0,
 										"zero" : 0
@@ -6803,6 +6808,7 @@
 									"outlettype" : [ "signal", "signal", "int", "int" ],
 									"patching_rect" : [ 115.999985, 305.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"w_interp" : 0,
 										"zero" : 0
@@ -8036,6 +8042,7 @@
 									"outlettype" : [ "signal", "signal", "int", "int" ],
 									"patching_rect" : [ 115.999939, 342.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"w_interp" : 0,
 										"zero" : 0
@@ -8377,7 +8384,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 0.0, 26.0, 1024.0, 593.0 ],
+						"rect" : [ 100.0, 126.0, 1024.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -8406,6 +8413,48 @@
 						"subpatcher_template" : "",
 						"showontab" : 1,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-19",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 368.0, 492.5, 183.799988, 20.0 ],
+									"style" : "",
+									"text" : "@reverse attribute"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"bubble" : 1,
+									"bubbleside" : 3,
+									"fontname" : "Arial",
+									"fontsize" : 13.0,
+									"id" : "obj-20",
+									"linecount" : 3,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 254.0, 498.5, 115.0, 54.0 ],
+									"style" : "",
+									"text" : "Switch between three reverse modes"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"attr" : "reverse",
+									"id" : "obj-37",
+									"maxclass" : "attrui",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 371.0, 514.5, 184.0, 22.0 ],
+									"style" : ""
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"bubble" : 1,
 									"bubbleside" : 3,
@@ -9381,6 +9430,7 @@
 									"outlettype" : [ "signal", "signal", "int", "int" ],
 									"patching_rect" : [ 115.999985, 343.0, 806.0, 22.0 ],
 									"saved_object_attributes" : 									{
+										"reverse" : "off",
 										"s_interp" : 1,
 										"w_interp" : 0,
 										"zero" : 0
@@ -9502,6 +9552,14 @@
 									"destination" : [ "obj-6", 0 ],
 									"midpoints" : [ 197.045441, 332.5, 125.499985, 332.5 ],
 									"source" : [ "obj-33", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-6", 0 ],
+									"hidden" : 1,
+									"source" : [ "obj-37", 0 ]
 								}
 
 							}
@@ -9677,30 +9735,30 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
-			"obj-6::obj-18::obj-21::obj-6" : [ "live.tab[7]", "live.tab[1]", 0 ],
-			"obj-9::obj-18::obj-21::obj-6" : [ "live.tab[10]", "live.tab[1]", 0 ],
-			"obj-8::obj-18::obj-35" : [ "[8]", "Level", 0 ],
-			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
-			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
 			"obj-5::obj-1::obj-21::obj-6" : [ "live.tab[6]", "live.tab[1]", 0 ],
+			"obj-2::obj-20::obj-21::obj-6" : [ "live.tab[5]", "live.tab[1]", 0 ],
 			"obj-7::obj-18::obj-35" : [ "[7]", "Level", 0 ],
 			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
-			"obj-9::obj-23" : [ "live.gain~[8]", "live.gain~", 0 ],
-			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
-			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ],
-			"obj-2::obj-20::obj-21::obj-6" : [ "live.tab[5]", "live.tab[1]", 0 ],
-			"obj-1::obj-3::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
-			"obj-6::obj-18::obj-35" : [ "[6]", "Level", 0 ],
-			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
 			"obj-3::obj-20::obj-21::obj-6" : [ "live.tab[4]", "live.tab[1]", 0 ],
+			"obj-6::obj-18::obj-35" : [ "[6]", "Level", 0 ],
+			"obj-9::obj-18::obj-21::obj-6" : [ "live.tab[10]", "live.tab[1]", 0 ],
+			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
+			"obj-1::obj-3::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
 			"obj-5::obj-1::obj-35" : [ "[3]", "Level", 0 ],
 			"obj-8::obj-18::obj-21::obj-6" : [ "live.tab[9]", "live.tab[1]", 0 ],
-			"obj-9::obj-18::obj-35" : [ "[9]", "Level", 0 ],
 			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
 			"obj-1::obj-3::obj-35" : [ "[5]", "Level", 0 ],
+			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
 			"obj-2::obj-20::obj-35" : [ "[2]", "Level", 0 ],
+			"obj-3::obj-20::obj-35" : [ "[1]", "Level", 0 ],
 			"obj-7::obj-18::obj-21::obj-6" : [ "live.tab[8]", "live.tab[1]", 0 ],
-			"obj-3::obj-20::obj-35" : [ "[1]", "Level", 0 ]
+			"obj-9::obj-18::obj-35" : [ "[9]", "Level", 0 ],
+			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
+			"obj-6::obj-18::obj-21::obj-6" : [ "live.tab[7]", "live.tab[1]", 0 ],
+			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
+			"obj-8::obj-18::obj-35" : [ "[8]", "Level", 0 ],
+			"obj-9::obj-23" : [ "live.gain~[8]", "live.gain~", 0 ],
+			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{
