@@ -1204,7 +1204,7 @@ t_bool cm_randomreverse() {
 	flag = 0.0 + ((1.0 - 0.0) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
 #endif
 #ifdef WIN_VERSION
-	flag 0.0 + ((1.0 - 0.0) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
+	flag = 0.0 + ((1.0 - 0.0) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
 #endif
 	if (flag > 0.5) {
 		return true;
