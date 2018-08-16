@@ -78,6 +78,7 @@ typedef struct _cmbuffercloud {
 	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
+	t_symbol *attr_reverse; // attribute: reverse grain playback mode
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
 	t_bool bang_trigger; // trigger received from bang method
@@ -94,7 +95,6 @@ typedef struct _cmbuffercloud {
 	double pitchlist_zero; // zero value pointer for randomize function
 	double pitchlist_size; // current numer of values stored in the pitch list array
 	t_bool pitchlist_active; // boolean pitch list active true/false
-	t_symbol *attr_reverse;
 } t_cmbuffercloud;
 
 
@@ -233,7 +233,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	object_attr_setlong(x, gensym("w_interp"), 0); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("s_interp"), 1); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("zero"), 0); // initialize zero crossing attribute
-	object_attr_setsym(x, gensym("reverse"), gensym("off"));
+	object_attr_setsym(x, gensym("reverse"), gensym("off")); // initialize reverse attribute
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 	
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE

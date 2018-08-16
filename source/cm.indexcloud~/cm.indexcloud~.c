@@ -59,6 +59,7 @@ typedef struct cmcloud {
 	double *right;
 	long length;
 	long pos;
+	t_bool reverse; // used to store the reverse flag
 	t_bool busy; // used to store the flag if a grain is currently playing or not
 } cm_cloud;
 
@@ -92,6 +93,7 @@ typedef struct _cmindexcloud {
 	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
+	t_symbol *attr_reverse; // attribute: reverse grain playback mode
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
 	t_bool bang_trigger; // trigger received from bang method
@@ -152,6 +154,7 @@ t_max_err cmindexcloud_stereo_set(t_cmindexcloud *x, t_object *attr, long argc, 
 t_max_err cmindexcloud_winterp_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmindexcloud_sinterp_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmindexcloud_zero_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmindexcloud_reverse_set(t_cmindexcloud *x, t_object *attr, long argc, t_atom *argv);
 
 void cmindexcloud_windowwrite(t_cmindexcloud *x);
 t_bool cmindexcloud_do_wintype(t_cmindexcloud *x);
@@ -161,6 +164,8 @@ t_bool cmindexcloud_do_winlength(t_cmindexcloud *x);
 void cm_panning(cm_panstruct *panstruct, double *pos, t_cmindexcloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
+// RANDOM REVERSE FLAG GENERATOR
+t_bool cm_randomreverse();
 // LINEAR INTERPOLATION FUNCTIONS
 double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
 double cm_lininterpwin(double distance, double *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
@@ -220,10 +225,18 @@ void ext_main(void *r) {
 	CLASS_ATTR_SAVE(cmindexcloud_class, "zero", 0);
 	CLASS_ATTR_STYLE_LABEL(cmindexcloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
+	CLASS_ATTR_SYM(cmindexcloud_class, "reverse", 0, t_cmindexcloud, attr_reverse);
+	CLASS_ATTR_ENUM(cmindexcloud_class, "reverse", 0, "off on random");
+	CLASS_ATTR_ACCESSORS(cmindexcloud_class, "reverse", (method)NULL, (method)cmindexcloud_reverse_set);
+	CLASS_ATTR_BASIC(cmindexcloud_class, "reverse", 0);
+	CLASS_ATTR_SAVE(cmindexcloud_class, "reverse", 0);
+	CLASS_ATTR_STYLE_LABEL(cmindexcloud_class, "reverse", 0, "enum", "Reverse mode");
+	
 	CLASS_ATTR_ORDER(cmindexcloud_class, "stereo", 0, "1");
 	CLASS_ATTR_ORDER(cmindexcloud_class, "w_interp", 0, "2");
 	CLASS_ATTR_ORDER(cmindexcloud_class, "s_interp", 0, "3");
 	CLASS_ATTR_ORDER(cmindexcloud_class, "zero", 0, "4");
+	CLASS_ATTR_ORDER(cmindexcloud_class, "reverse", 0, "5");
 	
 	class_dspinit(cmindexcloud_class); // Add standard Max/MSP methods to your class
 	class_register(CLASS_BOX, cmindexcloud_class); // Register the class with Max
@@ -255,6 +268,7 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 	object_attr_setlong(x, gensym("w_interp"), 0); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("s_interp"), 1); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("zero"), 0); // initialize zero crossing attribute
+	object_attr_setsym(x, gensym("reverse"), gensym("off")); // initialize reverse attribute
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 	
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE
@@ -680,6 +694,23 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			// write gain value
 			gain = x->randomized[4];
 			
+			// handle reverse attribute
+			if (x->attr_reverse == gensym("off")) {
+				x->cloud[slot].reverse = false;
+			}
+			else if (x->attr_reverse == gensym("on")) {
+				x->cloud[slot].reverse = true;
+				x->cloud[slot].pos = x->cloud[slot].length - 1;
+			}
+			else if (x->attr_reverse == gensym("random")) {
+				if (cm_randomreverse()) {
+					x->cloud[slot].reverse = true;
+					x->cloud[slot].pos = x->cloud[slot].length - 1;
+				}
+				else {
+					x->cloud[slot].reverse = false;
+				}
+			}
 			
 			// grain is written into memory here
 			for (readpos = 0; readpos < smp_length; readpos++) {
@@ -726,15 +757,29 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		if (x->grains_count) {
 			for (i = 0; i < x->cloudsize; i++) {
 				if (x->cloud[i].busy) {
-					r = x->cloud[i].pos++;
-					outsample_left += x->cloud[i].left[r];
-					outsample_right += x->cloud[i].right[r];
-					if (x->cloud[i].pos == x->cloud[i].length) {
-						x->cloud[i].pos = 0;
-						x->cloud[i].busy = false;
-						x->grains_count--;
-						if (x->grains_count < 0) {
-							x->grains_count = 0;
+					if (x->cloud[i].reverse) {
+						r = x->cloud[i].pos--;
+						outsample_left += x->cloud[i].left[r];
+						outsample_right += x->cloud[i].right[r];
+						if (x->cloud[i].pos < 0) {
+							x->cloud[i].busy = false;
+							x->grains_count--;
+							if (x->grains_count < 0) {
+								x->grains_count = 0;
+							}
+						}
+					}
+					else {
+						r = x->cloud[i].pos++;
+						outsample_left += x->cloud[i].left[r];
+						outsample_right += x->cloud[i].right[r];
+						if (x->cloud[i].pos == x->cloud[i].length) {
+							x->cloud[i].pos = 0;
+							x->cloud[i].busy = false;
+							x->grains_count--;
+							if (x->grains_count < 0) {
+								x->grains_count = 0;
+							}
 						}
 					}
 				}
@@ -1252,6 +1297,16 @@ t_max_err cmindexcloud_zero_set(t_cmindexcloud *x, t_object *attr, long ac, t_at
 }
 
 /************************************************************************************************************************/
+/* THE REVERSE ATTRIBUTE SET METHOD                                                                                     */
+/************************************************************************************************************************/
+t_max_err cmindexcloud_reverse_set(t_cmindexcloud *x, t_object *attr, long ac, t_atom *av) {
+	if (ac && av) {
+		x->attr_reverse = atom_getsym(av);
+	}
+	return MAX_ERR_NONE;
+}
+
+/************************************************************************************************************************/
 /* THE WINDOW_WRITE FUNCTION                                                                                            */
 /************************************************************************************************************************/
 void cmindexcloud_windowwrite(t_cmindexcloud *x) {
@@ -1314,6 +1369,23 @@ double cm_random(double *min, double *max) {
 #ifdef WIN_VERSION
 	return *min + ((*max - *min) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
 #endif
+}
+
+// RANDOM REVERSE FLAG GENERATOR
+t_bool cm_randomreverse() {
+	double flag;
+#ifdef MAC_VERSION
+	flag = 0.0 + ((1.0 - 0.0) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+#endif
+#ifdef WIN_VERSION
+	flag 0.0 + ((1.0 - 0.0) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
+#endif
+	if (flag > 0.5) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 // LINEAR INTERPOLATION FUNCTION

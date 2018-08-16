@@ -53,6 +53,7 @@ typedef struct cmcloud {
 	double *right;
 	long length;
 	long pos;
+	t_bool reverse; // used to store the reverse flag
 	t_bool busy; // used to store the flag if a grain is currently playing or not
 } cm_cloud;
 
@@ -76,6 +77,7 @@ typedef struct _cmgausscloud {
 	t_atom_long attr_stereo; // attribute: number of channels to be played
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
+	t_symbol *attr_reverse; // attribute: reverse grain playback mode
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
 	t_bool bang_trigger;
@@ -132,11 +134,14 @@ t_bool cmgausscloud_resize(t_cmgausscloud *x);
 t_max_err cmgausscloud_stereo_set(t_cmgausscloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgausscloud_sinterp_set(t_cmgausscloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgausscloud_zero_set(t_cmgausscloud *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgausscloud_reverse_set(t_cmgausscloud *x, t_object *attr, long argc, t_atom *argv);
 
 // PANNING FUNCTION
 void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausscloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
+// RANDOM REVERSE FLAG GENERATOR
+t_bool cm_randomreverse();
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
 // GAUSS WINDOW FUNCTION
@@ -178,10 +183,18 @@ void ext_main(void *r) {
 	CLASS_ATTR_BASIC(cmgausscloud_class, "zero", 0);
 	CLASS_ATTR_SAVE(cmgausscloud_class, "zero", 0);
 	CLASS_ATTR_STYLE_LABEL(cmgausscloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
+	
+	CLASS_ATTR_SYM(cmgausscloud_class, "reverse", 0, t_cmgausscloud, attr_reverse);
+	CLASS_ATTR_ENUM(cmgausscloud_class, "reverse", 0, "off on random");
+	CLASS_ATTR_ACCESSORS(cmgausscloud_class, "reverse", (method)NULL, (method)cmgausscloud_reverse_set);
+	CLASS_ATTR_BASIC(cmgausscloud_class, "reverse", 0);
+	CLASS_ATTR_SAVE(cmgausscloud_class, "reverse", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgausscloud_class, "reverse", 0, "enum", "Reverse mode");
 
 	CLASS_ATTR_ORDER(cmgausscloud_class, "stereo", 0, "1");
 	CLASS_ATTR_ORDER(cmgausscloud_class, "s_interp", 0, "2");
 	CLASS_ATTR_ORDER(cmgausscloud_class, "zero", 0, "3");
+	CLASS_ATTR_ORDER(cmgausscloud_class, "reverse", 0, "4");
 
 	class_dspinit(cmgausscloud_class); // Add standard Max/MSP methods to your class
 	class_register(CLASS_BOX, cmgausscloud_class); // Register the class with Max
@@ -213,6 +226,7 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	object_attr_setlong(x, gensym("stereo"), 0); // initialize stereo attribute
 	object_attr_setlong(x, gensym("s_interp"), 1); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("zero"), 0); // initialize zero crossing attribute
+	object_attr_setsym(x, gensym("reverse"), gensym("off")); // initialize reverse attribute
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE
@@ -610,6 +624,23 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			// write alpha value
 			alpha = x->randomized[5];
 			
+			// handle reverse attribute
+			if (x->attr_reverse == gensym("off")) {
+				x->cloud[slot].reverse = false;
+			}
+			else if (x->attr_reverse == gensym("on")) {
+				x->cloud[slot].reverse = true;
+				x->cloud[slot].pos = x->cloud[slot].length - 1;
+			}
+			else if (x->attr_reverse == gensym("random")) {
+				if (cm_randomreverse()) {
+					x->cloud[slot].reverse = true;
+					x->cloud[slot].pos = x->cloud[slot].length - 1;
+				}
+				else {
+					x->cloud[slot].reverse = false;
+				}
+			}
 			
 			for (readpos = 0; readpos < smp_length; readpos++) { // if the current slot contains grain playback information
 				// GET WINDOW SAMPLE FROM WINDOW BUFFER
@@ -649,15 +680,29 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 		if (x->grains_count) {
 			for (i = 0; i < x->cloudsize; i++) {
 				if (x->cloud[i].busy) {
-					r = x->cloud[i].pos++;
-					outsample_left += x->cloud[i].left[r];
-					outsample_right += x->cloud[i].right[r];
-					if (x->cloud[i].pos == x->cloud[i].length) {
-						x->cloud[i].pos = 0;
-						x->cloud[i].busy = false;
-						x->grains_count--;
-						if (x->grains_count < 0) {
-							x->grains_count = 0;
+					if (x->cloud[i].reverse) {
+						r = x->cloud[i].pos--;
+						outsample_left += x->cloud[i].left[r];
+						outsample_right += x->cloud[i].right[r];
+						if (x->cloud[i].pos < 0) {
+							x->cloud[i].busy = false;
+							x->grains_count--;
+							if (x->grains_count < 0) {
+								x->grains_count = 0;
+							}
+						}
+					}
+					else {
+						r = x->cloud[i].pos++;
+						outsample_left += x->cloud[i].left[r];
+						outsample_right += x->cloud[i].right[r];
+						if (x->cloud[i].pos == x->cloud[i].length) {
+							x->cloud[i].pos = 0;
+							x->cloud[i].busy = false;
+							x->grains_count--;
+							if (x->grains_count < 0) {
+								x->grains_count = 0;
+							}
 						}
 					}
 				}
@@ -1103,6 +1148,17 @@ t_max_err cmgausscloud_zero_set(t_cmgausscloud *x, t_object *attr, long ac, t_at
 
 
 /************************************************************************************************************************/
+/* THE REVERSE ATTRIBUTE SET METHOD                                                                                     */
+/************************************************************************************************************************/
+t_max_err cmgausscloud_reverse_set(t_cmgausscloud *x, t_object *attr, long ac, t_atom *av) {
+	if (ac && av) {
+		x->attr_reverse = atom_getsym(av);
+	}
+	return MAX_ERR_NONE;
+}
+
+
+/************************************************************************************************************************/
 /* CUSTOM FUNCTIONS																										*/
 /************************************************************************************************************************/
 // constant power stereo function
@@ -1119,6 +1175,22 @@ double cm_random(double *min, double *max) {
 #ifdef WIN_VERSION
 	return *min + ((*max - *min) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
 #endif
+}
+// RANDOM REVERSE FLAG GENERATOR
+t_bool cm_randomreverse() {
+	double flag;
+#ifdef MAC_VERSION
+	flag = 0.0 + ((1.0 - 0.0) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+#endif
+#ifdef WIN_VERSION
+	flag 0.0 + ((1.0 - 0.0) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
+#endif
+	if (flag > 0.5) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
