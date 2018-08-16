@@ -104,6 +104,8 @@ typedef struct _cmlivecloud {
 	double pitchlist_zero; // zero value pointer for randomize function
 	double pitchlist_size; // current numer of values stored in the pitch list array
 	t_bool pitchlist_active; // boolean pitch list active true/false
+	long playback_timer; // timer for check-interval playback direction
+	double startmedian; // variable to store the current playback position (median between min and max)
 } t_cmlivecloud;
 
 
@@ -199,7 +201,7 @@ void ext_main(void *r) {
 	CLASS_ATTR_STYLE_LABEL(cmlivecloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
 	CLASS_ATTR_SYM(cmlivecloud_class, "reverse", 0, t_cmlivecloud, attr_reverse);
-	CLASS_ATTR_ENUM(cmlivecloud_class, "reverse", 0, "off on random");
+	CLASS_ATTR_ENUM(cmlivecloud_class, "reverse", 0, "off on random direction");
 	CLASS_ATTR_ACCESSORS(cmlivecloud_class, "reverse", (method)NULL, (method)cmlivecloud_reverse_set);
 	CLASS_ATTR_BASIC(cmlivecloud_class, "reverse", 0);
 	CLASS_ATTR_SAVE(cmlivecloud_class, "reverse", 0);
@@ -381,6 +383,8 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	x->bufferms_request = false;
 	x->bufferms_verify = false;
+	
+	x->playback_timer = 0;
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -465,6 +469,8 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	double gain;
 	double pan_left, pan_right;
 	long max_delay; // calculated maximum delay length according to grain length and pitch
+	double startmedian_curr;
+	t_bool play_reverse;
 
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
@@ -572,6 +578,22 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 
 	// DSP LOOP
 	while (n--) {
+		
+		// detect playback position if delay-min/delay-max have been modified
+		x->playback_timer++;
+		// check diff every 100 ms
+		if (x->playback_timer == (100 * x->m_sr)) {
+			x->playback_timer = 0;
+			startmedian_curr = x->grain_params[0] - ((x->grain_params[0] - x->grain_params[1]) / 2);
+			if (startmedian_curr > x->startmedian) {
+				play_reverse = true;
+			}
+			else if (startmedian_curr < x->startmedian) {
+				play_reverse = false;
+			}
+			x->startmedian = startmedian_curr;
+		}
+		
 		tr_curr = *tr_sigin++; // get current trigger value
 		sig_curr = *rec_sigin++; // get current signal value
 
@@ -724,6 +746,15 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			}
 			else if (x->attr_reverse == gensym("random")) {
 				if (cm_randomreverse()) {
+					x->cloud[slot].reverse = true;
+					x->cloud[slot].pos = x->cloud[slot].length - 1;
+				}
+				else {
+					x->cloud[slot].reverse = false;
+				}
+			}
+			else if (x->attr_reverse == gensym("direction")) {
+				if (play_reverse) {
 					x->cloud[slot].reverse = true;
 					x->cloud[slot].pos = x->cloud[slot].length - 1;
 				}

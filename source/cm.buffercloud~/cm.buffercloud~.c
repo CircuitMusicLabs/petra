@@ -95,6 +95,8 @@ typedef struct _cmbuffercloud {
 	double pitchlist_zero; // zero value pointer for randomize function
 	double pitchlist_size; // current numer of values stored in the pitch list array
 	t_bool pitchlist_active; // boolean pitch list active true/false
+	long playback_timer; // timer for check-interval playback direction
+	double startmedian; // variable to store the current playback position (median between min and max)
 } t_cmbuffercloud;
 
 
@@ -190,7 +192,7 @@ void ext_main(void *r) {
 	CLASS_ATTR_STYLE_LABEL(cmbuffercloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
 	
 	CLASS_ATTR_SYM(cmbuffercloud_class, "reverse", 0, t_cmbuffercloud, attr_reverse);
-	CLASS_ATTR_ENUM(cmbuffercloud_class, "reverse", 0, "off on random");
+	CLASS_ATTR_ENUM(cmbuffercloud_class, "reverse", 0, "off on random direction");
 	CLASS_ATTR_ACCESSORS(cmbuffercloud_class, "reverse", (method)NULL, (method)cmbuffercloud_reverse_set);
 	CLASS_ATTR_BASIC(cmbuffercloud_class, "reverse", 0);
 	CLASS_ATTR_SAVE(cmbuffercloud_class, "reverse", 0);
@@ -348,6 +350,8 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->length_request = false;
 	x->length_verify = false;
 	
+	x->playback_timer = 0;
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -422,6 +426,8 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	long pitch_length;
 	double gain;
 	double pan_left, pan_right;
+	double startmedian_curr;
+	t_bool play_reverse;
 	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
@@ -516,6 +522,21 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	/************************************************************************************************************************/
 	// DSP LOOP
 	while (n--) {
+		
+		// detect playback position if start-min/start-max have been modified
+		x->playback_timer++;
+		// check diff every 100 ms
+		if (x->playback_timer == (100 * x->m_sr)) {
+			x->playback_timer = 0;
+			startmedian_curr = x->grain_params[1] - ((x->grain_params[1] - x->grain_params[0]) / 2);
+			if (startmedian_curr < x->startmedian) {
+				play_reverse = true;
+			}
+			else if (startmedian_curr > x->startmedian) {
+				play_reverse = false;
+			}
+			x->startmedian = startmedian_curr;
+		}
 		
 		tr_curr = *tr_sigin++; // get current trigger value
 		
@@ -638,6 +659,15 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			}
 			else if (x->attr_reverse == gensym("random")) {
 				if (cm_randomreverse()) {
+					x->cloud[slot].reverse = true;
+					x->cloud[slot].pos = x->cloud[slot].length - 1;
+				}
+				else {
+					x->cloud[slot].reverse = false;
+				}
+			}
+			else if (x->attr_reverse == gensym("direction")) {
+				if (play_reverse) {
 					x->cloud[slot].reverse = true;
 					x->cloud[slot].pos = x->cloud[slot].length - 1;
 				}
