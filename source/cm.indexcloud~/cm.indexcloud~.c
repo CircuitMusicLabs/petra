@@ -587,6 +587,35 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 	if (x->grain_params[1] < x->grain_params[0]) {
 		x->grain_params[0] = x->grain_params[1];
 	}
+	// clip length values
+	if (x->grain_params[2] > x->grain_params[3]) {
+		x->grain_params[3] = x->grain_params[2];
+	}
+	if (x->grain_params[3] < x->grain_params[2]) {
+		x->grain_params[2] = x->grain_params[3];
+	}
+	// clip pitch values
+	if (x->grain_params[4] > x->grain_params[5]) {
+		x->grain_params[5] = x->grain_params[4];
+	}
+	if (x->grain_params[5] < x->grain_params[4]) {
+		x->grain_params[4] = x->grain_params[5];
+	}
+	// clip pan values
+	if (x->grain_params[6] > x->grain_params[7]) {
+		x->grain_params[7] = x->grain_params[6];
+	}
+	if (x->grain_params[7] < x->grain_params[6]) {
+		x->grain_params[6] = x->grain_params[7];
+	}
+	// clip gain values
+	if (x->grain_params[8] > x->grain_params[9]) {
+		x->grain_params[9] = x->grain_params[8];
+	}
+	if (x->grain_params[9] < x->grain_params[8]) {
+		x->grain_params[8] = x->grain_params[9];
+	}
+	
 	
 	// DSP LOOP
 	while (n--) {
