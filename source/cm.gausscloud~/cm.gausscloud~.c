@@ -96,6 +96,7 @@ typedef struct _cmgausscloud {
 	t_bool pitchlist_active; // boolean pitch list active true/false
 	long playback_timer; // timer for check-interval playback direction
 	double startmedian; // variable to store the current playback position (median between min and max)
+	t_bool play_reverse; // flag for reverse playback used when reverse-attr set to "direction"
 } t_cmgausscloud;
 
 
@@ -345,6 +346,7 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->length_verify = false;
 
 	x->playback_timer = 0;
+	x->play_reverse = false;
 	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -424,7 +426,6 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	double pan_left, pan_right;
 	double alpha;
 	double startmedian_curr;
-	t_bool play_reverse;
 	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
@@ -551,12 +552,12 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 		// check diff every 100 ms
 		if (x->playback_timer == (100 * x->m_sr)) {
 			x->playback_timer = 0;
-			startmedian_curr = x->grain_params[1] - ((x->grain_params[1] - x->grain_params[0]) / 2);
+			startmedian_curr = x->grain_params[0] + ((x->grain_params[1] - x->grain_params[0]) / 2);
 			if (startmedian_curr < x->startmedian) {
-				play_reverse = true;
+				x->play_reverse = true;
 			}
 			else if (startmedian_curr > x->startmedian) {
-				play_reverse = false;
+				x->play_reverse = false;
 			}
 			x->startmedian = startmedian_curr;
 		}
@@ -699,7 +700,7 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 				}
 			}
 			else if (x->attr_reverse == gensym("direction")) {
-				if (play_reverse) {
+				if (x->play_reverse) {
 					x->cloud[slot].reverse = true;
 					x->cloud[slot].pos = x->cloud[slot].length - 1;
 				}

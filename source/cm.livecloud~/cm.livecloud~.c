@@ -106,6 +106,7 @@ typedef struct _cmlivecloud {
 	t_bool pitchlist_active; // boolean pitch list active true/false
 	long playback_timer; // timer for check-interval playback direction
 	double startmedian; // variable to store the current playback position (median between min and max)
+	t_bool play_reverse; // flag for reverse playback used when reverse-attr set to "direction"
 } t_cmlivecloud;
 
 
@@ -385,6 +386,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->bufferms_verify = false;
 	
 	x->playback_timer = 0;
+	x->play_reverse = false;
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
@@ -470,7 +472,6 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	double pan_left, pan_right;
 	long max_delay; // calculated maximum delay length according to grain length and pitch
 	double startmedian_curr;
-	t_bool play_reverse;
 
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
@@ -614,10 +615,10 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 			x->playback_timer = 0;
 			startmedian_curr = x->grain_params[0] - ((x->grain_params[0] - x->grain_params[1]) / 2);
 			if (startmedian_curr > x->startmedian) {
-				play_reverse = true;
+				x->play_reverse = true;
 			}
 			else if (startmedian_curr < x->startmedian) {
-				play_reverse = false;
+				x->play_reverse = false;
 			}
 			x->startmedian = startmedian_curr;
 		}
@@ -782,7 +783,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 				}
 			}
 			else if (x->attr_reverse == gensym("direction")) {
-				if (play_reverse) {
+				if (x->play_reverse) {
 					x->cloud[slot].reverse = true;
 					x->cloud[slot].pos = x->cloud[slot].length - 1;
 				}
