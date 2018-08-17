@@ -323,6 +323,14 @@
 								TEXT_HERE
 							</description>
 						</enum>
+						<enum name="direction">
+							<digest>
+								Forward playback when value for min/max delay decreasing, reverse playback when value for min/max delay increasing
+							</digest>
+							<description>
+								TEXT_HERE
+							</description>
+						</enum>
 					</enumlist>
 				</attribute>
 				<attribute name="style" get="1" set="1" type="symbol" size="1" value="enum" />

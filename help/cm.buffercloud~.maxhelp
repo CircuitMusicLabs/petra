@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 441.0, 252.0, 1054.0, 619.0 ],
+		"rect" : [ 357.0, 115.0, 1054.0, 619.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -54,7 +54,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 441.0, 278.0, 1054.0, 593.0 ],
+						"rect" : [ 357.0, 141.0, 1054.0, 593.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -305,9 +305,9 @@
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 238.099976, 74.0, 478.799988, 60.0 ],
+									"patching_rect" : [ 238.099976, 74.0, 684.099976, 60.0 ],
 									"style" : "",
-									"text" : "forward playback only\nreverse playback only\nrandomly alternating between forward and reverse playback for each grain\nforward playback when moving forwards, reverse playback when moving backwards"
+									"text" : "forward playback only\nreverse playback only\nrandomly alternating between forward and reverse playback for each grain\nforward playback when value for min/max offset increasing, reverse playback when value for min/max offset decreasing"
 								}
 
 							}
@@ -1235,7 +1235,7 @@
 									"outlettype" : [ "signal", "signal", "int" ],
 									"patching_rect" : [ 115.999985, 312.0, 805.999939, 22.0 ],
 									"saved_object_attributes" : 									{
-										"reverse" : "direction",
+										"reverse" : "off",
 										"s_interp" : 1,
 										"stereo" : 0,
 										"w_interp" : 0,
@@ -1255,7 +1255,7 @@
 									"numinlets" : 1,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 384.199982, 185.5, 183.799988, 22.0 ],
+									"patching_rect" : [ 384.199982, 185.5, 184.0, 22.0 ],
 									"style" : ""
 								}
 
@@ -1264,6 +1264,7 @@
 						"lines" : [ 							{
 								"patchline" : 								{
 									"destination" : [ "obj-6", 0 ],
+									"hidden" : 1,
 									"source" : [ "obj-1", 0 ]
 								}
 
@@ -15459,15 +15460,15 @@
  ],
 		"lines" : [  ],
 		"parameters" : 		{
-			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
-			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
 			"obj-10::obj-23" : [ "live.gain~[9]", "live.gain~", 0 ],
-			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
-			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ],
-			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
 			"obj-5::obj-23" : [ "live.gain~[4]", "live.gain~", 0 ],
+			"obj-2::obj-23" : [ "live.gain~[2]", "live.gain~", 0 ],
+			"obj-6::obj-23" : [ "live.gain~[5]", "live.gain~", 0 ],
 			"obj-9::obj-23" : [ "live.gain~[8]", "live.gain~", 0 ],
-			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ]
+			"obj-7::obj-23" : [ "live.gain~[6]", "live.gain~", 0 ],
+			"obj-3::obj-23" : [ "live.gain~[1]", "live.gain~", 0 ],
+			"obj-1::obj-23" : [ "live.gain~", "live.gain~", 0 ],
+			"obj-8::obj-23" : [ "live.gain~[7]", "live.gain~", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{
