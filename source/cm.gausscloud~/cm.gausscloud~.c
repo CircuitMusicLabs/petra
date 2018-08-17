@@ -1219,7 +1219,18 @@ t_max_err cmgausscloud_zero_set(t_cmgausscloud *x, t_object *attr, long ac, t_at
 /************************************************************************************************************************/
 t_max_err cmgausscloud_reverse_set(t_cmgausscloud *x, t_object *attr, long ac, t_atom *av) {
 	if (ac && av) {
-		x->attr_reverse = atom_getsym(av);
+		t_symbol *arg = atom_getsym(av);
+		t_symbol *off = gensym("off");
+		t_symbol *on = gensym("on");
+		t_symbol *random = gensym("random");
+		t_symbol *direction = gensym("direction");
+		if (arg != off && arg != on && arg != random && arg != direction) {
+			object_error((t_object *)x, "invalid attribute value");
+			object_error((t_object *)x, "valid attribute values are off | on | random | direction");
+		}
+		else {
+			x->attr_reverse = arg;
+		}
 	}
 	return MAX_ERR_NONE;
 }
