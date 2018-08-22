@@ -41,6 +41,7 @@
 #define MAX_ALPHA 10.0 // max alpha value
 #define ARGUMENTS 3 // constant number of arguments required for the external
 #define FLOAT_INLETS 12 // number of object float inlets
+#define PITCHLIST 10 // max values to be provided for pitch list
 #define RANDMAX 10000
 
 
@@ -52,6 +53,7 @@ typedef struct cmcloud {
 	double *right;
 	long length;
 	long pos;
+	t_bool reverse; // used to store the reverse flag
 	t_bool busy; // used to store the flag if a grain is currently playing or not
 } cm_cloud;
 
@@ -75,6 +77,7 @@ typedef struct _cmgausscloud {
 	t_atom_long attr_stereo; // attribute: number of channels to be played
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
+	t_symbol *attr_reverse; // attribute: reverse grain playback mode
 	double piovr2; // pi over two for panning function
 	double root2ovr2; // root of 2 over two for panning function
 	t_bool bang_trigger;
@@ -87,6 +90,13 @@ typedef struct _cmgausscloud {
 	t_bool length_request; // flag set to true when "grainlength" method called
 	long grainlength_new; // new grain length obtained from "grainlength" method
 	t_bool length_verify; // check flag for proper memory re-allocation
+	double *pitchlist; // array to store pitch values provided by method
+	double pitchlist_zero; // zero value pointer for randomize function
+	double pitchlist_size; // current numer of values stored in the pitch list array
+	t_bool pitchlist_active; // boolean pitch list active true/false
+	long playback_timer; // timer for check-interval playback direction
+	double startmedian; // variable to store the current playback position (median between min and max)
+	t_bool play_reverse; // flag for reverse playback used when reverse-attr set to "direction"
 } t_cmgausscloud;
 
 
@@ -120,17 +130,21 @@ t_max_err cmgausscloud_notify(t_cmgausscloud *x, t_symbol *s, t_symbol *msg, voi
 void cmgausscloud_set(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av);
 void cmgausscloud_cloudsize(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av);
 void cmgausscloud_grainlength(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av);
+void cmgausscloud_pitchlist(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av);
 void cmgausscloud_bang(t_cmgausscloud *x);
 t_bool cmgausscloud_resize(t_cmgausscloud *x);
 
 t_max_err cmgausscloud_stereo_set(t_cmgausscloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgausscloud_sinterp_set(t_cmgausscloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmgausscloud_zero_set(t_cmgausscloud *x, t_object *attr, long argc, t_atom *argv);
+t_max_err cmgausscloud_reverse_set(t_cmgausscloud *x, t_object *attr, long argc, t_atom *argv);
 
 // PANNING FUNCTION
 void cm_panning(cm_panstruct *panstruct, double *pos, t_cmgausscloud *x);
 // RANDOM NUMBER GENERATOR
 double cm_random(double *min, double *max);
+// RANDOM REVERSE FLAG GENERATOR
+t_bool cm_randomreverse();
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *b_sample, t_atom_long b_channelcount, t_atom_long b_framecount, short channel);
 // GAUSS WINDOW FUNCTION
@@ -152,6 +166,7 @@ void ext_main(void *r) {
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_set,			"set", 			A_GIMME, 0); // Bind the set message for user buffer set
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_cloudsize,		"cloudsize",	A_GIMME, 0); // Bind the cloudsize message
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_grainlength,	"grainlength",	A_GIMME, 0); // Bind the grainlength message
+	class_addmethod(cmgausscloud_class, (method)cmgausscloud_pitchlist,		"pitchlist",	A_GIMME, 0); // Bind the pitchlist message
 	class_addmethod(cmgausscloud_class, (method)cmgausscloud_bang,			"bang",			0);
 
 	CLASS_ATTR_ATOM_LONG(cmgausscloud_class, "stereo", 0, t_cmgausscloud, attr_stereo);
@@ -171,10 +186,18 @@ void ext_main(void *r) {
 	CLASS_ATTR_BASIC(cmgausscloud_class, "zero", 0);
 	CLASS_ATTR_SAVE(cmgausscloud_class, "zero", 0);
 	CLASS_ATTR_STYLE_LABEL(cmgausscloud_class, "zero", 0, "onoff", "Zero crossing trigger mode on/off");
+	
+	CLASS_ATTR_SYM(cmgausscloud_class, "reverse", 0, t_cmgausscloud, attr_reverse);
+	CLASS_ATTR_ENUM(cmgausscloud_class, "reverse", 0, "off on random direction");
+	CLASS_ATTR_ACCESSORS(cmgausscloud_class, "reverse", (method)NULL, (method)cmgausscloud_reverse_set);
+	CLASS_ATTR_BASIC(cmgausscloud_class, "reverse", 0);
+	CLASS_ATTR_SAVE(cmgausscloud_class, "reverse", 0);
+	CLASS_ATTR_STYLE_LABEL(cmgausscloud_class, "reverse", 0, "enum", "Reverse mode");
 
 	CLASS_ATTR_ORDER(cmgausscloud_class, "stereo", 0, "1");
 	CLASS_ATTR_ORDER(cmgausscloud_class, "s_interp", 0, "2");
 	CLASS_ATTR_ORDER(cmgausscloud_class, "zero", 0, "3");
+	CLASS_ATTR_ORDER(cmgausscloud_class, "reverse", 0, "4");
 
 	class_dspinit(cmgausscloud_class); // Add standard Max/MSP methods to your class
 	class_register(CLASS_BOX, cmgausscloud_class); // Register the class with Max
@@ -206,6 +229,7 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	object_attr_setlong(x, gensym("stereo"), 0); // initialize stereo attribute
 	object_attr_setlong(x, gensym("s_interp"), 1); // initialize window interpolation attribute
 	object_attr_setlong(x, gensym("zero"), 0); // initialize zero crossing attribute
+	object_attr_setsym(x, gensym("reverse"), gensym("off")); // initialize reverse attribute
 	attr_args_process(x, argc, argv); // get attribute values if supplied as argument
 
 	// CHECK IF USER SUPPLIED MAXIMUM GRAINS IS IN THE LEGAL RANGE
@@ -271,7 +295,9 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 			return NULL;
 		}
 	}
-
+	
+	// ALLOCATE MEMORY FOR PITCH LIST
+	x->pitchlist = (double *)sysmem_newptrclear(PITCHLIST * sizeof(double));
 
 	/************************************************************************************************************************/
 	// INITIALIZE VALUES
@@ -298,6 +324,11 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	// bang trigger flag
 	x->bang_trigger = false;
 	
+	// pitchlist values
+	x->pitchlist_active = false;
+	x->pitchlist_zero = 0.0;
+	x->pitchlist_size = 0.0;
+	
 	// cloud structure members
 	for (i = 0; i < x->cloudsize; i++) {
 		x->cloud[i].length = 0;
@@ -314,6 +345,9 @@ void *cmgausscloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->resize_verify = false;
 	x->length_verify = false;
 
+	x->playback_timer = 0;
+	x->play_reverse = false;
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -391,6 +425,7 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	double gain;
 	double pan_left, pan_right;
 	double alpha;
+	double startmedian_curr;
 	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
@@ -401,6 +436,8 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	float *b_sample = buffer_locksamples(buffer);
 	long b_framecount; // number of frames in the sample buffer
 	t_atom_long b_channelcount; // number of channels in the sample buffer
+	double b_m_sr; // buffer sample rate
+	double sr_ratio; // ratio between buffer sample rate and system sample rate
 	
 	// CLOUDSIZE - MEMORY RESIZE
 	if (x->grains_count == 0 && x->resize_request) {
@@ -444,12 +481,14 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	// GET BUFFER INFORMATION
 	b_framecount = buffer_getframecount(buffer); // get number of frames in the sample buffer
 	b_channelcount = buffer_getchannelcount(buffer); // get number of channels in the sample buffer
+	b_m_sr = buffer_getsamplerate(buffer) * 0.001; // get the sample buffer sample rate
+	sr_ratio = b_m_sr / x->m_sr; // calculate ratio between system sample rate and buffer sample rate
 
 	// GET INLET VALUES
 	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
 
-	x->grain_params[0] = x->connect_status[0] ? *ins[1] * x->m_sr : x->object_inlets[0] * x->m_sr;	// start min
-	x->grain_params[1] = x->connect_status[1] ? *ins[2] * x->m_sr : x->object_inlets[1] * x->m_sr;	// start max
+	x->grain_params[0] = x->connect_status[0] ? *ins[1] * b_m_sr : x->object_inlets[0] * b_m_sr;	// start min
+	x->grain_params[1] = x->connect_status[1] ? *ins[2] * b_m_sr : x->object_inlets[1] * b_m_sr;	// start max
 	x->grain_params[2] = x->connect_status[2] ? *ins[3] * x->m_sr : x->object_inlets[2] * x->m_sr;	// length min
 	x->grain_params[3] = x->connect_status[3] ? *ins[4] * x->m_sr : x->object_inlets[3] * x->m_sr;	// length max
 	x->grain_params[4] = x->connect_status[4] ? *ins[5] : x->object_inlets[4];						// pitch min
@@ -460,10 +499,69 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 	x->grain_params[9] = x->connect_status[9] ? *ins[10] : x->object_inlets[9];						// gain max
 	x->grain_params[10] = x->connect_status[10] ? *ins[11] : x->object_inlets[10];					// alpha min
 	x->grain_params[11] = x->connect_status[11] ? *ins[12] : x->object_inlets[11];					// alpha max
+	
+	// clip start values
+	if (x->grain_params[0] > x->grain_params[1]) {
+		x->grain_params[1] = x->grain_params[0];
+	}
+	if (x->grain_params[1] < x->grain_params[0]) {
+		x->grain_params[0] = x->grain_params[1];
+	}
+	// clip length values
+	if (x->grain_params[2] > x->grain_params[3]) {
+		x->grain_params[3] = x->grain_params[2];
+	}
+	if (x->grain_params[3] < x->grain_params[2]) {
+		x->grain_params[2] = x->grain_params[3];
+	}
+	// clip pitch values
+	if (x->grain_params[4] > x->grain_params[5]) {
+		x->grain_params[5] = x->grain_params[4];
+	}
+	if (x->grain_params[5] < x->grain_params[4]) {
+		x->grain_params[4] = x->grain_params[5];
+	}
+	// clip pan values
+	if (x->grain_params[6] > x->grain_params[7]) {
+		x->grain_params[7] = x->grain_params[6];
+	}
+	if (x->grain_params[7] < x->grain_params[6]) {
+		x->grain_params[6] = x->grain_params[7];
+	}
+	// clip gain values
+	if (x->grain_params[8] > x->grain_params[9]) {
+		x->grain_params[9] = x->grain_params[8];
+	}
+	if (x->grain_params[9] < x->grain_params[8]) {
+		x->grain_params[8] = x->grain_params[9];
+	}
+	// clip alpha values
+	if (x->grain_params[10] > x->grain_params[11]) {
+		x->grain_params[11] = x->grain_params[10];
+	}
+	if (x->grain_params[11] < x->grain_params[10]) {
+		x->grain_params[10] = x->grain_params[11];
+	}
 
 
 	// DSP LOOP
 	while (n--) {
+		
+		// detect playback position if start-min/start-max have been modified
+		x->playback_timer++;
+		// check diff every 100 ms
+		if (x->playback_timer == (100 * x->m_sr)) {
+			x->playback_timer = 0;
+			startmedian_curr = x->grain_params[0] + ((x->grain_params[1] - x->grain_params[0]) / 2);
+			if (startmedian_curr < x->startmedian) {
+				x->play_reverse = true;
+			}
+			else if (startmedian_curr > x->startmedian) {
+				x->play_reverse = false;
+			}
+			x->startmedian = startmedian_curr;
+		}
+		
 		tr_curr = *tr_sigin++; // get current trigger value
 
 		if (x->attr_zero) {
@@ -503,8 +601,15 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 
 			
 			for (i = 0; i < 6; i++) {
-				r = i * 2;
-				x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+				// if currently processing randomized value for pitch (i == 2) and if pitchlist is active
+				if (i == 2 && x->pitchlist_active) {
+					// get random postition from pitchlist and write stored value
+					x->randomized[i] = x->pitchlist[(int)cm_random(&x->pitchlist_zero, &x->pitchlist_size)];
+				}
+				else {
+					r = i * 2;
+					x->randomized[i] = cm_random(&x->grain_params[r], &x->grain_params[r+1]);
+				}
 			}
 			
 			// check for parameter sanity of the length value
@@ -514,7 +619,9 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			else if (x->randomized[1] > x->grainlength * x->m_sr) {
 				x->randomized[1] = x->grainlength * x->m_sr;
 			}
-
+			
+			// adjust the pitch value according to the sample rate ratio system/buffer
+			x->randomized[2] = x->randomized[2] * sr_ratio;
 
 			// check for parameter sanity of the pitch value
 			if (x->randomized[2] < MIN_PITCH) {
@@ -575,6 +682,32 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 			// write alpha value
 			alpha = x->randomized[5];
 			
+			// handle reverse attribute
+			if (x->attr_reverse == gensym("off")) {
+				x->cloud[slot].reverse = false;
+			}
+			else if (x->attr_reverse == gensym("on")) {
+				x->cloud[slot].reverse = true;
+				x->cloud[slot].pos = x->cloud[slot].length - 1;
+			}
+			else if (x->attr_reverse == gensym("random")) {
+				if (cm_randomreverse()) {
+					x->cloud[slot].reverse = true;
+					x->cloud[slot].pos = x->cloud[slot].length - 1;
+				}
+				else {
+					x->cloud[slot].reverse = false;
+				}
+			}
+			else if (x->attr_reverse == gensym("direction")) {
+				if (x->play_reverse) {
+					x->cloud[slot].reverse = true;
+					x->cloud[slot].pos = x->cloud[slot].length - 1;
+				}
+				else {
+					x->cloud[slot].reverse = false;
+				}
+			}
 			
 			for (readpos = 0; readpos < smp_length; readpos++) { // if the current slot contains grain playback information
 				// GET WINDOW SAMPLE FROM WINDOW BUFFER
@@ -614,15 +747,29 @@ void cmgausscloud_perform64(t_cmgausscloud *x, t_object *dsp64, double **ins, lo
 		if (x->grains_count) {
 			for (i = 0; i < x->cloudsize; i++) {
 				if (x->cloud[i].busy) {
-					r = x->cloud[i].pos++;
-					outsample_left += x->cloud[i].left[r];
-					outsample_right += x->cloud[i].right[r];
-					if (x->cloud[i].pos == x->cloud[i].length) {
-						x->cloud[i].pos = 0;
-						x->cloud[i].busy = false;
-						x->grains_count--;
-						if (x->grains_count < 0) {
-							x->grains_count = 0;
+					if (x->cloud[i].reverse) {
+						r = x->cloud[i].pos--;
+						outsample_left += x->cloud[i].left[r];
+						outsample_right += x->cloud[i].right[r];
+						if (x->cloud[i].pos < 0) {
+							x->cloud[i].busy = false;
+							x->grains_count--;
+							if (x->grains_count < 0) {
+								x->grains_count = 0;
+							}
+						}
+					}
+					else {
+						r = x->cloud[i].pos++;
+						outsample_left += x->cloud[i].left[r];
+						outsample_right += x->cloud[i].right[r];
+						if (x->cloud[i].pos == x->cloud[i].length) {
+							x->cloud[i].pos = 0;
+							x->cloud[i].busy = false;
+							x->grains_count--;
+							if (x->grains_count < 0) {
+								x->grains_count = 0;
+							}
 						}
 					}
 				}
@@ -989,6 +1136,44 @@ t_bool cmgausscloud_resize(t_cmgausscloud *x) {
 
 
 /************************************************************************************************************************/
+/* THE PITCHLIST METHOD                                                                                                 */
+/************************************************************************************************************************/
+void cmgausscloud_pitchlist(t_cmgausscloud *x, t_symbol *s, long ac, t_atom *av) {
+	double value;
+	if (ac < 1) {
+		object_error((t_object *)x, "minimum number of pitch values is 1");
+	}
+	else if (ac == 1 && atom_getfloat(av) == 0) {
+		x->pitchlist_active = false;
+	}
+	else if (ac <= 10) {
+		x->pitchlist_active = true;
+		// clear array
+		for (int i = 0; i < PITCHLIST; i++) {
+			x->pitchlist[i] = 0;
+		}
+		x->pitchlist_size = (double)ac;
+		// write args into array
+		for (int i = 0; i < x->pitchlist_size; i++) {
+			value = atom_getfloat(av+i);
+			if (value > MAX_PITCH) {
+				object_error((t_object *)x, "value of element %d (%.3f) must not be higher than %d - setting value to %d", (i+1), value, MAX_PITCH, MAX_PITCH);
+				value = MAX_PITCH;
+			}
+			else if (value < MIN_PITCH) {
+				object_error((t_object *)x, "value of element %d (%f) must be higher than %.3f - setting value to %.3f", (i+1), value, MIN_PITCH, MIN_PITCH);
+				value = MIN_PITCH;
+			}
+			x->pitchlist[i] = value;
+		}
+	}
+	else {
+		object_error((t_object *)x, "maximum number of pitch values is 10");
+	}
+}
+
+
+/************************************************************************************************************************/
 /* THE BANG METHOD                                                                                                      */
 /************************************************************************************************************************/
 void cmgausscloud_bang(t_cmgausscloud *x) {
@@ -1030,6 +1215,28 @@ t_max_err cmgausscloud_zero_set(t_cmgausscloud *x, t_object *attr, long ac, t_at
 
 
 /************************************************************************************************************************/
+/* THE REVERSE ATTRIBUTE SET METHOD                                                                                     */
+/************************************************************************************************************************/
+t_max_err cmgausscloud_reverse_set(t_cmgausscloud *x, t_object *attr, long ac, t_atom *av) {
+	if (ac && av) {
+		t_symbol *arg = atom_getsym(av);
+		t_symbol *off = gensym("off");
+		t_symbol *on = gensym("on");
+		t_symbol *random = gensym("random");
+		t_symbol *direction = gensym("direction");
+		if (arg != off && arg != on && arg != random && arg != direction) {
+			object_error((t_object *)x, "invalid attribute value");
+			object_error((t_object *)x, "valid attribute values are off | on | random | direction");
+		}
+		else {
+			x->attr_reverse = arg;
+		}
+	}
+	return MAX_ERR_NONE;
+}
+
+
+/************************************************************************************************************************/
 /* CUSTOM FUNCTIONS																										*/
 /************************************************************************************************************************/
 // constant power stereo function
@@ -1046,6 +1253,22 @@ double cm_random(double *min, double *max) {
 #ifdef WIN_VERSION
 	return *min + ((*max - *min) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
 #endif
+}
+// RANDOM REVERSE FLAG GENERATOR
+t_bool cm_randomreverse() {
+	double flag;
+#ifdef MAC_VERSION
+	flag = 0.0 + ((1.0 - 0.0) * (((double)arc4random_uniform(RANDMAX)) / (double)RANDMAX));
+#endif
+#ifdef WIN_VERSION
+	flag = 0.0 + ((1.0 - 0.0) * ((double)(rand() % RANDMAX) / (double)RANDMAX));
+#endif
+	if (flag > 0.5) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 // LINEAR INTERPOLATION FUNCTION
 double cm_lininterp(double distance, float *buffer, t_atom_long b_channelcount, t_atom_long b_framecount, short channel) {
