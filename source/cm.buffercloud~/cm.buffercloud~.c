@@ -98,6 +98,8 @@ typedef struct _cmbuffercloud {
 	long playback_timer; // timer for check-interval playback direction
 	double startmedian; // variable to store the current playback position (median between min and max)
 	t_bool play_reverse; // flag for reverse playback used when reverse-attr set to "direction"
+	t_bool preview_request; // flag set to true when "preview" method called
+	long preview_playhead; // current playback position during preview
 } t_cmbuffercloud;
 
 
@@ -132,6 +134,7 @@ void cmbuffercloud_set(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
 void cmbuffercloud_cloudsize(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
 void cmbuffercloud_grainlength(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
 void cmbuffercloud_pitchlist(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
+void cmbuffercloud_preview(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av);
 void cmbuffercloud_bang(t_cmbuffercloud *x);
 t_max_err cmbuffercloud_stereo_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
 t_max_err cmbuffercloud_winterp_set(t_cmbuffercloud *x, t_object *attr, long argc, t_atom *argv);
@@ -166,6 +169,7 @@ void ext_main(void *r) {
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_cloudsize,	"cloudsize",	A_GIMME, 0); // Bind the cloudsize message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_grainlength,	"grainlength",	A_GIMME, 0); // Bind the grainlength message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_pitchlist,	"pitchlist",	A_GIMME, 0); // Bind the pitchlist message
+	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_preview,		"preview",		A_GIMME, 0); // Bind the preview message
 	class_addmethod(cmbuffercloud_class, (method)cmbuffercloud_bang,		"bang",			0);
 	
 	CLASS_ATTR_ATOM_LONG(cmbuffercloud_class, "stereo", 0, t_cmbuffercloud, attr_stereo);
@@ -354,6 +358,9 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	x->playback_timer = 0;
 	x->play_reverse = false;
 	
+	x->preview_request = false;
+	x->preview_playhead = 0;
+	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
 	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
@@ -429,6 +436,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	double gain;
 	double pan_left, pan_right;
 	double startmedian_curr;
+	double preview_pos;
 	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
@@ -567,6 +575,26 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			x->startmedian = startmedian_curr;
 		}
 		
+		// check for preview request
+		if (x->preview_request) {
+			preview_pos = x->preview_playhead++ * sr_ratio;
+			if (b_channelcount > 1 ) {
+				outsample_left = cm_lininterp(preview_pos, b_sample, b_channelcount, b_framecount, 0);
+				outsample_right = cm_lininterp(preview_pos, b_sample, b_channelcount, b_framecount, 1);
+			}
+			else {
+				b_read = cm_lininterp(preview_pos, b_sample, b_channelcount, b_framecount, 0);
+				outsample_left += b_read;
+				outsample_right += b_read;
+			}
+			// check nex preview_pos
+			preview_pos = x->preview_playhead * sr_ratio;
+			if (preview_pos > b_framecount) {
+				x->preview_playhead = 0;
+				x->preview_request = false;
+			}
+		}
+		
 		tr_curr = *tr_sigin++; // get current trigger value
 		
 		if (x->attr_zero) {
@@ -590,7 +618,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->buffer_modified && b_sample && w_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->buffer_modified && !x->preview_request && b_sample && w_sample) {
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -879,6 +907,7 @@ void cmbuffercloud_free(t_cmbuffercloud *x) {
 		sysmem_freeptr(x->cloud[i].right);
 	}
 	sysmem_freeptr(x->cloud);
+	sysmem_freeptr(x->pitchlist);
 	
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
 	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
@@ -1173,6 +1202,25 @@ void cmbuffercloud_pitchlist(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *a
 	}
 	else {
 		object_error((t_object *)x, "maximum number of pitch values is 10");
+	}
+}
+
+/************************************************************************************************************************/
+/* THE PREVIEW METHOD                                                                                                   */
+/************************************************************************************************************************/
+void cmbuffercloud_preview(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
+	long arg = atom_getlong(av);
+	if (ac && av) {
+		if (arg < 1) {
+			x->preview_request = false;
+		}
+		else {
+			x->preview_playhead = 0;
+			x->preview_request = true;
+		}
+	}
+	else {
+		object_error((t_object *)x, "argument required (preview start / stop)");
 	}
 }
 

@@ -972,6 +972,7 @@ void cmlivecloud_free(t_cmlivecloud *x) {
 		sysmem_freeptr(x->cloud[i].right);
 	}
 	sysmem_freeptr(x->cloud);
+	sysmem_freeptr(x->pitchlist);
 
 }
 
