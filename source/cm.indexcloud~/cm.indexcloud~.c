@@ -89,6 +89,7 @@ typedef struct _cmindexcloud {
 	t_bool buffer_modified; // checkflag to see if buffer has been modified
 	short grains_count; // currently playing grains
 	void *grains_count_out; // outlet for number of currently playing grains (for debugging)
+	void *bang_out; // bang outlet for preview playback indication
 	t_atom_long attr_stereo; // attribute: number of channels to be played
 	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
@@ -291,6 +292,7 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 	
 	// CREATE OUTLETS (OUTLETS ARE CREATED FROM RIGHT TO LEFT)
+	x->bang_out = bangout((t_object *)x);
 	x->grains_count_out = intout((t_object *)x); // create outlet for number of currently playing grains
 	outlet_new((t_object *)x, "signal"); // right signal outlet
 	outlet_new((t_object *)x, "signal"); // left signal outlet
@@ -645,7 +647,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		}
 		
 		// check for preview request
-		if (x->preview_request) {
+		if (x->preview_request && !x->grains_count) {
 			preview_pos = x->preview_playhead++ * sr_ratio;
 			if (b_channelcount > 1 ) {
 				outsample_left = cm_lininterp(preview_pos, b_sample, b_channelcount, b_framecount, 0);
@@ -659,6 +661,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			// check nex preview_pos
 			preview_pos = x->preview_playhead * sr_ratio;
 			if (preview_pos > b_framecount) {
+				outlet_bang(x->bang_out);
 				x->preview_playhead = 0;
 				x->preview_request = false;
 			}
@@ -687,7 +690,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->wintype_request && !x->winlength_request && !x->buffer_modified && b_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->wintype_request && !x->winlength_request && !x->buffer_modified && !x->preview_request && b_sample) {
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
