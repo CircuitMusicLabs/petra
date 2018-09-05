@@ -141,6 +141,13 @@
 			<description>
 			</description>
 		</outlet>
+		<outlet id="3" type="OUTLET_TYPE">
+			<digest>
+				Bang when preview completed
+			</digest>
+			<description>
+			</description>
+		</outlet>
 	</outletlist>
 	<!--ARGUMENTS-->
 	<objarglist>
@@ -222,6 +229,17 @@
 			</digest>
 			<description>
 				When provided, the object randomly selects pitch values from the list and the object inlets for minimum and maximum pitch will be ignored. Supply a single zero value to deactivate pitch list processing.
+			</description>
+		</method>
+		<method name="preview">
+			<arglist>
+				<arg name="preview on/off" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Starts and stops preview of the sample loaded into the buffer~ object.
+			</digest>
+			<description>
+				Int value larger than zero starts preview playback. Int value zero stops preview playback.
 			</description>
 		</method>
 	</methodlist>

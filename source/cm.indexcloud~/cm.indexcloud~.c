@@ -961,6 +961,9 @@ void cmindexcloud_assist(t_cmindexcloud *x, void *b, long msg, long arg, char *d
 			case 2:
 				snprintf_zero(dst, 256, "(int) current grain count");
 				break;
+			case 3:
+				snprintf_zero(dst, 256, "bang when preview completed");
+				break;
 		}
 	}
 }
