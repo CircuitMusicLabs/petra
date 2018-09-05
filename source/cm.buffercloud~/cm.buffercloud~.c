@@ -63,12 +63,10 @@ typedef struct _cmbuffercloud {
 	t_pxobject obj;
 	t_symbol *buffer_name; // sample buffer name
 	t_buffer_ref *buffer_ref; // sample buffer reference
-	t_buffer_obj *buffer_obj;
 	long b_framecount; // number of frames in the sample buffer
 	t_atom_long b_channelcount; // number of channels in the sample buffer
-	t_symbol *window_name; // window buffer name
+	t_symbol *w_buffer_name; // window buffer name
 	t_buffer_ref *w_buffer_ref; // window buffer reference
-	t_buffer_obj *w_buffer_obj;
 	long w_framecount; // number of frames in the window buffer
 	t_atom_long w_channelcount; // number of channels in the window buffer
 	double b_m_sr; // buffer sample rate
@@ -241,7 +239,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 	
 	x->buffer_name = atom_getsymarg(0, argc, argv); // get user supplied argument for sample buffer
-	x->window_name = atom_getsymarg(1, argc, argv); // get user supplied argument for window buffer
+	x->w_buffer_name = atom_getsymarg(1, argc, argv); // get user supplied argument for window buffer
 	x->cloudsize = atom_getintarg(2, argc, argv); // get user supplied argument for cloud size
 	x->grainlength = atom_getintarg(3, argc, argv); // get user supplied argument for maximum grain length
 	
@@ -374,8 +372,14 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
-	x->buffer_ref = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
-	x->w_buffer_ref = buffer_ref_new((t_object *)x, x->window_name); // write the window buffer reference into the object structure
+	x->buffer_ref = NULL;
+	x->w_buffer_ref = NULL;
+	x->b_framecount = 0;
+	x->w_framecount = 0;
+	x->b_channelcount = 0;
+	x->w_channelcount = 0;
+	x->b_m_sr = 0;
+	x->sr_ratio = 0;
 	
 #ifdef WIN_VERSION
 	srand((unsigned int)clock());
@@ -452,6 +456,9 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	double startmedian_curr;
 	double preview_pos;
 	
+	float *b_sample;
+	float *w_sample;
+	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
@@ -463,8 +470,10 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		x->buffer_modified = false;
 	}
 	
-	float *b_sample = buffer_locksamples(x->buffer_obj);
-	float *w_sample = buffer_locksamples(x->w_buffer_obj);
+	t_buffer_obj *buffer_obj = buffer_ref_getobject(x->buffer_ref);
+	t_buffer_obj *w_buffer_obj = buffer_ref_getobject(x->w_buffer_ref);
+	b_sample = buffer_locksamples(buffer_obj);
+	w_sample = buffer_locksamples(w_buffer_obj);
 	
 	
 	// CLOUDSIZE - MEMORY RESIZE
@@ -817,8 +826,8 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	
 	/************************************************************************************************************************/
 	// STORE UPDATED RUNNING VALUES INTO THE OBJECT STRUCTURE
-	buffer_unlocksamples(x->buffer_obj);
-	buffer_unlocksamples(x->w_buffer_obj);
+	buffer_unlocksamples(buffer_obj);
+	buffer_unlocksamples(w_buffer_obj);
 	outlet_int(x->grains_count_out, x->grains_count); // send number of currently playing grains to the outlet
 	return;
 	
@@ -827,8 +836,8 @@ zero:
 		*out_left++ = 0.0;
 		*out_right++ = 0.0;
 	}
-	buffer_unlocksamples(x->buffer_obj);
-	buffer_unlocksamples(x->w_buffer_obj);
+	buffer_unlocksamples(buffer_obj);
+	buffer_unlocksamples(w_buffer_obj);
 	return; // THIS RETURN WAS MISSING FOR A LONG, LONG TIME. MAYBE THIS HELPS WITH STABILITY!?
 }
 
@@ -1037,7 +1046,7 @@ t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, v
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = true;
 	}
-	if (buffer_name == x->window_name) { // check if calling object was the window buffer
+	if (buffer_name == x->w_buffer_name) { // check if calling object was the window buffer
 		return buffer_ref_notify(x->w_buffer_ref, s, msg, sender, data); // return with the calling buffer
 	}
 	else if (buffer_name == x->buffer_name) { // check if calling object was the sample buffer
@@ -1049,17 +1058,33 @@ t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, v
 }
 
 void cmbuffercloud_buffersetup(t_cmbuffercloud *x) {
-	// get buffer objects
-	x->buffer_obj = buffer_ref_getobject(x->buffer_ref);
-	x->w_buffer_obj = buffer_ref_getobject(x->w_buffer_ref);
+	// get buffer references
+	if (!x->buffer_ref || !x->w_buffer_ref) {
+		x->buffer_ref = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
+		x->w_buffer_ref = buffer_ref_new((t_object *)x, x->w_buffer_name); // write the window buffer reference into the object structure
+	}
+	else {
+		buffer_ref_set(x->buffer_ref, x->buffer_name);
+		buffer_ref_set(x->w_buffer_ref, x->w_buffer_name);
+	}
 	
-	// get buffer information
-	x->b_framecount = buffer_getframecount(x->buffer_obj); // get number of frames in the sample buffer
-	x->w_framecount = buffer_getframecount(x->w_buffer_obj); // get number of frames in the window buffer
-	x->b_channelcount = buffer_getchannelcount(x->buffer_obj); // get number of channels in the sample buffer
-	x->w_channelcount = buffer_getchannelcount(x->w_buffer_obj); // get number of channels in the sample buffer
-	x->b_m_sr = buffer_getsamplerate(x->buffer_obj) * 0.001; // get the sample buffer sample rate
-	x->sr_ratio = x->b_m_sr / x->m_sr; // calculate ratio between system sample rate and buffer sample rate
+	// get buffer objects
+	t_buffer_obj *buffer_obj = buffer_ref_getobject(x->buffer_ref);
+	t_buffer_obj *w_buffer_obj = buffer_ref_getobject(x->w_buffer_ref);
+	
+	if (buffer_obj && w_buffer_obj) {
+		// get buffer information
+		x->b_framecount = buffer_getframecount(buffer_obj); // get number of frames in the sample buffer
+		x->w_framecount = buffer_getframecount(w_buffer_obj); // get number of frames in the window buffer
+		x->b_channelcount = buffer_getchannelcount(buffer_obj); // get number of channels in the sample buffer
+		x->w_channelcount = buffer_getchannelcount(w_buffer_obj); // get number of channels in the sample buffer
+		x->b_m_sr = buffer_getsamplerate(buffer_obj) * 0.001; // get the sample buffer sample rate
+		x->sr_ratio = x->b_m_sr / x->m_sr; // calculate ratio between system sample rate and buffer sample rate
+	}
+	else {
+		x->buffer_ref = NULL;
+		x->w_buffer_ref = NULL;
+	}
 }
 
 
@@ -1071,9 +1096,9 @@ void cmbuffercloud_doset(t_cmbuffercloud *x, t_symbol *s, long ac, t_atom *av) {
 		//object_post((t_object *)x, "buffer ref changed");
 		x->buffer_modified = true;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
-		x->window_name = atom_getsym(av+1); // write buffer name into object structure
+		x->w_buffer_name = atom_getsym(av+1); // write buffer name into object structure
 		buffer_ref_set(x->buffer_ref, x->buffer_name);
-		buffer_ref_set(x->w_buffer_ref, x->window_name);
+		buffer_ref_set(x->w_buffer_ref, x->w_buffer_name);
 		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->buffer_ref))) > 2) {
 			object_error((t_object *)x, "referenced sample buffer has more than 2 channels. using channels 1 and 2.");
 		}
