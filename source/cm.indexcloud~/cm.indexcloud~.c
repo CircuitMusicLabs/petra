@@ -1,6 +1,6 @@
 /*
  cm.indexcloud~ - a granular synthesis external audio object for Max/MSP.
- Copyright (C) 2012 - 2017  Matthias W. Müller - circuit.music.labs
+ Copyright (C) 2012 - 2018  Matthias W. Müller - circuit.music.labs
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -70,7 +70,11 @@ typedef struct cmcloud {
 typedef struct _cmindexcloud {
 	t_pxobject obj;
 	t_symbol *buffer_name; // sample buffer name
-	t_buffer_ref *buffer; // sample buffer reference
+	t_buffer_ref *buffer_ref; // sample buffer reference
+	long b_framecount; // number of frames in the sample buffer
+	t_atom_long b_channelcount; // number of channels in the sample buffer
+	double b_m_sr; // buffer sample rate
+	double sr_ratio; // ratio between buffer sample rate and system sample rate
 	double *window; // window array
 	long window_type; // window typedef
 	long window_type_new;
@@ -146,6 +150,7 @@ void cmindexcloud_free(t_cmindexcloud *x);
 void cmindexcloud_float(t_cmindexcloud *x, double f);
 void cmindexcloud_dblclick(t_cmindexcloud *x);
 t_max_err cmindexcloud_notify(t_cmindexcloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+void cmindexcloud_buffersetup(t_cmindexcloud *x);
 void cmindexcloud_set(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
 void cmindexcloud_cloudsize(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
 void cmindexcloud_grainlength(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av);
@@ -416,7 +421,11 @@ void *cmindexcloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
-	x->buffer = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
+	x->buffer_ref = NULL;
+	x->b_framecount = 0;
+	x->b_channelcount = 0;
+	x->b_m_sr = 0;
+	x->sr_ratio = 0;
 	
 	
 	// WRITE WINDOW INTO WINDOW ARRAY
@@ -463,6 +472,8 @@ void cmindexcloud_dsp64(t_cmindexcloud *x, t_object *dsp64, short *count, double
 			}
 		}
 	}
+	// BUFFER SETUP
+	cmindexcloud_buffersetup(x);
 	
 	// CALL THE PERFORM ROUTINE
 	object_method(dsp64, gensym("dsp_add64"), x, cmindexcloud_perform64, 0, NULL);
@@ -486,8 +497,6 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 	double outsample_right = 0.0; // temporary right output sample used for adding up all grain samples
 	int slot = 0; // variable for the current slot in the arrays to write grain info to
 	cm_panstruct panstruct; // struct for holding the calculated constant power left and right stereo values
-	long b_framecount; // number of frames in the sample buffer
-	t_atom_long b_channelcount; // number of channels in the sample buffer
 	
 	long readpos;
 	long start;
@@ -502,11 +511,13 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
 	
-	// BUFFER VARIABLE DECLARATIONS
-	t_buffer_obj *buffer = buffer_ref_getobject(x->buffer);
-	float *b_sample = buffer_locksamples(buffer);
-	double b_m_sr; // buffer sample rate
-	double sr_ratio; // ratio between buffer sample rate and system sample rate
+	// BUFFER REFERENCES
+	if (x->buffer_modified) {
+		cmindexcloud_buffersetup(x);
+		x->buffer_modified = false;
+	}
+	t_buffer_obj *buffer_obj = buffer_ref_getobject(x->buffer_ref);
+	float *b_sample = buffer_locksamples(buffer_obj);
 	
 	// CLOUDSIZE - MEMORY RESIZE
 	if (!x->grains_count && x->resize_request) {
@@ -571,17 +582,11 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		goto zero;
 	}
 	
-	// GET BUFFER INFORMATION
-	b_framecount = buffer_getframecount(buffer); // get number of frames in the sample buffer
-	b_channelcount = buffer_getchannelcount(buffer); // get number of channels in the sample buffer
-	b_m_sr = buffer_getsamplerate(buffer) * 0.001; // get the sample buffer sample rate
-	sr_ratio = b_m_sr / x->m_sr; // calculate ratio between system sample rate and buffer sample rate
-	
 	// GET INLET VALUES
 	t_double *tr_sigin 	= (t_double *)ins[0]; // get trigger input signal from 1st inlet
 	
-	x->grain_params[0] = x->connect_status[0] ? *ins[1] * b_m_sr : x->object_inlets[0] * b_m_sr;	// start min
-	x->grain_params[1] = x->connect_status[1] ? *ins[2] * b_m_sr : x->object_inlets[1] * b_m_sr;	// start max
+	x->grain_params[0] = x->connect_status[0] ? *ins[1] * x->b_m_sr : x->object_inlets[0] * x->b_m_sr;	// start min
+	x->grain_params[1] = x->connect_status[1] ? *ins[2] * x->b_m_sr : x->object_inlets[1] * x->b_m_sr;	// start max
 	x->grain_params[2] = x->connect_status[2] ? *ins[3] * x->m_sr : x->object_inlets[2] * x->m_sr;	// length min
 	x->grain_params[3] = x->connect_status[3] ? *ins[4] * x->m_sr : x->object_inlets[3] * x->m_sr;	// length max
 	x->grain_params[4] = x->connect_status[4] ? *ins[5] : x->object_inlets[4];						// pitch min
@@ -648,19 +653,19 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		
 		// check for preview request
 		if (x->preview_request && !x->grains_count) {
-			preview_pos = x->preview_playhead++ * sr_ratio;
-			if (b_channelcount > 1 ) {
-				outsample_left = cm_lininterp(preview_pos, b_sample, b_channelcount, b_framecount, 0);
-				outsample_right = cm_lininterp(preview_pos, b_sample, b_channelcount, b_framecount, 1);
+			preview_pos = x->preview_playhead++ * x->sr_ratio;
+			if (x->b_channelcount > 1 ) {
+				outsample_left = cm_lininterp(preview_pos, b_sample, x->b_channelcount, x->b_framecount, 0);
+				outsample_right = cm_lininterp(preview_pos, b_sample, x->b_channelcount, x->b_framecount, 1);
 			}
 			else {
-				b_read = cm_lininterp(preview_pos, b_sample, b_channelcount, b_framecount, 0);
+				b_read = cm_lininterp(preview_pos, b_sample, x->b_channelcount, x->b_framecount, 0);
 				outsample_left += b_read;
 				outsample_right += b_read;
 			}
 			// check nex preview_pos
-			preview_pos = x->preview_playhead * sr_ratio;
-			if (preview_pos > b_framecount) {
+			preview_pos = x->preview_playhead * x->sr_ratio;
+			if (preview_pos > x->b_framecount) {
 				outlet_bang(x->bang_out);
 				x->preview_playhead = 0;
 				x->preview_request = false;
@@ -690,7 +695,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 		
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->wintype_request && !x->winlength_request && !x->buffer_modified && !x->preview_request && b_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->wintype_request && !x->winlength_request && !x->preview_request && b_sample) {
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
 			// FIND A FREE SLOT FOR THE NEW GRAIN
@@ -726,7 +731,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			}
 			
 			// adjust the pitch value according to the sample rate ratio system/buffer
-			x->randomized[2] = x->randomized[2] * sr_ratio;
+			x->randomized[2] = x->randomized[2] * x->sr_ratio;
 			
 			// check for parameter sanity of the pitch value
 			if (x->randomized[2] < MIN_PITCH) {
@@ -756,16 +761,16 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 			smp_length = x->randomized[1];
 			pitch_length = smp_length * x->randomized[2]; // length * pitch
 			// check that grain length is not larger than size of buffer
-			if (pitch_length > b_framecount) {
-				pitch_length = b_framecount;
+			if (pitch_length > x->b_framecount) {
+				pitch_length = x->b_framecount;
 			}
 			x->cloud[slot].length = smp_length; // IMPORTANT!! DO NOT FORGET TO WRITE THE SAMPLE LENGTH INTO THE MEMORY STRUCTURE
 			
 			// write start position
 			start = x->randomized[0];
 			// start position sanity testing
-			if (start > b_framecount - pitch_length) { // plus 1 because of interpolation sample increment
-				start = b_framecount - pitch_length;
+			if (start > x->b_framecount - pitch_length) { // plus 1 because of interpolation sample increment
+				start = x->b_framecount - pitch_length;
 			}
 			if (start < 0) {
 				start = 0;
@@ -817,27 +822,27 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 				// GET GRAIN SAMPLE FROM SAMPLE BUFFER
 				distance = start + (((double)readpos / (double)smp_length) * (double)pitch_length);
 				
-				if (b_channelcount > 1 && x->attr_stereo) { // if more than one channel
+				if (x->b_channelcount > 1 && x->attr_stereo) { // if more than one channel
 					if (x->attr_sinterp) {
 						// get interpolated sample
-						x->cloud[slot].left[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read) * pan_left) * gain;
-						x->cloud[slot].right[readpos] = ((cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 1) * w_read) * pan_right) * gain;
+						x->cloud[slot].left[readpos] = ((cm_lininterp(distance, b_sample, x->b_channelcount, x->b_framecount, 0) * w_read) * pan_left) * gain;
+						x->cloud[slot].right[readpos] = ((cm_lininterp(distance, b_sample, x->b_channelcount, x->b_framecount, 1) * w_read) * pan_right) * gain;
 					}
 					else {
 						// get non-interpolated sample
-						x->cloud[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
-						x->cloud[slot].right[readpos] = ((b_sample[((long)distance * b_channelcount) + 1] * w_read) * pan_right) * gain;
+						x->cloud[slot].left[readpos] = ((b_sample[(long)distance * x->b_channelcount] * w_read) * pan_left) * gain;
+						x->cloud[slot].right[readpos] = ((b_sample[((long)distance * x->b_channelcount) + 1] * w_read) * pan_right) * gain;
 					}
 				}
 				else { // if only one channel
 					if (x->attr_sinterp) {
-						b_read = cm_lininterp(distance, b_sample, b_channelcount, b_framecount, 0) * w_read; // get interpolated sample
+						b_read = cm_lininterp(distance, b_sample, x->b_channelcount, x->b_framecount, 0) * w_read; // get interpolated sample
 						x->cloud[slot].left[readpos] = (b_read * pan_left) * gain;
 						x->cloud[slot].right[readpos] = (b_read * pan_right) * gain;
 					}
 					else {
-						x->cloud[slot].left[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_left) * gain;
-						x->cloud[slot].right[readpos] = ((b_sample[(long)distance * b_channelcount] * w_read) * pan_right) * gain;
+						x->cloud[slot].left[readpos] = ((b_sample[(long)distance * x->b_channelcount] * w_read) * pan_left) * gain;
+						x->cloud[slot].right[readpos] = ((b_sample[(long)distance * x->b_channelcount] * w_read) * pan_right) * gain;
 					}
 				}
 			}
@@ -890,7 +895,7 @@ void cmindexcloud_perform64(t_cmindexcloud *x, t_object *dsp64, double **ins, lo
 	
 	/************************************************************************************************************************/
 	// STORE UPDATED RUNNING VALUES INTO THE OBJECT STRUCTURE
-	buffer_unlocksamples(buffer);
+	buffer_unlocksamples(buffer_obj);
 	outlet_int(x->grains_count_out, x->grains_count); // send number of currently playing grains to the outlet
 	return;
 	
@@ -899,7 +904,7 @@ zero:
 		*out_left++ = 0.0;
 		*out_right++ = 0.0;
 	}
-	buffer_unlocksamples(buffer);
+	buffer_unlocksamples(buffer_obj);
 	return; // THIS RETURN WAS MISSING FOR A LONG, LONG TIME. MAYBE THIS HELPS WITH STABILITY!?
 }
 
@@ -967,7 +972,7 @@ void cmindexcloud_assist(t_cmindexcloud *x, void *b, long msg, long arg, char *d
 void cmindexcloud_free(t_cmindexcloud *x) {
 	int i;
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
-	object_free(x->buffer); // free the buffer reference
+	object_free(x->buffer_ref); // free the buffer reference
 	
 	sysmem_freeptr(x->window); // free memory allocated to the window array
 	
@@ -1090,7 +1095,7 @@ void cmindexcloud_float(t_cmindexcloud *x, double f) {
 /* DOUBLE CLICK METHOD FOR VIEWING BUFFER CONTENT                                                                       */
 /************************************************************************************************************************/
 void cmindexcloud_dblclick(t_cmindexcloud *x) {
-	buffer_view(buffer_ref_getobject(x->buffer));
+	buffer_view(buffer_ref_getobject(x->buffer_ref));
 }
 
 
@@ -1101,7 +1106,35 @@ t_max_err cmindexcloud_notify(t_cmindexcloud *x, t_symbol *s, t_symbol *msg, voi
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = true;
 	}
-	return buffer_ref_notify(x->buffer, s, msg, sender, data); // return with the calling buffer
+	return buffer_ref_notify(x->buffer_ref, s, msg, sender, data); // return with the calling buffer
+}
+
+
+/************************************************************************************************************************/
+/* BUFFER SETUP METHOD                                                                                                  */
+/************************************************************************************************************************/
+void cmindexcloud_buffersetup(t_cmindexcloud *x) {
+	// get buffer references
+	if (!x->buffer_ref) {
+		x->buffer_ref = buffer_ref_new((t_object *)x, x->buffer_name); // write the buffer reference into the object structure
+	}
+	else {
+		buffer_ref_set(x->buffer_ref, x->buffer_name);
+	}
+	
+	// get buffer object
+	t_buffer_obj *buffer_obj = buffer_ref_getobject(x->buffer_ref);
+	
+	if (buffer_obj) {
+		// get buffer information
+		x->b_framecount = buffer_getframecount(buffer_obj); // get number of frames in the sample buffer
+		x->b_channelcount = buffer_getchannelcount(buffer_obj); // get number of channels in the sample buffer
+		x->b_m_sr = buffer_getsamplerate(buffer_obj) * 0.001; // get the sample buffer sample rate
+		x->sr_ratio = x->b_m_sr / x->m_sr; // calculate ratio between system sample rate and buffer sample rate
+	}
+	else {
+		x->buffer_ref = NULL;
+	}
 }
 
 
@@ -1112,8 +1145,8 @@ void cmindexcloud_doset(t_cmindexcloud *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
 		x->buffer_modified = true;
 		x->buffer_name = atom_getsym(av); // write buffer name into object structure
-		buffer_ref_set(x->buffer, x->buffer_name);
-		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->buffer))) > 2) {
+		buffer_ref_set(x->buffer_ref, x->buffer_name);
+		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->buffer_ref))) > 2) {
 			object_error((t_object *)x, "referenced sample buffer has more than 2 channels. using channels 1 and 2.");
 		}
 	}

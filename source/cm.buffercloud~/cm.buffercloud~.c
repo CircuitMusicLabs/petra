@@ -1,6 +1,6 @@
 /*
  cm.buffercloud~ - a granular synthesis external audio object for Max/MSP.
- Copyright (C) 2012 - 2017  Matthias W. Müller - circuit.music.labs
+ Copyright (C) 2012 - 2018  Matthias W. Müller - circuit.music.labs
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -456,9 +456,6 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 	double startmedian_curr;
 	double preview_pos;
 	
-	float *b_sample;
-	float *w_sample;
-	
 	// OUTLETS
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
@@ -469,11 +466,10 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 		cmbuffercloud_buffersetup(x);
 		x->buffer_modified = false;
 	}
-	
 	t_buffer_obj *buffer_obj = buffer_ref_getobject(x->buffer_ref);
 	t_buffer_obj *w_buffer_obj = buffer_ref_getobject(x->w_buffer_ref);
-	b_sample = buffer_locksamples(buffer_obj);
-	w_sample = buffer_locksamples(w_buffer_obj);
+	float *b_sample = buffer_locksamples(buffer_obj);
+	float *w_sample = buffer_locksamples(w_buffer_obj);
 	
 	
 	// CLOUDSIZE - MEMORY RESIZE
@@ -1057,6 +1053,10 @@ t_max_err cmbuffercloud_notify(t_cmbuffercloud *x, t_symbol *s, t_symbol *msg, v
 	}
 }
 
+
+/************************************************************************************************************************/
+/* BUFFER SETUP METHOD                                                                                                  */
+/************************************************************************************************************************/
 void cmbuffercloud_buffersetup(t_cmbuffercloud *x) {
 	// get buffer references
 	if (!x->buffer_ref || !x->w_buffer_ref) {
