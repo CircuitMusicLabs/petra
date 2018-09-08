@@ -1,6 +1,6 @@
 /*
  cm.livecloud~ - a granular synthesis external audio object for Max/MSP.
- Copyright (C) 2012 - 2017  Matthias W. Müller - circuit.music.labs
+ Copyright (C) 2012 - 2018  Matthias W. Müller - circuit.music.labs
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -63,8 +63,10 @@ typedef struct cmcloud {
 /************************************************************************************************************************/
 typedef struct _cmlivecloud {
 	t_pxobject obj;
-	t_symbol *window_name; // window buffer name
-	t_buffer_ref *w_buffer; // window buffer reference
+	t_symbol *w_buffer_name; // window buffer name
+	t_buffer_ref *w_buffer_ref; // window buffer reference
+	long w_framecount; // number of frames in the window buffer
+	t_atom_long w_channelcount; // number of channels in the window buffer
 	double m_sr; // system millisampling rate (samples per milliseconds = sr * 0.001)
 	short connect_status[FLOAT_INLETS]; // array for signal inlet connection statuses
 	double *object_inlets; // array to store the incoming values coming from the object inlets
@@ -137,6 +139,7 @@ void cmlivecloud_free(t_cmlivecloud *x);
 void cmlivecloud_float(t_cmlivecloud *x, double f);
 void cmlivecloud_dblclick(t_cmlivecloud *x);
 t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void *sender, void *data);
+void cmlivecloud_buffersetup(t_cmlivecloud *x);
 void cmlivecloud_set(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_cloudsize(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
 void cmlivecloud_grainlength(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av);
@@ -235,13 +238,13 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 	
 	if (argc == ARGUMENTS) {
-		x->window_name = atom_getsymarg(0, argc, argv); // get user supplied argument for window buffer
+		x->w_buffer_name = atom_getsymarg(0, argc, argv); // get user supplied argument for window buffer
 		x->cloudsize = atom_getintarg(1, argc, argv); // get user supplied argument for cloud size
 		x->grainlength = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grain length
 		x->bufferms = DEFAULT_BUFFERMS;
 	}
 	else if (argc > ARGUMENTS) {
-		x->window_name = atom_getsymarg(0, argc, argv); // get user supplied argument for window buffer
+		x->w_buffer_name = atom_getsymarg(0, argc, argv); // get user supplied argument for window buffer
 		x->cloudsize = atom_getintarg(1, argc, argv); // get user supplied argument for cloud size
 		x->grainlength = atom_getintarg(2, argc, argv); // get user supplied argument for maximum grain length
 		x->bufferms = atom_getintarg(3, argc, argv); // get user supplied argument for circular buffer length
@@ -390,7 +393,9 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 
 	/************************************************************************************************************************/
 	// BUFFER REFERENCES
-	x->w_buffer = buffer_ref_new((t_object *)x, x->window_name); // write the window buffer reference into the object structure
+	x->w_buffer_ref = NULL;
+	x->w_framecount = 0;
+	x->w_channelcount = 0;
 
 	#ifdef WIN_VERSION
 		srand((unsigned int)clock());
@@ -438,6 +443,8 @@ void cmlivecloud_dsp64(t_cmlivecloud *x, t_object *dsp64, short *count, double s
 			return;
 		}
 	}
+	// BUFFER SETUP
+	cmlivecloud_buffersetup(x);
 
 	x->bufferframes = x->bufferms * x->m_sr;
 
@@ -477,11 +484,13 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	t_double *out_left 	= (t_double *)outs[0]; // assign pointer to left output
 	t_double *out_right = (t_double *)outs[1]; // assign pointer to right output
 	
-	// BUFFER VARIABLE DECLARATIONS
-	t_buffer_obj *w_buffer = buffer_ref_getobject(x->w_buffer);
-	float *w_sample = buffer_locksamples(w_buffer);
-	long w_framecount; // number of frames in the window buffer
-	t_atom_long w_channelcount; // number of channels in the window buffer
+	// BUFFER REFERENCES
+	if (x->buffer_modified) {
+		cmlivecloud_buffersetup(x);
+		x->buffer_modified = false;
+	}
+	t_buffer_obj *w_buffer_obj = buffer_ref_getobject(x->w_buffer_ref);
+	float *w_sample = buffer_locksamples(w_buffer_obj);
 	
 	// CLOUDSIZE - MEMORY RESIZE
 	if (x->grains_count == 0 && x->resize_request) {
@@ -540,10 +549,6 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 	if (!w_sample) { // if the sample buffer does not exist
 		goto zero;
 	}
-
-	// GET BUFFER INFORMATION
-	w_framecount = buffer_getframecount(w_buffer); // get number of frames in the window buffer
-	w_channelcount = buffer_getchannelcount(w_buffer); // get number of channels in the sample buffer
 
 	// GET INLET VALUES
 	t_double *tr_sigin		= (t_double *)ins[0]; // get trigger input signal from 1st inlet
@@ -657,7 +662,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 
 		/************************************************************************************************************************/
 		// IN CASE OF TRIGGER, LIMIT NOT MODIFIED AND GRAINS COUNT IN THE LEGAL RANGE (AVAILABLE SLOTS)
-		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->bufferms_request && !x->recordflag && !x->buffer_modified && w_sample) {
+		if (trigger && x->grains_count < x->cloudsize && !x->resize_request && !x->length_request && !x->bufferms_request && !x->recordflag && w_sample) {
 
 			trigger = false; // reset trigger
 			x->grains_count++; // increment grains_count
@@ -794,11 +799,11 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 
 			for (readpos = 0; readpos < smp_length; readpos++) {
 				if (x->attr_winterp) {
-					distance = ((double)readpos / (double)smp_length) * (double)w_framecount;
-					w_read = cm_lininterp(distance, w_sample, w_channelcount, w_framecount, 0);
+					distance = ((double)readpos / (double)smp_length) * (double)x->w_framecount;
+					w_read = cm_lininterp(distance, w_sample, x->w_channelcount, x->w_framecount, 0);
 				}
 				else {
-					index = (long)(((double)readpos / (double)smp_length) * (double)w_framecount);
+					index = (long)(((double)readpos / (double)smp_length) * (double)x->w_framecount);
 					w_read = w_sample[index];
 				}
 
@@ -875,7 +880,7 @@ void cmlivecloud_perform64(t_cmlivecloud *x, t_object *dsp64, double **ins, long
 
 	/************************************************************************************************************************/
 	// STORE UPDATED RUNNING VALUES INTO THE OBJECT STRUCTURE
-	buffer_unlocksamples(w_buffer);
+	buffer_unlocksamples(w_buffer_obj);
 //	if (x->randomized[0] == x->bufferframes) {
 //		x->randomized[0] = 0;
 //	}
@@ -888,7 +893,7 @@ zero:
 		*out_left++ = 0.0;
 		*out_right++ = 0.0;
 	}
-	buffer_unlocksamples(w_buffer);
+	buffer_unlocksamples(w_buffer_obj);
 	return; // THIS RETURN WAS MISSING FOR A LONG, LONG TIME. MAYBE THIS HELPS WITH STABILITY!?
 }
 
@@ -962,7 +967,7 @@ void cmlivecloud_assist(t_cmlivecloud *x, void *b, long msg, long arg, char *dst
 void cmlivecloud_free(t_cmlivecloud *x) {
 	int i;
 	dsp_free((t_pxobject *)x); // free memory allocated for the object
-	object_free(x->w_buffer); // free the window buffer reference
+	object_free(x->w_buffer_ref); // free the window buffer reference
 	sysmem_freeptr(x->object_inlets); // free memory allocated to the object inlets array
 	sysmem_freeptr(x->grain_params); // free memory allocated to the grain parameters array
 	sysmem_freeptr(x->randomized); // free memory allocated to the grain parameters array
@@ -972,6 +977,7 @@ void cmlivecloud_free(t_cmlivecloud *x) {
 		sysmem_freeptr(x->cloud[i].right);
 	}
 	sysmem_freeptr(x->cloud);
+	sysmem_freeptr(x->pitchlist);
 
 }
 
@@ -1079,7 +1085,7 @@ void cmlivecloud_float(t_cmlivecloud *x, double f) {
 /* DOUBLE CLICK METHOD FOR VIEWING BUFFER CONTENT                                                                       */
 /************************************************************************************************************************/
 void cmlivecloud_dblclick(t_cmlivecloud *x) {
-	buffer_view(buffer_ref_getobject(x->w_buffer));
+	buffer_view(buffer_ref_getobject(x->w_buffer_ref));
 }
 
 
@@ -1091,11 +1097,37 @@ t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void 
 	if (msg == ps_buffer_modified) {
 		x->buffer_modified = true;
 	}
-	if (buffer_name == x->window_name) { // check if calling object was the window buffer
-		return buffer_ref_notify(x->w_buffer, s, msg, sender, data); // return with the calling buffer
+	if (buffer_name == x->w_buffer_name) { // check if calling object was the window buffer
+		return buffer_ref_notify(x->w_buffer_ref, s, msg, sender, data); // return with the calling buffer
 	}
 	else { // if calling object was none of the expected buffers
 		return MAX_ERR_NONE; // return generic MAX_ERR_NONE
+	}
+}
+
+
+/************************************************************************************************************************/
+/* BUFFER SETUP METHOD                                                                                                  */
+/************************************************************************************************************************/
+void cmlivecloud_buffersetup(t_cmlivecloud *x) {
+	// get buffer references
+	if (!x->w_buffer_ref) {
+		x->w_buffer_ref = buffer_ref_new((t_object *)x, x->w_buffer_name); // write the window buffer reference into the object structure
+	}
+	else {
+		buffer_ref_set(x->w_buffer_ref, x->w_buffer_name);
+	}
+	
+	// get buffer objects
+	t_buffer_obj *w_buffer_obj = buffer_ref_getobject(x->w_buffer_ref);
+	
+	if (w_buffer_obj) {
+		// get buffer information
+		x->w_framecount = buffer_getframecount(w_buffer_obj); // get number of frames in the window buffer
+		x->w_channelcount = buffer_getchannelcount(w_buffer_obj); // get number of channels in the sample buffer
+	}
+	else {
+		x->w_buffer_ref = NULL;
 	}
 }
 
@@ -1106,9 +1138,9 @@ t_max_err cmlivecloud_notify(t_cmlivecloud *x, t_symbol *s, t_symbol *msg, void 
 void cmlivecloud_doset(t_cmlivecloud *x, t_symbol *s, long ac, t_atom *av) {
 	if (ac == 1) {
 		x->buffer_modified = true;
-		x->window_name = atom_getsym(av); // write buffer name into object structure
-		buffer_ref_set(x->w_buffer, x->window_name);
-		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->w_buffer))) > 1) {
+		x->w_buffer_name = atom_getsym(av); // write buffer name into object structure
+		buffer_ref_set(x->w_buffer_ref, x->w_buffer_name);
+		if (buffer_getchannelcount((t_object *)(buffer_ref_getobject(x->w_buffer_ref))) > 1) {
 			object_error((t_object *)x, "referenced window buffer has more than 1 channel. expect strange results.");
 		}
 	}
