@@ -1474,35 +1474,35 @@ void cmindexcloud_windowwrite(t_cmindexcloud *x) {
 	long length = x->window_length;
 	switch (x->window_type) {
 		case 0:
-			object_post((t_object*)x, "hann - %d", length);
+			// object_post((t_object*)x, "hann - %d", length);
 			cm_hann(x->window, &length);
 			break;
 		case 1:
-			object_post((t_object*)x, "hamming - %d", length);
+			// object_post((t_object*)x, "hamming - %d", length);
 			cm_hamming(x->window, &length);
 			break;
 		case 2:
-			object_post((t_object*)x, "rectangular - %d", length);
+			// object_post((t_object*)x, "rectangular - %d", length);
 			cm_rectangular(x->window, &length);
 			break;
 		case 3:
-			object_post((t_object*)x, "bartlett - %d", length);
+			// object_post((t_object*)x, "bartlett - %d", length);
 			cm_bartlett(x->window, &length);
 			break;
 		case 4:
-			object_post((t_object*)x, "flattop - %d", length);
+			// object_post((t_object*)x, "flattop - %d", length);
 			cm_flattop(x->window, &length);
 			break;
 		case 5:
-			object_post((t_object*)x, "gauss (alpha 2) - %d", length);
+			// object_post((t_object*)x, "gauss (alpha 2) - %d", length);
 			cm_gauss2(x->window, &length);
 			break;
 		case 6:
-			object_post((t_object*)x, "gauss (alpha 4) - %d", length);
+			// object_post((t_object*)x, "gauss (alpha 4) - %d", length);
 			cm_gauss4(x->window, &length);
 			break;
 		case 7:
-			object_post((t_object*)x, "gauss (alpha 8) - %d", length);
+			// object_post((t_object*)x, "gauss (alpha 8) - %d", length);
 			cm_gauss8(x->window, &length);
 			break;
 		default:
