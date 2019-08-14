@@ -372,6 +372,5 @@
 				"preview" message when preview is completed. "resize" message when internal grain buffer resize is completed.
 			</description>
 		</entry>
-		</entry>
 	</misc>
 </c74object>
