@@ -77,6 +77,7 @@ typedef struct _cmlivecloud {
 	short grains_count; // currently playing grains
 	void *grains_count_out; // outlet for number of currently playing grains (for debugging)
 	void *rec_position_out; // outlet for current record position in buffer
+	void *status_out; // bang outlet for preview playback indication
 	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
 	t_atom_long attr_zero; // attribute: zero crossing trigger on/off
@@ -276,6 +277,7 @@ void *cmlivecloud_new(t_symbol *s, long argc, t_atom *argv) {
 	
 
 	// CREATE OUTLETS (OUTLETS ARE CREATED FROM RIGHT TO LEFT)
+	x->status_out = outlet_new((t_object *)x, NULL);
 	x->grains_count_out = intout((t_object *)x); // create outlet for number of currently playing grains
 	x->rec_position_out = intout((t_object *)x); // create outlet for current record position in buffer
 	outlet_new((t_object *)x, "signal"); // right signal outlet
@@ -956,6 +958,9 @@ void cmlivecloud_assist(t_cmlivecloud *x, void *b, long msg, long arg, char *dst
 			case 3:
 				snprintf_zero(dst, 256, "(int) current grain count");
 				break;
+			case 4:
+				snprintf_zero(dst, 256, "(message) status output");
+				break;
 		}
 	}
 }
@@ -1240,7 +1245,7 @@ t_bool cmlivecloud_resize(t_cmlivecloud *x) {
 			return false;
 		}
 	}
-	
+	outlet_anything(x->status_out, gensym("resize"), 0, NIL);
 	return true;
 }
 
