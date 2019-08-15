@@ -1,6 +1,6 @@
 ![petra logo](http://archive.circuitmusiclabs.com/img/projects/petra/petra-logo-preview.png)
 
-**Matthias W. Müller - [@mwmueller](https://twitter.com/mwmueller) - [www.circuitmusiclabs.com](http://www.circuitmusiclabs.com/)**
+**Matthias W. Müller - [@verenasounds](https://twitter.com/verenasounds) - [www.circuitmusiclabs.com](http://www.circuitmusiclabs.com/)**
 
 petra is now available in the official Max Package Manager. Just open Max, go to the Package Manager and search for the petra package to download and install.
 
