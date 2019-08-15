@@ -80,7 +80,7 @@ typedef struct _cmbuffercloud {
 	t_bool buffer_modified; // checkflag to see if buffer has been modified
 	short grains_count; // currently playing grains
 	void *grains_count_out; // outlet for number of currently playing grains (for debugging)
-	void *bang_out; // bang outlet for preview playback indication
+	void *status_out; // bang outlet for preview playback indication
 	t_atom_long attr_stereo; // attribute: number of channels to be played
 	t_atom_long attr_winterp; // attribute: window interpolation on/off
 	t_atom_long attr_sinterp; // attribute: window interpolation on/off
@@ -264,7 +264,7 @@ void *cmbuffercloud_new(t_symbol *s, long argc, t_atom *argv) {
 	}
 	
 	// CREATE OUTLETS (OUTLETS ARE CREATED FROM RIGHT TO LEFT)
-	x->bang_out = bangout((t_object *)x);
+	x->status_out = outlet_new((t_object *)x, NULL);
 	x->grains_count_out = intout((t_object *)x); // create outlet for number of currently playing grains
 	outlet_new((t_object *)x, "signal"); // right signal outlet
 	outlet_new((t_object *)x, "signal"); // left signal outlet
@@ -591,7 +591,7 @@ void cmbuffercloud_perform64(t_cmbuffercloud *x, t_object *dsp64, double **ins, 
 			// check nex preview_pos
 			preview_pos = x->preview_playhead * x->sr_ratio;
 			if (preview_pos > x->b_framecount) {
-				outlet_bang(x->bang_out);
+				outlet_anything(x->status_out, gensym("preview"), 0, NIL);
 				x->preview_playhead = 0;
 				x->preview_request = false;
 			}
@@ -891,7 +891,7 @@ void cmbuffercloud_assist(t_cmbuffercloud *x, void *b, long msg, long arg, char 
 				snprintf_zero(dst, 256, "(int) current grain count");
 				break;
 			case 3:
-				snprintf_zero(dst, 256, "bang when preview completed");
+				snprintf_zero(dst, 256, "(message) status output");
 				break;
 		}
 	}
@@ -1202,7 +1202,7 @@ t_bool cmbuffercloud_resize(t_cmbuffercloud *x) {
 			return false;
 		}
 	}
-	
+	outlet_anything(x->status_out, gensym("resize"), 0, NIL);
 	return true;
 }
 

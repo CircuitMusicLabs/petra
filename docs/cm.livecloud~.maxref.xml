@@ -353,9 +353,9 @@
 				Current recording position in the circular buffer.
 			</description>
 		</entry>
-		<entry name="current grain count">
+		<entry name="status output">
 			<description>
-				Number of currently playing grains.
+				"preview" message when preview is completed. "resize" message when internal grain buffer resize is completed.
 			</description>
 		</entry>
 	</misc>
