@@ -1,6 +1,6 @@
 /*
  cm.indexcloud~ - a granular synthesis external audio object for Max/MSP.
- Copyright (C) 2012 - 2018  Matthias W. Müller - circuit.music.labs
+ Copyright (C) 2012 - 2019  Matthias W. Müller - circuit.music.labs
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
