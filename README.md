@@ -8,7 +8,7 @@ petra is now available in the official Max Package Manager. Just open Max, go to
 This repository might be in active development at any time, so any of the existing branches might be unstable or contain incomplete code. If you're interested in downloading stable code only, please find the latest release [here](https://github.com/CircuitMusicLabs/petra/releases).
 
 ## Package Description
-#### External Objects for Max
+### External Objects for Max
 petra is a is a collection of external audio objects neatly packed into a Package for Max by [Cycling '74](https://cycling74.com/). It is used for polyphonic granulation of pre-recorded sounds. The package is loosely based on the principle of asynchronous granular synthesis (outlined in Curtis Roads' book [Microsound](https://mitpress.mit.edu/books/microsound)). The objects are made for sample precision granulation of both single- and dual-channel audio files.
 
 In addition, petra contains an audio object for live input granulation. It makes use of a circular buffer and an adjustable, and optionally randomised, delay control over the duration of the entire buffer.
@@ -21,14 +21,14 @@ All objects share the following controls, which consist of an upper and lower ra
 * panorama position per grain
 * gain per grain
 
-#### Max for Live Device
+### Max for Live Device
 As of v1.1.0, the petra package will contain a Max for Live Device, which showcases the potential of the external objects:
 
 ![m4l device](http://circuitmusiclabs.com/wp-content/uploads/petra-m4l-device.png)
 
 The device uses the `cm.indexcloud~`external object and merely serves as an example of what can be done with the objects contained in the petra package. The device can be found in the [extras](https://github.com/CircuitMusicLabs/petra/blob/master/extras) folder.
 
-##### How to use the Max for Live Device
+#### How to use the Max for Live Device
 Drop the Max for Live Device onto a new MIDI Track in Ableton Live and you are ready to go.
 
 Descriptions for all parameters can be viewed in the Ableton Live Info View in the bottom left corner of the Live window. Just hover with the mouse over a parameter and the respective description is displayed.
