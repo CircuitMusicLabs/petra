@@ -81,5 +81,8 @@ Copy the entire petra repository either into the "packages" folder in your Max i
 #### Installing for Max 7 - Mac OS X and Windows
 Copy the entire petra repository into “Max 7/Packages" in your ~/Documents folder.
 
+#### Installing for Max 8 - Mac OS X and Windows
+Copy the entire petra repository into “Max 8/Packages" in your ~/Documents folder.
+
 ## How to use petra
 After installing, open the [petra_overview.maxpat](https://github.com/CircuitMusicLabs/petra/blob/master/extras/petra_overview.maxpat) file. It contains the entire documentation and links to all object helpfiles.
