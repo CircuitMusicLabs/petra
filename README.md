@@ -28,9 +28,14 @@ As of v1.1.0, the petra package will contain a Max for Live Device, which showca
 
 The device uses the `cm.indexcloud~`external object and merely serves as an example of what can be done with the objects contained in the petra package. The device can be found in the [extras](https://github.com/CircuitMusicLabs/petra/blob/master/extras) folder.
 
+##### How to use the Max for Live Device
+Drop the Max for Live Device onto a new MIDI Track in Ableton Live and you are ready to go.
+
+Descriptions for all parameters can be viewed in the Ableton Live Info View in the bottom left corner of the Live window. Just hover with the mouse over a parameter and the respective description is displayed.
+
 ## System Requirements for Compiled Externals
 * Mac OS 10.9.5 or above or Microsoft Windows 7 or later
-* Max 6.1.8 or above (compatible with Max 7)
+* Max 6.1.8 or above (compatible with Max 7 and Max 8)
 * Max 32 bit and 64 bit
 
 ## Installing the Source Code
