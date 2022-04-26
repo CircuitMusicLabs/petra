@@ -1,3 +1,6 @@
+#### Development discontinued!
+I have officially discontinued further development and maintenance for the Petra package. If you are interested to take of the the project, please get in touch with me.
+
 ![petra logo](http://archive.circuitmusiclabs.com/img/projects/petra/petra-logo-preview.png)
 
 **Matthias W. Müller - [@verenasounds](https://twitter.com/verenasounds) - [www.circuitmusiclabs.com](http://www.circuitmusiclabs.com/)**
