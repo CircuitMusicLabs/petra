@@ -1,4 +1,5 @@
 build/
+externals/
 _build/
 _archive/
 *.pbxuser
