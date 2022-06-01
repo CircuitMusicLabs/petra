@@ -1,0 +1,24 @@
+{
+	"author" : "circuit.music.labs",
+	"description" : "A collection of audio objects made for sample-precision polyphonic granulation.",
+	"homepatcher" : "petra_overview.maxpat",
+	"max_version_max" : "none",
+	"max_version_min" : "8",
+	"name" : "petra",
+	"os" : 	{
+		"macintosh" : 		{
+			"platform" : [ "x64", "aarch64" ],
+			"min_version" : "10.11.x"
+		}
+,
+		"windows" : 		{
+			"platform" : [ "x64" ],
+			"min_version" : "7"
+		}
+
+	}
+,
+	"tags" : [ "granular", "sampling", "audio", "synthesis" ],
+    "version" : "@GIT_VERSION_MAJ@.@GIT_VERSION_MIN@.@GIT_VERSION_SUB@",
+	"website" : "https://github.com/cycling74/petra"
+}
