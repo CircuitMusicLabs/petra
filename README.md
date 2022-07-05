@@ -1,5 +1,5 @@
-# Development discontinued!
-I have officially discontinued further development and maintenance for the Petra package. If you are interested to take of the the project, please get in touch with me.
+# Development discontinued - package maintained by Cycling '74
+I have officially discontinued further development and maintenance for the Petra package. For this reason, Cycling '74 has taken over maintenance of the repository. Please refer to the official fork at [https://github.com/Cycling74/petra](https://github.com/Cycling74/petra).
 
 **Matthias W. Müller - [@verenasounds](https://twitter.com/verenasounds) - [www.circuitmusiclabs.com](http://www.circuitmusiclabs.com/)**
 
